@@ -115,6 +115,16 @@ export function AppSidebar({ brukerNavn, brukerEpost }: AppSidebarProps) {
     return () => clearInterval(intervall)
   }, [lastKonsultasjoner])
 
+  // Synkroniser listen når aktiv konsultasjon endres (f.eks. pasientId-oppdatering)
+  useEffect(() => {
+    if (!aktiv) return
+    setKonsultasjoner(prev =>
+      prev.some(k => k.id === aktiv.id)
+        ? prev.map(k => (k.id === aktiv.id ? aktiv : k))
+        : [aktiv, ...prev]
+    )
+  }, [aktiv])
+
   async function opprettNy(type: KonsultasjonsType) {
     const ny = nyKonsultasjon(type)
     await lagreKonsultasjon(ny)
