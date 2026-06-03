@@ -4,18 +4,7 @@ import { useState, useRef, useCallback } from "react"
 import type { KonsultasjonsType } from "@/types/konsultasjon"
 
 const SAMPLE_RATE = 16000
-// v3 Streaming API
-const STREAMING_WS_URL = "wss://streaming.assemblyai.com/v3/ws"
-
-// Norske medisinske termer for word_boost
-const MEDISINSKE_TERMER = [
-  "diagnose", "symptom", "behandling", "blodtrykk", "blodprøve",
-  "resept", "sykmelding", "henvisning", "epikrise", "journal",
-  "pasient", "fastlege", "spesialist", "røntgen", "ultralyd",
-  "operasjon", "medisin", "bivirkninger", "allergi", "diabetes",
-  "hypertensjon", "kolesterol", "spirometri", "ekg", "ekkokardiografi",
-  "nav", "arbeidsevne", "trygd", "uføretrygd", "rehabilitering",
-]
+const SONIOX_WS_URL = "wss://api.soniox.com/transcribe-websocket"
 
 export type TranskriberingsStatus =
   | "klar"
@@ -23,6 +12,30 @@ export type TranskriberingsStatus =
   | "opptar"
   | "pause"
   | "feil"
+
+// Soniox respons-token
+interface SonioxToken {
+  text: string
+  start_ms: number
+  end_ms: number
+  is_final?: boolean
+  speaker?: number
+}
+
+// Soniox meldings-format:
+// fw  = final words    (ferdig transkribert)
+// nfw = non-final words (foreløpig, kan endre seg)
+interface SonioxMelding {
+  fw?: SonioxToken[]
+  nfw?: SonioxToken[]
+}
+
+function tokensTilTekst(tokens: SonioxToken[]): string {
+  return tokens
+    .map((t) => t.text)
+    .join("")
+    .trim()
+}
 
 export function useTranskribering(
   type: KonsultasjonsType,
@@ -37,7 +50,6 @@ export function useTranskribering(
   const audioCtxRef = useRef<AudioContext | null>(null)
   const processorRef = useRef<ScriptProcessorNode | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
-  // Ref unngår stale closure i onaudioprocess
   const transkriptRef = useRef("")
 
   const ryddOpp = useCallback(() => {
@@ -54,9 +66,10 @@ export function useTranskribering(
 
     if (wsRef.current) {
       if (wsRef.current.readyState === WebSocket.OPEN) {
-        wsRef.current.send(JSON.stringify({ type: "Terminate" })) // v3 format
+        // Soniox: send tom melding for å signalisere slutt på lyd
+        wsRef.current.send(new ArrayBuffer(0))
+        wsRef.current.close()
       }
-      wsRef.current.close()
       wsRef.current = null
     }
   }, [])
@@ -88,8 +101,8 @@ export function useTranskribering(
     transkriptRef.current = ""
 
     try {
-      // 1. Hent kortlivet token fra vår server (API-nøkkel forlater aldri serveren)
-      const tokenRes = await fetch("/api/assemblyai-token")
+      // 1. Hent kortlivet Soniox-token fra serveren
+      const tokenRes = await fetch("/api/soniox-token")
       if (!tokenRes.ok) {
         let feilmelding = `Serverfeil ${tokenRes.status}`
         try {
@@ -108,29 +121,23 @@ export function useTranskribering(
       let stream: MediaStream
 
       if (type === "DIALOGMOTE_NAV") {
-        // Fang nettleserfane-lyd (inkl. motpartens stemme i videomøtet)
         const displayStream = await navigator.mediaDevices.getDisplayMedia({
-          video: true, // Nettlesere krever video, vi stopper det umiddelbart
+          video: true,
           audio: {
             echoCancellation: false,
             noiseSuppression: false,
             autoGainControl: false,
           } as MediaTrackConstraints,
         })
-
-        // Stopp videostrøm — vi trenger bare lyd
         displayStream.getVideoTracks().forEach((t) => t.stop())
-
         const audioSpor = displayStream.getAudioTracks()
         if (audioSpor.length === 0) {
           throw new Error(
-            'Ingen lyd deles. Velg «Del lyd fra fane» i skjermdelingsdialogen, ' +
-              'og del fanen der NAV-videomøtet kjører.'
+            "Ingen lyd deles. Velg «Del lyd fra fane» i skjermdelingsdialogen."
           )
         }
         stream = new MediaStream(audioSpor)
       } else {
-        // Vanlig mikrofonfangst
         stream = await navigator.mediaDevices.getUserMedia({
           audio: mikofonId
             ? {
@@ -149,51 +156,59 @@ export function useTranskribering(
 
       streamRef.current = stream
 
-      // 3. Åpne WebSocket mot AssemblyAI v3 Streaming API
-      const wsParams = new URLSearchParams({
-        token,
-        sample_rate: String(SAMPLE_RATE),
-        encoding: "pcm_s16le",
-      })
-      // Boost norske medisinske termer
-      wsParams.set("word_boost", JSON.stringify(MEDISINSKE_TERMER))
-
-      const ws = new WebSocket(`${STREAMING_WS_URL}?${wsParams.toString()}`)
+      // 3. Koble til Soniox WebSocket
+      const ws = new WebSocket(SONIOX_WS_URL)
       wsRef.current = ws
 
       // Vent på åpen tilkobling (maks 10 sek)
       await new Promise<void>((resolve, reject) => {
         const tidBegrensning = setTimeout(
-          () => reject(new Error("Tidsavbrudd ved tilkobling til AssemblyAI")),
+          () => reject(new Error("Tidsavbrudd ved tilkobling til Soniox")),
           10_000
         )
         ws.onopen = () => {
           clearTimeout(tidBegrensning)
+          // Send Soniox-konfigurasjon som første melding
+          ws.send(
+            JSON.stringify({
+              token,
+              model: "soniox_speech:en-norsk",  // Norsk modell
+              language_hints: ["no", "nb"],
+              sample_rate: SAMPLE_RATE,
+              include_nonfinal: true,
+              enable_endpoint_detection: true,
+            })
+          )
           setStatus("opptar")
           resolve()
         }
         ws.onerror = () => {
           clearTimeout(tidBegrensning)
-          reject(new Error("WebSocket-tilkobling til AssemblyAI feilet"))
+          reject(new Error("WebSocket-tilkobling til Soniox feilet"))
         }
       })
 
       ws.onmessage = (e) => {
         try {
-          const msg = JSON.parse(e.data as string)
-          // v3 bruker type:"Turn" med end_of_turn-flagg
-          // end_of_turn: false → delvis setning (vis live)
-          // end_of_turn: true  → ferdig setning (legg til i transkript)
-          if (msg.type === "Turn" && msg.transcript) {
-            if (msg.end_of_turn) {
+          const msg = JSON.parse(e.data as string) as SonioxMelding
+
+          // Legg til ferdig-transkribert tekst (fw = final words)
+          if (msg.fw && msg.fw.length > 0) {
+            const nyTekst = tokensTilTekst(msg.fw)
+            if (nyTekst) {
               transkriptRef.current = transkriptRef.current
-                ? `${transkriptRef.current} ${msg.transcript}`
-                : msg.transcript
+                ? `${transkriptRef.current} ${nyTekst}`
+                : nyTekst
               setTranskript(transkriptRef.current)
-              setPartial("")
-            } else {
-              setPartial(msg.transcript)
             }
+          }
+
+          // Vis foreløpig tekst live (nfw = non-final words)
+          if (msg.nfw && msg.nfw.length > 0) {
+            setPartial(tokensTilTekst(msg.nfw))
+          } else if (msg.fw && msg.fw.length > 0) {
+            // Ferdig segment — tøm partial
+            setPartial("")
           }
         } catch {
           // Ignorer meldinger som ikke er gyldig JSON
@@ -201,9 +216,16 @@ export function useTranskribering(
       }
 
       ws.onerror = () => {
-        setFeil("Tilkoblingsfeil mot AssemblyAI — prøv å starte på nytt")
+        setFeil("Tilkoblingsfeil mot Soniox — prøv å starte på nytt")
         setStatus("feil")
         ryddOpp()
+      }
+
+      ws.onclose = (e) => {
+        if (e.code !== 1000 && status === "opptar") {
+          setFeil(`Soniox koblet fra (${e.code})`)
+          setStatus("feil")
+        }
       }
 
       // 4. Lyd-prosessering: MediaStream → Float32 → Int16 PCM → WebSocket
@@ -211,7 +233,6 @@ export function useTranskribering(
       audioCtxRef.current = audioCtx
 
       const kilde = audioCtx.createMediaStreamSource(stream)
-      // ScriptProcessor er deprecated men støttet overalt; AudioWorklet er fremtiden
       const prosessor = audioCtx.createScriptProcessor(4096, 1, 1)
       processorRef.current = prosessor
 
@@ -227,14 +248,14 @@ export function useTranskribering(
       }
 
       kilde.connect(prosessor)
-      prosessor.connect(audioCtx.destination) // Nødvendig for at prosessoren skal kjøre
+      prosessor.connect(audioCtx.destination)
     } catch (e) {
       const melding = e instanceof Error ? e.message : "Ukjent feil"
       setFeil(melding)
       setStatus("feil")
       ryddOpp()
     }
-  }, [type, mikofonId, ryddOpp])
+  }, [type, mikofonId, ryddOpp, status])
 
   const nullstill = useCallback(() => {
     setTranskript("")
@@ -248,7 +269,6 @@ export function useTranskribering(
     status,
     transkript,
     partial,
-    // Kombinert visning: ferdige setninger + gjeldende delsetning
     visTekst:
       transkript + (partial ? (transkript ? ` ${partial}` : partial) : ""),
     feil,
