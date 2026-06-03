@@ -1,8 +1,13 @@
 "use client"
 
 import { useState, useRef, useCallback } from "react"
-import { SonioxClient } from "@soniox/speech-to-text-web"
 import type { KonsultasjonsType } from "@/types/konsultasjon"
+
+// Dynamisk import — unngår "window is not defined" ved server-side rendering
+async function lastSonioxClient() {
+  const { SonioxClient } = await import("@soniox/speech-to-text-web")
+  return SonioxClient
+}
 
 export type TranskriberingsStatus =
   | "klar"
@@ -20,7 +25,8 @@ export function useTranskribering(
   const [partial, setPartial] = useState("")
   const [feil, setFeil] = useState<string | null>(null)
 
-  const klientRef = useRef<SonioxClient | null>(null)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const klientRef = useRef<any>(null)
   const transkriptRef = useRef("")
   const wsUrlRef = useRef<string | undefined>(undefined)
 
@@ -103,6 +109,9 @@ export function useTranskribering(
         }
         stream = new MediaStream(audioSpor)
       }
+
+      // Last SDK dynamisk (unngår window is not defined på server)
+      const SonioxClient = await lastSonioxClient()
 
       // Opprett Soniox SDK-klient med temp-token-funksjon og EU-WebSocket-URL
       const klient = new SonioxClient({
