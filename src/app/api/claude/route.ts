@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth"
 import { NextResponse } from "next/server"
-import Anthropic from "@anthropic-ai/sdk"
+import { AnthropicBedrock } from "@anthropic-ai/bedrock-sdk"
 import { TYPE_STAGING, type KonsultasjonsType } from "@/types/konsultasjon"
 
 interface RequestBody {
@@ -11,51 +11,65 @@ interface RequestBody {
   malInnhold: string | null
 }
 
+function lagBedrockKlient() {
+  return new AnthropicBedrock({
+    // AWS Bedrock krever to nøkler:
+    // BEDROCK_API_KEY  = AWS Access Key ID (starter typisk med AKIA...)
+    // BEDROCK_SECRET_KEY = AWS Secret Access Key
+    awsAccessKey: process.env.BEDROCK_API_KEY ?? "",
+    awsSecretKey: process.env.BEDROCK_SECRET_KEY ?? "",
+    // EU North 1 (Stockholm) for GDPR/personvern
+    awsRegion: "eu-north-1",
+  })
+}
+
 export async function POST(req: Request) {
   const session = await auth()
   if (!session) {
     return NextResponse.json({ feil: "Uautorisert" }, { status: 401 })
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY
-  if (!apiKey) {
+  if (!process.env.BEDROCK_API_KEY || !process.env.BEDROCK_SECRET_KEY) {
     return NextResponse.json(
-      { feil: "Claude API-nøkkel mangler på server (ANTHROPIC_API_KEY)" },
+      {
+        feil:
+          "Bedrock-nøkler mangler. Sett BEDROCK_API_KEY (Access Key ID) og BEDROCK_SECRET_KEY i .env",
+      },
       { status: 500 }
     )
   }
 
   const body: RequestBody = await req.json()
 
-  // Bygg systemprompt fra staging-tekst + eventuell notatmal
+  // Bygg systemprompt: staging-tekst + eventuell notatmal
   const stagingTekst = TYPE_STAGING[body.type]
   const systemPrompt = body.malInnhold
     ? `${stagingTekst}\n\n${body.malInnhold}`
     : stagingTekst
 
-  // Bygg brukermelding fra kontekst, tilleggsinfo og transkript
+  // Bygg brukermelding
   const deler: string[] = []
-  if (body.kontekst?.trim()) {
+  if (body.kontekst?.trim())
     deler.push(`**Kontekst (epikriser, tidligere notater):**\n${body.kontekst}`)
-  }
-  if (body.tilleggsinfo?.trim()) {
+  if (body.tilleggsinfo?.trim())
     deler.push(`**Tilleggsopplysninger:**\n${body.tilleggsinfo}`)
-  }
-  if (body.transkript?.trim()) {
+  if (body.transkript?.trim())
     deler.push(`**Transkript av konsultasjonen:**\n${body.transkript}`)
-  }
 
   if (deler.length === 0) {
     return NextResponse.json(
-      { feil: "Ingen data å generere notat fra — legg til transkript, kontekst eller tilleggsinfo" },
+      { feil: "Ingen data å generere notat fra" },
       { status: 400 }
     )
   }
 
   const brukerMelding = deler.join("\n\n---\n\n")
-  const model = process.env.ANTHROPIC_MODEL ?? "claude-opus-4-8"
 
-  const client = new Anthropic({ apiKey })
+  // Bedrock-modell: krever "anthropic."-prefiks
+  const model =
+    process.env.ANTHROPIC_MODEL ?? "anthropic.claude-opus-4-8"
+
+  const client = lagBedrockKlient()
   const encoder = new TextEncoder()
 
   const stream = new ReadableStream({
@@ -86,7 +100,7 @@ export async function POST(req: Request) {
         controller.enqueue(encoder.encode("data: [DONE]\n\n"))
         controller.close()
       } catch (e) {
-        const melding = e instanceof Error ? e.message : "Ukjent Claude-feil"
+        const melding = e instanceof Error ? e.message : "Ukjent Bedrock-feil"
         controller.enqueue(
           encoder.encode(`data: ${JSON.stringify({ feil: melding })}\n\n`)
         )

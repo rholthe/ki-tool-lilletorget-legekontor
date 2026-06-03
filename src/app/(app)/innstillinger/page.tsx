@@ -100,26 +100,35 @@ export default async function InnstillingerSide() {
           <div className="space-y-1">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium text-slate-700">
-                Claude (Anthropic)
+                Claude via AWS Bedrock
               </p>
-              {process.env.ANTHROPIC_API_KEY ? (
+              {process.env.BEDROCK_API_KEY && process.env.BEDROCK_SECRET_KEY ? (
                 <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
-                  Konfigurert på server
+                  Konfigurert
                 </span>
               ) : (
                 <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-medium">
-                  Mangler ANTHROPIC_API_KEY
+                  Mangler nøkler
                 </span>
               )}
             </div>
-            <p className="text-xs text-slate-500">
-              Modell:{" "}
-              <code className="bg-slate-100 px-1 rounded text-xs">
-                {process.env.ANTHROPIC_MODEL ?? "claude-opus-4-8"}
-              </code>
-              . Transkript og kontekst sendes til Claude via vår server for
-              notatgenerering. Data lagres ikke — serveren er en stateless proxy.
-            </p>
+            <div className="text-xs text-slate-500 space-y-0.5">
+              <p>
+                Modell:{" "}
+                <code className="bg-slate-100 px-1 rounded">
+                  {process.env.ANTHROPIC_MODEL ?? "anthropic.claude-opus-4-8"}
+                </code>
+              </p>
+              <p>
+                Region:{" "}
+                <code className="bg-slate-100 px-1 rounded">eu-north-1</code>
+                {" "}(Stockholm) — data forlater ikke EU.
+              </p>
+              <p>
+                AWS Bedrock bruker ikke kundedata til modelltrening. Data lagres
+                ikke på vår server — den er en stateless proxy til Bedrock.
+              </p>
+            </div>
           </div>
         </div>
       </section>
