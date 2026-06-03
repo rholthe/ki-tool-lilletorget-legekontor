@@ -1,10 +1,10 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
+  url      = env("DATABASE_URL")
 }
 
 // ─── NextAuth v5 required tables ─────────────────────────────────────────────
@@ -35,12 +35,12 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String?
-  access_token      String?
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String?
+  id_token          String? @db.Text
   session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -69,7 +69,7 @@ model Authenticator {
   credentialID         String  @unique
   userId               String
   providerAccountId    String
-  credentialPublicKey  String
+  credentialPublicKey  String  @db.Text
   counter              Int
   credentialDeviceType String
   credentialBackedUp   Boolean
@@ -92,11 +92,11 @@ model Mal {
   id          String      @id @default(cuid())
   tittel      String
   beskrivelse String?
-  innhold     String      // Selve systemprompt-innholdet
+  innhold     String      @db.Text
   kategori    MalKategori
 
-  erPrivat Boolean @default(true)  // true = kun eier ser den
-  erDelt   Boolean @default(false) // true = synlig for alle innloggede brukere
+  erPrivat Boolean @default(true)
+  erDelt   Boolean @default(false)
 
   eierBrukerId String
   eier         User   @relation(fields: [eierBrukerId], references: [id], onDelete: Cascade)
