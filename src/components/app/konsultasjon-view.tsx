@@ -37,6 +37,7 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
@@ -286,30 +287,32 @@ export function KonsultasjonView() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-64">
-                  <DropdownMenuLabel className="text-xs">
-                    Velg mikrofon
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {mikrofoner.length === 0 ? (
-                    <DropdownMenuItem onClick={beOmTillatelse}>
-                      <Mic className="w-4 h-4 mr-2 text-slate-400" />
-                      Gi tilgang til mikrofon
-                    </DropdownMenuItem>
-                  ) : (
-                    mikrofoner.map((m) => (
-                      <DropdownMenuItem
-                        key={m.deviceId}
-                        onClick={() => velgMikrofon(m.deviceId)}
-                      >
-                        {valgtId === m.deviceId ? (
-                          <Check className="w-3.5 h-3.5 mr-2 text-blue-600 shrink-0" />
-                        ) : (
-                          <span className="w-3.5 h-3.5 mr-2 shrink-0" />
-                        )}
-                        <span className="truncate text-xs">{m.label}</span>
+                  <DropdownMenuGroup>
+                    <DropdownMenuLabel className="text-xs">
+                      Velg mikrofon
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {mikrofoner.length === 0 ? (
+                      <DropdownMenuItem onClick={beOmTillatelse}>
+                        <Mic className="w-4 h-4 mr-2 text-slate-400" />
+                        Gi tilgang til mikrofon
                       </DropdownMenuItem>
-                    ))
-                  )}
+                    ) : (
+                      mikrofoner.map((m) => (
+                        <DropdownMenuItem
+                          key={m.deviceId}
+                          onClick={() => velgMikrofon(m.deviceId)}
+                        >
+                          {valgtId === m.deviceId ? (
+                            <Check className="w-3.5 h-3.5 mr-2 text-blue-600 shrink-0" />
+                          ) : (
+                            <span className="w-3.5 h-3.5 mr-2 shrink-0" />
+                          )}
+                          <span className="truncate text-xs">{m.label}</span>
+                        </DropdownMenuItem>
+                      ))
+                    )}
+                  </DropdownMenuGroup>
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
