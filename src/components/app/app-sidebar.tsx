@@ -26,6 +26,7 @@ import {
   hentAlleKonsultasjoner,
   nyKonsultasjon,
   lagreKonsultasjon,
+  slettKonsultasjon,
   slettAlleKonsultasjoner,
   slettUtlopteKonsultasjoner,
 } from "@/lib/idb"
@@ -132,6 +133,13 @@ export function AppSidebar({ brukerNavn, brukerEpost }: AppSidebarProps) {
     setAktiv(ny)
   }
 
+  async function slettEn(id: string, e: React.MouseEvent) {
+    e.stopPropagation()
+    await slettKonsultasjon(id)
+    if (aktiv?.id === id) setAktiv(null)
+    setKonsultasjoner(prev => prev.filter(k => k.id !== id))
+  }
+
   async function slettAlle() {
     if (!confirm("Slette alle konsultasjoner? Kan ikke angres.")) return
     await slettAlleKonsultasjoner()
@@ -187,24 +195,33 @@ export function AppSidebar({ brukerNavn, brukerEpost }: AppSidebarProps) {
         ) : (
           <div className="space-y-1 pb-2">
             {konsultasjoner.map((k) => (
-              <button
+              <div
                 key={k.id}
                 onClick={() => setAktiv(k)}
-                className={`w-full text-left px-3 py-2.5 rounded-lg transition-colors group ${
+                className={`w-full text-left px-3 py-2.5 rounded-lg transition-colors group cursor-pointer relative ${
                   aktiv?.id === k.id
                     ? "bg-blue-50 border border-blue-200"
-                    : "hover:bg-slate-50"
+                    : "hover:bg-slate-50 border border-transparent"
                 }`}
               >
                 <div className="flex items-start justify-between gap-1">
                   <span className="text-sm font-medium text-slate-700 truncate leading-tight">
                     {k.pasientId || "Uten ID"}
                   </span>
-                  <span
-                    className={`text-[10px] px-1.5 py-0.5 rounded-full shrink-0 font-medium ${statusFarger(k.status)}`}
-                  >
-                    {statusTekst(k.status)}
-                  </span>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <span
+                      className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${statusFarger(k.status)}`}
+                    >
+                      {statusTekst(k.status)}
+                    </span>
+                    <button
+                      onClick={(e) => slettEn(k.id, e)}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-red-100 text-slate-400 hover:text-red-500"
+                      title="Slett konsultasjon"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </div>
                 </div>
                 <p className="text-xs text-slate-400 mt-0.5">
                   {TYPE_LABELS[k.type]}
@@ -215,7 +232,7 @@ export function AppSidebar({ brukerNavn, brukerEpost }: AppSidebarProps) {
                     Slettes om {gjenvaerendeTimer(k.expiresAt)}
                   </span>
                 </div>
-              </button>
+              </div>
             ))}
           </div>
         )}
