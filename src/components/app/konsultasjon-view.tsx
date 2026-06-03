@@ -46,6 +46,7 @@ import {
 import { useKonsultasjon } from "@/hooks/use-konsultasjon"
 import { useMikrofon } from "@/hooks/use-mikrofon"
 import { useTranskribering } from "@/hooks/use-transkribering"
+import { useClaude } from "@/hooks/use-claude"
 import { TYPE_LABELS, TYPE_STAGING } from "@/types/konsultasjon"
 
 const TYPE_IKON = {
@@ -70,10 +71,13 @@ export function KonsultasjonView() {
     valgtId
   )
 
+  const { genererNotat, isGenerating, feil: claudeFeil, avbryt } = useClaude()
+
   const [visTranskript, setVisTranskript] = useState(false)
   const [kopiert, setKopiert] = useState(false)
-  // Sporer om vi legger til eksisterende transkript (fortsett opptak)
   const [appendModus, setAppendModus] = useState(false)
+  // Buffer for streaming-tekst (vises i notat-feltet mens Claude genererer)
+  const [streamingNotat, setStreamingNotat] = useState("")
 
   if (!aktiv) {
     return (
@@ -98,7 +102,8 @@ export function KonsultasjonView() {
   const erAktiv = erOpptar || erPause
   const erKobler = transkribering.status === "kobler"
   const harTranskript = Boolean(aktiv.transkript)
-  const harNotat = Boolean(aktiv.notat)
+  const visNotat = isGenerating ? streamingNotat : aktiv.notat
+  const harNotat = Boolean(visNotat)
   const erNAV = aktiv.type === "DIALOGMOTE_NAV"
 
   async function handleStart() {
@@ -122,17 +127,45 @@ export function KonsultasjonView() {
   async function handleStopp() {
     const nyTranskript = await transkribering.stopp()
     if (!aktiv) return
-    // Append-modus: legg ny transkript til etter eksisterende
+
     const kombinert = appendModus && aktiv.transkript
       ? `${aktiv.transkript}\n\n${nyTranskript}`.trim()
       : nyTranskript
     setAppendModus(false)
+
+    // Lagre transkript
+    const oppdatert = { ...aktiv, transkript: kombinert, status: "ferdig" as const }
     await oppdater({ transkript: kombinert, status: "ferdig" })
+
+    // Auto-generer notat med Claude
+    setStreamingNotat("")
+    await genererNotat(
+      oppdatert,
+      (delta) => setStreamingNotat((prev) => prev + delta),
+      async (fullTekst) => {
+        setStreamingNotat("")
+        await oppdater({ notat: fullTekst })
+      }
+    )
+  }
+
+  async function handleRegenerer() {
+    if (!aktiv) return
+    setStreamingNotat("")
+    await genererNotat(
+      aktiv,
+      (delta) => setStreamingNotat((prev) => prev + delta),
+      async (fullTekst) => {
+        setStreamingNotat("")
+        await oppdater({ notat: fullTekst })
+      }
+    )
   }
 
   async function kopierNotat() {
-    if (!aktiv?.notat) return
-    await navigator.clipboard.writeText(aktiv.notat)
+    const tekst = aktiv?.notat
+    if (!tekst) return
+    await navigator.clipboard.writeText(tekst)
     setKopiert(true)
     setTimeout(() => setKopiert(false), 2000)
   }
@@ -417,13 +450,16 @@ export function KonsultasjonView() {
                 variant="outline"
                 size="sm"
                 className="gap-1.5 text-sm"
-                disabled={!harNotat}
+                disabled={!harTranskript || isGenerating}
+                onClick={handleRegenerer}
               >
-                <RefreshCw className="w-4 h-4" />
-                Regenerer
+                <RefreshCw className={`w-4 h-4 ${isGenerating ? "animate-spin" : ""}`} />
+                {isGenerating ? "Genererer…" : "Regenerer"}
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Regenerer notat (Claude-integrasjon kommer)</TooltipContent>
+            <TooltipContent>
+              {isGenerating ? "Klikk for å avbryte" : "Regenerer notat med Claude"}
+            </TooltipContent>
           </Tooltip>
 
           <Tooltip>
@@ -443,10 +479,21 @@ export function KonsultasjonView() {
 
           <div className="flex-1" />
 
+          {isGenerating && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1.5 text-sm border-red-200 text-red-600 hover:bg-red-50"
+              onClick={avbryt}
+            >
+              Avbryt
+            </Button>
+          )}
+
           <Button
             size="sm"
             className="gap-1.5 text-sm bg-slate-800 hover:bg-slate-900"
-            disabled={!harNotat}
+            disabled={!harNotat || isGenerating}
             onClick={kopierNotat}
           >
             <Copy className="w-4 h-4" />
@@ -454,16 +501,33 @@ export function KonsultasjonView() {
           </Button>
         </div>
 
+        {/* Claude-feilmelding */}
+        {claudeFeil && (
+          <div className="flex items-start gap-2 text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+            <span>Claude: {claudeFeil}</span>
+          </div>
+        )}
+
         {/* Notatfelt */}
         <div className="space-y-1.5">
-          <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
-            Generert notat
-          </label>
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+              Generert notat
+            </label>
+            {isGenerating && (
+              <span className="flex items-center gap-1.5 text-xs text-blue-600">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                Claude skriver…
+              </span>
+            )}
+          </div>
           <Textarea
-            placeholder="Notat genereres her etter at konsultasjonen er sendt til Claude…"
-            value={aktiv.notat}
-            onChange={(e) => oppdater({ notat: e.target.value })}
-            className="min-h-48 text-sm border-slate-200 font-mono"
+            placeholder="Notat genereres automatisk etter «Stopp & Send», eller klikk «Regenerer»…"
+            value={visNotat}
+            onChange={(e) => !isGenerating && oppdater({ notat: e.target.value })}
+            readOnly={isGenerating}
+            className={`min-h-48 text-sm border-slate-200 font-mono ${isGenerating ? "bg-slate-50 text-slate-600" : ""}`}
           />
         </div>
       </div>

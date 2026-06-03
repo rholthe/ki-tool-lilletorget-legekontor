@@ -100,16 +100,25 @@ export default async function InnstillingerSide() {
           <div className="space-y-1">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium text-slate-700">
-                Claude API (Anthropic)
+                Claude (Anthropic)
               </p>
-              <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">
-                Kommer snart
-              </span>
+              {process.env.ANTHROPIC_API_KEY ? (
+                <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
+                  Konfigurert på server
+                </span>
+              ) : (
+                <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-medium">
+                  Mangler ANTHROPIC_API_KEY
+                </span>
+              )}
             </div>
             <p className="text-xs text-slate-500">
-              Brukerspesifikk Claude-nøkkel — kryptert i kontoen din, kun
-              dekryptert i nettleseren. Notatgenerering skjer direkte mellom
-              nettleseren og Claude. Ingen pasientdata lagres på serveren.
+              Modell:{" "}
+              <code className="bg-slate-100 px-1 rounded text-xs">
+                {process.env.ANTHROPIC_MODEL ?? "claude-opus-4-8"}
+              </code>
+              . Transkript og kontekst sendes til Claude via vår server for
+              notatgenerering. Data lagres ikke — serveren er en stateless proxy.
             </p>
           </div>
         </div>
