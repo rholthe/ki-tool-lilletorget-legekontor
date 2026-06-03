@@ -118,7 +118,7 @@ export function KonsultasjonView() {
         {/* Vedlegg + Mal-velger */}
         <div className="flex items-center gap-3">
           <Tooltip>
-            <TooltipTrigger>
+            <TooltipTrigger render={<span />}>
               <Button variant="outline" size="sm" className="gap-2 text-sm">
                 <Paperclip className="w-4 h-4" />
                 Bilder / PDF
@@ -130,7 +130,7 @@ export function KonsultasjonView() {
           </Tooltip>
 
           <Tooltip>
-            <TooltipTrigger>
+            <TooltipTrigger render={<span />}>
               <Button variant="outline" size="sm" className="gap-2 text-sm">
                 <FileText className="w-4 h-4" />
                 {aktiv.malId ? "Bytt mal" : "Velg notatmal"}
@@ -188,7 +188,7 @@ export function KonsultasjonView() {
         {/* Handlingsknapper */}
         <div className="flex items-center gap-2 flex-wrap">
           <Tooltip>
-            <TooltipTrigger>
+            <TooltipTrigger render={<span />}>
               <Button
                 variant="outline"
                 size="sm"
@@ -203,7 +203,7 @@ export function KonsultasjonView() {
           </Tooltip>
 
           <Tooltip>
-            <TooltipTrigger>
+            <TooltipTrigger render={<span />}>
               <Button
                 variant="outline"
                 size="sm"
@@ -218,7 +218,7 @@ export function KonsultasjonView() {
           </Tooltip>
 
           <Tooltip>
-            <TooltipTrigger>
+            <TooltipTrigger render={<span />}>
               <Button
                 variant="outline"
                 size="sm"
@@ -237,7 +237,7 @@ export function KonsultasjonView() {
           <div className="flex-1" />
 
           <Tooltip>
-            <TooltipTrigger>
+            <TooltipTrigger render={<span />}>
               <Button
                 size="sm"
                 className="gap-1.5 text-sm bg-slate-800 hover:bg-slate-900"

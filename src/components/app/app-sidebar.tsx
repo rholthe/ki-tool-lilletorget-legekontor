@@ -229,7 +229,7 @@ export function AppSidebar({ brukerNavn, brukerEpost }: AppSidebarProps) {
 
         {konsultasjoner.length > 0 && (
           <Tooltip>
-            <TooltipTrigger>
+            <TooltipTrigger render={<span />}>
               <button
                 onClick={slettAlle}
                 className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-red-500 hover:bg-red-50 transition-colors"
