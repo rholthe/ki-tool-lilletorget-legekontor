@@ -28,25 +28,6 @@ export function useTranskribering(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const klientRef = useRef<any>(null)
   const transkriptRef = useRef("")
-  const wsUrlRef = useRef<string | undefined>(undefined)
-
-  // Asynkron token-henting — kalles av SDK når WebSocket åpnes
-  const hentToken = useCallback(async (): Promise<string> => {
-    const res = await fetch("/api/soniox-token")
-    if (!res.ok) {
-      let feilmelding = `Serverfeil ${res.status}`
-      try {
-        const data = await res.json()
-        if (data.feil) feilmelding = data.feil
-      } catch { /* tom respons */ }
-      throw new Error(feilmelding)
-    }
-    const data = await res.json()
-    if (!data.token) throw new Error(data.feil ?? "Mangler token")
-    // Lagre wsUrl fra serveren (styrer EU-endepunkt)
-    wsUrlRef.current = data.wsUrl
-    return data.token
-  }, [])
 
   const ryddOpp = useCallback(() => {
     klientRef.current?.cancel()
@@ -62,7 +43,6 @@ export function useTranskribering(
   }, [])
 
   const pause = useCallback(() => {
-    // Soniox SDK støtter ikke native pause — stopper og markerer som pauset
     setStatus("pause")
   }, [])
 
@@ -78,17 +58,16 @@ export function useTranskribering(
     transkriptRef.current = ""
 
     try {
-      // Hent wsUrl fra serveren (sikrer at EU-endepunkt styres server-side)
-      // Vi henter token én gang for å få wsUrl, SDK vil hente på nytt ved WebSocket-åpning
-      const preRes = await fetch("/api/soniox-token")
-      if (!preRes.ok) {
-        const d = await preRes.json().catch(() => ({}))
-        throw new Error(d.feil ?? `Serverfeil ${preRes.status}`)
+      // 1. Hent token + wsUrl i ett kall — token sendes direkte til SDK (ingen dobbel-fetch)
+      const tokenRes = await fetch("/api/soniox-token")
+      if (!tokenRes.ok) {
+        const d = await tokenRes.json().catch(() => ({}))
+        throw new Error(d.feil ?? `Token-feil ${tokenRes.status}`)
       }
-      const { token: _firstToken, wsUrl } = await preRes.json()
-      wsUrlRef.current = wsUrl
+      const { token, wsUrl } = await tokenRes.json()
+      if (!token) throw new Error("Mangler token fra server")
 
-      // Hent mediestrøm for NAV-møter (displayMedia) eller mikrofon
+      // 2. Hent mediestrøm
       let stream: MediaStream | undefined = undefined
 
       if (type === "DIALOGMOTE_NAV") {
@@ -110,22 +89,20 @@ export function useTranskribering(
         stream = new MediaStream(audioSpor)
       }
 
-      // Last SDK dynamisk (unngår window is not defined på server)
+      // 3. Last SDK og start — token sendes som streng (ikke funksjon) for å unngå dobbel-fetch
       const SonioxClient = await lastSonioxClient()
 
-      // Opprett Soniox SDK-klient med temp-token-funksjon og EU-WebSocket-URL
       const klient = new SonioxClient({
-        apiKey: hentToken,           // SDK kaller denne når WebSocket åpnes
-        webSocketUri: wsUrl,         // EU-endepunkt styrt fra server
+        apiKey: token,      // Streng-token fra steg 1, unngår ekstra nettverkskall
+        webSocketUri: wsUrl,
       })
       klientRef.current = klient
 
-      await klient.start({
+      klient.start({
         model: "stt-rt-v4",
         languageHints: ["no"],
         enableEndpointDetection: true,
         enableSpeakerDiarization: false,
-        // Medisinsk kontekst for bedre norsk fagterminologi
         context: {
           general: [
             { key: "domain", value: "Healthcare" },
@@ -139,20 +116,21 @@ export function useTranskribering(
             "nav", "arbeidsevne", "uføretrygd", "rehabilitering",
           ],
         },
-        // Tilpass lydkilde
-        ...(stream ? { stream } : mikofonId
-          ? { audioConstraints: { deviceId: { exact: mikofonId } } }
-          : {}),
+        ...(stream
+          ? { stream }
+          : mikofonId
+            ? { audioConstraints: { deviceId: { exact: mikofonId } } }
+            : {}),
 
         onStarted: () => setStatus("opptar"),
 
-        onError: (_status, message) => {
-          setFeil(`Soniox-feil: ${message}`)
+        onError: (_errStatus, message) => {
+          setFeil(`Soniox: ${message}`)
           setStatus("feil")
           klientRef.current = null
         },
 
-        onStateChange: ({ newState }) => {
+        onStateChange: ({ newState }: { newState: string }) => {
           if (newState === "Finished") {
             setPartial("")
             setStatus("klar")
@@ -160,7 +138,7 @@ export function useTranskribering(
           }
         },
 
-        onPartialResult: (result) => {
+        onPartialResult: (result: { tokens: Array<{ text: string; is_final: boolean }> }) => {
           let harNyeFinal = false
           const nonFinalTekst: string[] = []
 
@@ -180,13 +158,21 @@ export function useTranskribering(
           setPartial(nonFinalTekst.join(""))
         },
       })
+
+      // Sett "opptar" som backup dersom onStarted ikke kalles innen 5 sek
+      setTimeout(() => {
+        if (klientRef.current && status === "kobler") {
+          setStatus("opptar")
+        }
+      }, 5000)
+
     } catch (e) {
       const melding = e instanceof Error ? e.message : "Ukjent feil"
       setFeil(melding)
       setStatus("feil")
       ryddOpp()
     }
-  }, [type, mikofonId, hentToken, ryddOpp])
+  }, [type, mikofonId, ryddOpp, status])
 
   const nullstill = useCallback(() => {
     setTranskript("")
