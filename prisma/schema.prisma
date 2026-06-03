@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -10,4 +5,106 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+// ─── NextAuth v5 required tables ─────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  passwordHash  String?
+
+  twoFactorEnabled Boolean @default(false)
+  twoFactorSecret  String? // AES-256-GCM kryptert TOTP-hemmelighet
+
+  accounts       Account[]
+  sessions       Session[]
+  authenticators Authenticator[]
+  maler          Mal[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// WebAuthn / YubiKey (FIDO2 passkeys)
+model Authenticator {
+  credentialID         String  @unique
+  userId               String
+  providerAccountId    String
+  credentialPublicKey  String
+  counter              Int
+  credentialDeviceType String
+  credentialBackedUp   Boolean
+  transports           String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, credentialID])
+}
+
+// ─── App-modeller ─────────────────────────────────────────────────────────────
+
+enum MalKategori {
+  KONSULTASJON
+  TELEFONKONSULTASJON
+  DIALOGMOTE_NAV
+}
+
+model Mal {
+  id          String      @id @default(cuid())
+  tittel      String
+  beskrivelse String?
+  innhold     String      // Selve systemprompt-innholdet
+  kategori    MalKategori
+
+  erPrivat Boolean @default(true)  // true = kun eier ser den
+  erDelt   Boolean @default(false) // true = synlig for alle innloggede brukere
+
+  eierBrukerId String
+  eier         User   @relation(fields: [eierBrukerId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([eierBrukerId])
+  @@index([kategori])
+  @@index([erDelt])
 }
