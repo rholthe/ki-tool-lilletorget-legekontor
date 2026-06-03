@@ -89,9 +89,17 @@ export function useTranskribering(
     try {
       // 1. Hent kortlivet token fra vår server (API-nøkkel forlater aldri serveren)
       const tokenRes = await fetch("/api/assemblyai-token")
+      if (!tokenRes.ok) {
+        let feilmelding = `Serverfeil ${tokenRes.status}`
+        try {
+          const data = await tokenRes.json()
+          if (data.feil) feilmelding = data.feil
+        } catch { /* tom respons */ }
+        throw new Error(feilmelding)
+      }
       const tokenData = await tokenRes.json()
-      if (!tokenRes.ok || tokenData.feil) {
-        throw new Error(tokenData.feil ?? "Kunne ikke hente opptak-token")
+      if (!tokenData.token) {
+        throw new Error(tokenData.feil ?? "Mangler token i serverrespons")
       }
       const { token } = tokenData
 
