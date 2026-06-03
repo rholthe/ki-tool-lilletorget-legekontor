@@ -15,6 +15,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { sjekkInnlogging } from "@/actions/auth"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -33,28 +34,46 @@ export default function LoginPage() {
     setFeil("")
 
     startTransition(async () => {
-      const result = await signIn("credentials", {
-        email,
-        password,
-        totp: step === "totp" ? totp : undefined,
-        redirect: false,
-      })
+      // Steg 1: Sjekk credentials og om 2FA trengs — uten å involvere NextAuth
+      if (step === "credentials") {
+        const sjekk = await sjekkInnlogging(email, password)
 
-      // NextAuth v5: custom CredentialsSignin-kode ligger i result.code,
-      // mens result.error alltid er den generiske "CredentialsSignin"
-      const feilKode = (result as any)?.code ?? result?.error
+        if (!sjekk.ok) {
+          setFeil(sjekk.feil ?? "Feil e-post eller passord.")
+          return
+        }
 
-      if (feilKode === "TwoFactorRequired") {
-        setStep("totp")
+        if (sjekk.trenger2FA) {
+          setStep("totp")
+          return
+        }
+
+        // Ingen 2FA — logg inn direkte
+        const result = await signIn("credentials", {
+          email,
+          password,
+          redirect: false,
+        })
+        if (result?.error) {
+          setFeil("Innlogging feilet. Prøv igjen.")
+          return
+        }
+        router.push(callbackUrl)
+        router.refresh()
         return
       }
 
+      // Steg 2: 2FA — send alle tre feltene til NextAuth
+      const result = await signIn("credentials", {
+        email,
+        password,
+        totp,
+        redirect: false,
+      })
+
       if (result?.error) {
-        setFeil(
-          step === "totp"
-            ? "Ugyldig engangskode. Prøv igjen."
-            : "Feil e-post eller passord."
-        )
+        setFeil("Ugyldig engangskode. Prøv igjen.")
+        setTotp("")
         return
       }
 
