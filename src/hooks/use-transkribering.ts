@@ -28,6 +28,8 @@ export function useTranskribering(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const klientRef = useRef<any>(null)
   const transkriptRef = useRef("")
+  // Lagrer config for gjenoppretting etter pause
+  const pauseConfigRef = useRef<{ type: KonsultasjonsType; mikofonId: string | null } | null>(null)
 
   const ryddOpp = useCallback(() => {
     klientRef.current?.cancel()
@@ -37,17 +39,93 @@ export function useTranskribering(
   const stopp = useCallback(async (): Promise<string> => {
     klientRef.current?.stop()
     klientRef.current = null
+    pauseConfigRef.current = null
     setPartial("")
     setStatus("klar")
     return transkriptRef.current
   }, [])
 
+  // Pause: lukker tilkoblingen men beholder transkriptet
   const pause = useCallback(() => {
+    klientRef.current?.cancel()
+    klientRef.current = null
+    setPartial("")
     setStatus("pause")
   }, [])
 
-  const fortsett = useCallback(() => {
-    setStatus("opptar")
+  // Fortsett: gjenoppretter tilkobling med nytt token, legger til eksisterende transkript
+  const fortsett = useCallback(async () => {
+    setStatus("kobler")
+    try {
+      const tokenRes = await fetch("/api/soniox-token")
+      if (!tokenRes.ok) throw new Error(`Token-feil ${tokenRes.status}`)
+      const { token, wsUrl } = await tokenRes.json()
+
+      const SonioxClient = await lastSonioxClient()
+      const klient = new SonioxClient({
+        apiKey: token,
+        webSocketUri: wsUrl,
+        keepAlive: true,
+        keepAliveInterval: 10_000,
+      })
+      klientRef.current = klient
+
+      klient.start({
+        model: "stt-rt-v4",
+        languageHints: ["no"],
+        enableEndpointDetection: true,
+        enableSpeakerDiarization: false,
+        context: {
+          general: [
+            { key: "domain", value: "Healthcare" },
+            { key: "topic", value: "Medical consultation in Norwegian" },
+          ],
+          terms: [
+            "diagnose", "symptom", "behandling", "blodtrykk", "blodprøve",
+            "resept", "sykmelding", "henvisning", "epikrise", "journal",
+            "fastlege", "spesialist", "røntgen", "ultralyd", "spirometri",
+            "hypertensjon", "kolesterol", "diabetes", "ekkokardiografi",
+            "nav", "arbeidsevne", "uføretrygd", "rehabilitering",
+          ],
+        },
+        ...(pauseConfigRef.current?.mikofonId
+          ? { audioConstraints: { deviceId: { exact: pauseConfigRef.current.mikofonId } } }
+          : {}),
+        onStarted: () => setStatus("opptar"),
+        onError: (_s: string, message: string) => {
+          setFeil(`Soniox: ${message}`)
+          setStatus("feil")
+          klientRef.current = null
+        },
+        onStateChange: ({ newState }: { newState: string }) => {
+          if (newState === "Finished") {
+            setPartial("")
+            setStatus("klar")
+            klientRef.current = null
+          }
+        },
+        onPartialResult: (result: { tokens: Array<{ text: string; is_final: boolean }> }) => {
+          let harNyeFinal = false
+          const nonFinalTekst: string[] = []
+          for (const tok of result.tokens) {
+            if (!tok.text) continue
+            if (tok.is_final) {
+              transkriptRef.current = transkriptRef.current
+                ? `${transkriptRef.current}${tok.text}`
+                : tok.text
+              harNyeFinal = true
+            } else {
+              nonFinalTekst.push(tok.text)
+            }
+          }
+          if (harNyeFinal) setTranskript(transkriptRef.current)
+          setPartial(nonFinalTekst.join(""))
+        },
+      })
+    } catch (e) {
+      setFeil(e instanceof Error ? e.message : "Gjenoppkobling feilet")
+      setStatus("feil")
+    }
   }, [])
 
   const start = useCallback(async () => {
@@ -92,9 +170,14 @@ export function useTranskribering(
       // 3. Last SDK og start — token sendes som streng (ikke funksjon) for å unngå dobbel-fetch
       const SonioxClient = await lastSonioxClient()
 
+      // Lagre config for bruk ved gjenoppkobling (Fortsett etter pause)
+      pauseConfigRef.current = { type, mikofonId }
+
       const klient = new SonioxClient({
-        apiKey: token,      // Streng-token fra steg 1, unngår ekstra nettverkskall
+        apiKey: token,
         webSocketUri: wsUrl,
+        keepAlive: true,          // Sender keepalive hvert 10. sekund — holder tilkoblingen
+        keepAliveInterval: 10_000, // ved kortere pauser (toalett, ta telefon etc.)
       })
       klientRef.current = klient
 

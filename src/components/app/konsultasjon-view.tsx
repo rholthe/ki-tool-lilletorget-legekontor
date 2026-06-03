@@ -252,7 +252,7 @@ export function KonsultasjonView() {
                 variant="outline"
                 size="sm"
                 className="gap-2 border-blue-300 text-blue-700 hover:bg-blue-50"
-                onClick={() => transkribering.fortsett()}
+                onClick={() => { transkribering.fortsett() }}
               >
                 <Mic className="w-4 h-4" />
                 Fortsett
