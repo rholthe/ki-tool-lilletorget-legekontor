@@ -4,7 +4,8 @@ import { useState, useRef, useCallback } from "react"
 import type { KonsultasjonsType } from "@/types/konsultasjon"
 
 const SAMPLE_RATE = 16000
-const SONIOX_WS_URL = "wss://api.soniox.com/transcribe-websocket"
+// Korrekt URL fra offisielle Soniox-eksempler
+const SONIOX_WS_URL = "wss://stt-rt.soniox.com/transcribe-websocket"
 
 export type TranskriberingsStatus =
   | "klar"
@@ -13,28 +14,20 @@ export type TranskriberingsStatus =
   | "pause"
   | "feil"
 
-// Soniox respons-token
 interface SonioxToken {
   text: string
   start_ms: number
   end_ms: number
-  is_final?: boolean
-  speaker?: number
+  is_final: boolean
+  speaker?: string
+  language?: string
 }
 
-// Soniox meldings-format:
-// fw  = final words    (ferdig transkribert)
-// nfw = non-final words (foreløpig, kan endre seg)
 interface SonioxMelding {
-  fw?: SonioxToken[]
-  nfw?: SonioxToken[]
-}
-
-function tokensTilTekst(tokens: SonioxToken[]): string {
-  return tokens
-    .map((t) => t.text)
-    .join("")
-    .trim()
+  tokens?: SonioxToken[]
+  finished?: boolean
+  error_code?: string
+  error_message?: string
 }
 
 export function useTranskribering(
@@ -66,8 +59,7 @@ export function useTranskribering(
 
     if (wsRef.current) {
       if (wsRef.current.readyState === WebSocket.OPEN) {
-        // Soniox: send tom melding for å signalisere slutt på lyd
-        wsRef.current.send(new ArrayBuffer(0))
+        wsRef.current.send("") // Tom streng = slutt på lyd (Soniox-konvensjon)
         wsRef.current.close()
       }
       wsRef.current = null
@@ -101,21 +93,18 @@ export function useTranskribering(
     transkriptRef.current = ""
 
     try {
-      // 1. Hent kortlivet Soniox-token fra serveren
-      const tokenRes = await fetch("/api/soniox-token")
-      if (!tokenRes.ok) {
-        let feilmelding = `Serverfeil ${tokenRes.status}`
+      // 1. Hent Soniox API-nøkkel fra serveren (kun for innloggede brukere)
+      const res = await fetch("/api/soniox-token")
+      if (!res.ok) {
+        let feilmelding = `Serverfeil ${res.status}`
         try {
-          const data = await tokenRes.json()
+          const data = await res.json()
           if (data.feil) feilmelding = data.feil
         } catch { /* tom respons */ }
         throw new Error(feilmelding)
       }
-      const tokenData = await tokenRes.json()
-      if (!tokenData.token) {
-        throw new Error(tokenData.feil ?? "Mangler token i serverrespons")
-      }
-      const { token } = tokenData
+      const { apiKey } = await res.json()
+      if (!apiKey) throw new Error("Mangler API-nøkkel i serverrespons")
 
       // 2. Hent mediestrøm
       let stream: MediaStream
@@ -160,28 +149,47 @@ export function useTranskribering(
       const ws = new WebSocket(SONIOX_WS_URL)
       wsRef.current = ws
 
-      // Vent på åpen tilkobling (maks 10 sek)
       await new Promise<void>((resolve, reject) => {
         const tidBegrensning = setTimeout(
           () => reject(new Error("Tidsavbrudd ved tilkobling til Soniox")),
           10_000
         )
+
         ws.onopen = () => {
           clearTimeout(tidBegrensning)
-          // Send Soniox-konfigurasjon som første melding
+
+          // Første melding: Soniox-konfigurasjon med API-nøkkel
           ws.send(
             JSON.stringify({
-              token,
-              model: "soniox_speech:en-norsk",  // Norsk modell
-              language_hints: ["no", "nb"],
+              api_key: apiKey,
+              model: "stt-rt-v4",
+              language_hints: ["nb", "no"],
+              audio_format: "pcm_s16le",
               sample_rate: SAMPLE_RATE,
-              include_nonfinal: true,
+              num_channels: 1,
               enable_endpoint_detection: true,
+              enable_speaker_diarization: false,
+              // Medisinsk kontekst for bedre gjenkjenning av fagtermer
+              context: {
+                general: [
+                  { key: "domain", value: "Healthcare" },
+                  { key: "topic", value: "Medical consultation in Norwegian" },
+                ],
+                terms: [
+                  "diagnose", "symptom", "behandling", "blodtrykk", "blodprøve",
+                  "resept", "sykmelding", "henvisning", "epikrise", "journal",
+                  "fastlege", "spesialist", "røntgen", "ultralyd", "spirometri",
+                  "hypertensjon", "kolesterol", "diabetes", "ekkokardiografi",
+                  "nav", "arbeidsevne", "uføretrygd", "rehabilitering",
+                ],
+              },
             })
           )
+
           setStatus("opptar")
           resolve()
         }
+
         ws.onerror = () => {
           clearTimeout(tidBegrensning)
           reject(new Error("WebSocket-tilkobling til Soniox feilet"))
@@ -192,22 +200,39 @@ export function useTranskribering(
         try {
           const msg = JSON.parse(e.data as string) as SonioxMelding
 
-          // Legg til ferdig-transkribert tekst (fw = final words)
-          if (msg.fw && msg.fw.length > 0) {
-            const nyTekst = tokensTilTekst(msg.fw)
-            if (nyTekst) {
-              transkriptRef.current = transkriptRef.current
-                ? `${transkriptRef.current} ${nyTekst}`
-                : nyTekst
-              setTranskript(transkriptRef.current)
-            }
+          if (msg.error_code) {
+            setFeil(`Soniox-feil: ${msg.error_message ?? msg.error_code}`)
+            setStatus("feil")
+            ryddOpp()
+            return
           }
 
-          // Vis foreløpig tekst live (nfw = non-final words)
-          if (msg.nfw && msg.nfw.length > 0) {
-            setPartial(tokensTilTekst(msg.nfw))
-          } else if (msg.fw && msg.fw.length > 0) {
-            // Ferdig segment — tøm partial
+          if (msg.tokens && msg.tokens.length > 0) {
+            let harNyeFinal = false
+            const nonFinal: SonioxToken[] = []
+
+            for (const token of msg.tokens) {
+              if (token.text) {
+                if (token.is_final) {
+                  transkriptRef.current = transkriptRef.current
+                    ? `${transkriptRef.current}${token.text}`
+                    : token.text
+                  harNyeFinal = true
+                } else {
+                  nonFinal.push(token)
+                }
+              }
+            }
+
+            if (harNyeFinal) {
+              setTranskript(transkriptRef.current)
+            }
+
+            // Vis foreløpige tokens som live-forhåndsvisning
+            setPartial(nonFinal.map((t) => t.text).join(""))
+          }
+
+          if (msg.finished) {
             setPartial("")
           }
         } catch {
@@ -222,13 +247,13 @@ export function useTranskribering(
       }
 
       ws.onclose = (e) => {
-        if (e.code !== 1000 && status === "opptar") {
-          setFeil(`Soniox koblet fra (${e.code})`)
+        if (e.code !== 1000 && e.code !== 1001) {
+          setFeil(`Soniox koblet fra uventet (kode ${e.code})`)
           setStatus("feil")
         }
       }
 
-      // 4. Lyd-prosessering: MediaStream → Float32 → Int16 PCM → WebSocket
+      // 4. Lyd-prosessering: Float32 → Int16 PCM → WebSocket
       const audioCtx = new AudioContext({ sampleRate: SAMPLE_RATE })
       audioCtxRef.current = audioCtx
 
@@ -255,7 +280,7 @@ export function useTranskribering(
       setStatus("feil")
       ryddOpp()
     }
-  }, [type, mikofonId, ryddOpp, status])
+  }, [type, mikofonId, ryddOpp])
 
   const nullstill = useCallback(() => {
     setTranskript("")
