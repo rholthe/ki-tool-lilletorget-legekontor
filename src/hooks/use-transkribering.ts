@@ -6,6 +6,16 @@ import type { KonsultasjonsType } from "@/types/konsultasjon"
 const SAMPLE_RATE = 16000
 const EU_WS_URL = "wss://eu.assemblyai.com/v2/realtime/ws"
 
+// Norske medisinske termer som boostes for bedre gjenkjenning
+const MEDISINSKE_TERMER = [
+  "diagnose", "symptom", "behandling", "blodtrykk", "blodprøve",
+  "resept", "sykmelding", "henvisning", "epikrise", "journal",
+  "pasient", "fastlege", "spesialist", "røntgen", "ultralyd",
+  "operasjon", "medisin", "bivirkninger", "allergi", "diabetes",
+  "hypertensjon", "kolesterol", "spirometri", "ekg", "ekkokardiografi",
+  "nav", "arbeidsevne", "trygd", "uføretrygd", "rehabilitering",
+]
+
 export type TranskriberingsStatus =
   | "klar"
   | "kobler"
@@ -130,10 +140,21 @@ export function useTranskribering(
 
       streamRef.current = stream
 
-      // 3. Åpne WebSocket mot AssemblyAI EU-endepunkt
-      const ws = new WebSocket(
-        `${EU_WS_URL}?sample_rate=${SAMPLE_RATE}&token=${token}`
-      )
+      // 3. Åpne WebSocket mot AssemblyAI EU-endepunkt med full konfigurasjon
+      const wsParams = new URLSearchParams({
+        sample_rate: String(SAMPLE_RATE),
+        token,
+        speech_model: "best",          // Universal-2 — mest nøyaktig
+        language_code: "no",           // Norsk bokmål
+        encoding: "pcm_s16le",         // 16-bit signed little-endian PCM
+        disfluencies: "true",          // Fjern "ehm", "øh", "liksom" fra transkript
+        disable_partial_transcripts: "false", // Vil ha live-visning
+      })
+      // Boost norske medisinske termer for bedre gjenkjenning
+      wsParams.set("word_boost", JSON.stringify(MEDISINSKE_TERMER))
+      wsParams.set("boost_param", "high")
+
+      const ws = new WebSocket(`${EU_WS_URL}?${wsParams.toString()}`)
       wsRef.current = ws
 
       // Vent på åpen tilkobling (maks 10 sek)
