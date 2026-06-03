@@ -4,9 +4,10 @@ import { useState, useRef, useCallback } from "react"
 import type { KonsultasjonsType } from "@/types/konsultasjon"
 
 const SAMPLE_RATE = 16000
-const EU_WS_URL = "wss://eu.assemblyai.com/v2/realtime/ws"
+// v3 Streaming API
+const STREAMING_WS_URL = "wss://streaming.assemblyai.com/v3/ws"
 
-// Norske medisinske termer som boostes for bedre gjenkjenning
+// Norske medisinske termer for word_boost
 const MEDISINSKE_TERMER = [
   "diagnose", "symptom", "behandling", "blodtrykk", "blodprøve",
   "resept", "sykmelding", "henvisning", "epikrise", "journal",
@@ -53,7 +54,7 @@ export function useTranskribering(
 
     if (wsRef.current) {
       if (wsRef.current.readyState === WebSocket.OPEN) {
-        wsRef.current.send(JSON.stringify({ terminate_session: true }))
+        wsRef.current.send(JSON.stringify({ type: "Terminate" })) // v3 format
       }
       wsRef.current.close()
       wsRef.current = null
@@ -148,21 +149,16 @@ export function useTranskribering(
 
       streamRef.current = stream
 
-      // 3. Åpne WebSocket mot AssemblyAI EU-endepunkt med full konfigurasjon
+      // 3. Åpne WebSocket mot AssemblyAI v3 Streaming API
       const wsParams = new URLSearchParams({
-        sample_rate: String(SAMPLE_RATE),
         token,
-        speech_model: "best",          // Universal-2 — mest nøyaktig
-        language_code: "no",           // Norsk bokmål
-        encoding: "pcm_s16le",         // 16-bit signed little-endian PCM
-        disfluencies: "true",          // Fjern "ehm", "øh", "liksom" fra transkript
-        disable_partial_transcripts: "false", // Vil ha live-visning
+        sample_rate: String(SAMPLE_RATE),
+        encoding: "pcm_s16le",
       })
-      // Boost norske medisinske termer for bedre gjenkjenning
+      // Boost norske medisinske termer
       wsParams.set("word_boost", JSON.stringify(MEDISINSKE_TERMER))
-      wsParams.set("boost_param", "high")
 
-      const ws = new WebSocket(`${EU_WS_URL}?${wsParams.toString()}`)
+      const ws = new WebSocket(`${STREAMING_WS_URL}?${wsParams.toString()}`)
       wsRef.current = ws
 
       // Vent på åpen tilkobling (maks 10 sek)
@@ -185,14 +181,19 @@ export function useTranskribering(
       ws.onmessage = (e) => {
         try {
           const msg = JSON.parse(e.data as string)
-          if (msg.message_type === "PartialTranscript") {
-            setPartial(msg.text || "")
-          } else if (msg.message_type === "FinalTranscript" && msg.text) {
-            transkriptRef.current = transkriptRef.current
-              ? `${transkriptRef.current} ${msg.text}`
-              : msg.text
-            setTranskript(transkriptRef.current)
-            setPartial("")
+          // v3 bruker type:"Turn" med end_of_turn-flagg
+          // end_of_turn: false → delvis setning (vis live)
+          // end_of_turn: true  → ferdig setning (legg til i transkript)
+          if (msg.type === "Turn" && msg.transcript) {
+            if (msg.end_of_turn) {
+              transkriptRef.current = transkriptRef.current
+                ? `${transkriptRef.current} ${msg.transcript}`
+                : msg.transcript
+              setTranskript(transkriptRef.current)
+              setPartial("")
+            } else {
+              setPartial(msg.transcript)
+            }
           }
         } catch {
           // Ignorer meldinger som ikke er gyldig JSON

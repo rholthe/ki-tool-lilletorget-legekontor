@@ -1,9 +1,8 @@
 import { auth } from "@/lib/auth"
 import { NextResponse } from "next/server"
 
-// Token genereres alltid fra api.assemblyai.com (ikke EU-spesifikt endepunkt).
-// EU-dataprosessering skjer i WebSocket-tilkoblingen (eu.assemblyai.com/v2/realtime/ws).
-const TOKEN_URL = "https://api.assemblyai.com/v2/realtime/token"
+// v3 Streaming API — token genereres fra streaming.assemblyai.com
+const TOKEN_URL = "https://streaming.assemblyai.com/v3/token"
 
 export async function GET() {
   const session = await auth()
@@ -21,13 +20,11 @@ export async function GET() {
 
   let res: Response
   try {
-    res = await fetch(TOKEN_URL, {
-      method: "POST",
+    res = await fetch(`${TOKEN_URL}?expires_in=60`, {
+      method: "GET",
       headers: {
-        authorization: apiKey,
-        "content-type": "application/json",
+        Authorization: apiKey,
       },
-      body: JSON.stringify({ expires_in: 60 }),
     })
   } catch (e) {
     console.error("Nettverksfeil mot AssemblyAI:", e)
@@ -42,13 +39,14 @@ export async function GET() {
   if (!res.ok) {
     console.error(`AssemblyAI token-feil (${res.status}):`, tekst)
     return NextResponse.json(
-      { feil: `AssemblyAI svarte med ${res.status}: ${tekst.substring(0, 100)}` },
+      { feil: `AssemblyAI svarte med ${res.status}: ${tekst.substring(0, 120)}` },
       { status: 502 }
     )
   }
 
   try {
-    const { token } = JSON.parse(tekst)
+    const data = JSON.parse(tekst)
+    const token = data.token ?? data.id
     if (!token) throw new Error("Token mangler i svar")
     return NextResponse.json({ token })
   } catch {
