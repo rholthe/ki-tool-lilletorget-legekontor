@@ -122,7 +122,7 @@ export function useTranskribering(
 
       await klient.start({
         model: "stt-rt-v4",
-        languageHints: ["nb", "no"],
+        languageHints: ["no"],
         enableEndpointDetection: true,
         enableSpeakerDiarization: false,
         // Medisinsk kontekst for bedre norsk fagterminologi
