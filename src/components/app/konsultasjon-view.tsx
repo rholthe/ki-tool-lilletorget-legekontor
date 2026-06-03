@@ -274,17 +274,13 @@ export function KonsultasjonView() {
             {/* Mikrofon-velger for vanlige konsultasjoner */}
             {!erNAV && (
               <DropdownMenu>
-                <DropdownMenuTrigger>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="gap-1.5 text-xs text-slate-500 ml-auto"
-                    disabled={erAktiv}
-                  >
-                    <Mic className="w-3.5 h-3.5" />
-                    <span className="max-w-[130px] truncate">{valgtEtikett}</span>
-                    <ChevronDown className="w-3 h-3" />
-                  </Button>
+                <DropdownMenuTrigger
+                  disabled={erAktiv}
+                  className="ml-auto inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-slate-500 hover:bg-slate-100 disabled:opacity-50 disabled:pointer-events-none transition-colors"
+                >
+                  <Mic className="w-3.5 h-3.5" />
+                  <span className="max-w-[130px] truncate">{valgtEtikett}</span>
+                  <ChevronDown className="w-3 h-3" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-64">
                   <DropdownMenuGroup>
