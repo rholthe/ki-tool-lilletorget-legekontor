@@ -40,7 +40,11 @@ export default function LoginPage() {
         redirect: false,
       })
 
-      if (result?.error === "TwoFactorRequired") {
+      // NextAuth v5: custom CredentialsSignin-kode ligger i result.code,
+      // mens result.error alltid er den generiske "CredentialsSignin"
+      const feilKode = (result as any)?.code ?? result?.error
+
+      if (feilKode === "TwoFactorRequired") {
         setStep("totp")
         return
       }
