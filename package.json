@@ -13,6 +13,7 @@
     "@auth/prisma-adapter": "^2.11.2",
     "@base-ui/react": "^1.5.0",
     "@prisma/client": "^5.22.0",
+    "@soniox/speech-to-text-web": "^1.4.0",
     "assemblyai": "^4.33.3",
     "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",

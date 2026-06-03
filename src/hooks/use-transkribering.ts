@@ -1,11 +1,8 @@
 "use client"
 
 import { useState, useRef, useCallback } from "react"
+import { SonioxClient } from "@soniox/speech-to-text-web"
 import type { KonsultasjonsType } from "@/types/konsultasjon"
-
-const SAMPLE_RATE = 16000
-// Korrekt URL fra offisielle Soniox-eksempler
-const SONIOX_WS_URL = "wss://stt-rt.soniox.com/transcribe-websocket"
 
 export type TranskriberingsStatus =
   | "klar"
@@ -13,22 +10,6 @@ export type TranskriberingsStatus =
   | "opptar"
   | "pause"
   | "feil"
-
-interface SonioxToken {
-  text: string
-  start_ms: number
-  end_ms: number
-  is_final: boolean
-  speaker?: string
-  language?: string
-}
-
-interface SonioxMelding {
-  tokens?: SonioxToken[]
-  finished?: boolean
-  error_code?: string
-  error_message?: string
-}
 
 export function useTranskribering(
   type: KonsultasjonsType,
@@ -39,49 +20,47 @@ export function useTranskribering(
   const [partial, setPartial] = useState("")
   const [feil, setFeil] = useState<string | null>(null)
 
-  const wsRef = useRef<WebSocket | null>(null)
-  const audioCtxRef = useRef<AudioContext | null>(null)
-  const processorRef = useRef<ScriptProcessorNode | null>(null)
-  const streamRef = useRef<MediaStream | null>(null)
+  const klientRef = useRef<SonioxClient | null>(null)
   const transkriptRef = useRef("")
+  const wsUrlRef = useRef<string | undefined>(undefined)
+
+  // Asynkron token-henting — kalles av SDK når WebSocket åpnes
+  const hentToken = useCallback(async (): Promise<string> => {
+    const res = await fetch("/api/soniox-token")
+    if (!res.ok) {
+      let feilmelding = `Serverfeil ${res.status}`
+      try {
+        const data = await res.json()
+        if (data.feil) feilmelding = data.feil
+      } catch { /* tom respons */ }
+      throw new Error(feilmelding)
+    }
+    const data = await res.json()
+    if (!data.token) throw new Error(data.feil ?? "Mangler token")
+    // Lagre wsUrl fra serveren (styrer EU-endepunkt)
+    wsUrlRef.current = data.wsUrl
+    return data.token
+  }, [])
 
   const ryddOpp = useCallback(() => {
-    processorRef.current?.disconnect()
-    processorRef.current = null
-
-    if (audioCtxRef.current && audioCtxRef.current.state !== "closed") {
-      audioCtxRef.current.close()
-    }
-    audioCtxRef.current = null
-
-    streamRef.current?.getTracks().forEach((t) => t.stop())
-    streamRef.current = null
-
-    if (wsRef.current) {
-      if (wsRef.current.readyState === WebSocket.OPEN) {
-        wsRef.current.send("") // Tom streng = slutt på lyd (Soniox-konvensjon)
-        wsRef.current.close()
-      }
-      wsRef.current = null
-    }
+    klientRef.current?.cancel()
+    klientRef.current = null
   }, [])
 
   const stopp = useCallback(async (): Promise<string> => {
-    ryddOpp()
+    klientRef.current?.stop()
+    klientRef.current = null
     setPartial("")
     setStatus("klar")
     return transkriptRef.current
-  }, [ryddOpp])
+  }, [])
 
   const pause = useCallback(() => {
-    processorRef.current?.disconnect()
+    // Soniox SDK støtter ikke native pause — stopper og markerer som pauset
     setStatus("pause")
   }, [])
 
   const fortsett = useCallback(() => {
-    if (processorRef.current && audioCtxRef.current) {
-      processorRef.current.connect(audioCtxRef.current.destination)
-    }
     setStatus("opptar")
   }, [])
 
@@ -93,21 +72,18 @@ export function useTranskribering(
     transkriptRef.current = ""
 
     try {
-      // 1. Hent Soniox API-nøkkel fra serveren (kun for innloggede brukere)
-      const res = await fetch("/api/soniox-token")
-      if (!res.ok) {
-        let feilmelding = `Serverfeil ${res.status}`
-        try {
-          const data = await res.json()
-          if (data.feil) feilmelding = data.feil
-        } catch { /* tom respons */ }
-        throw new Error(feilmelding)
+      // Hent wsUrl fra serveren (sikrer at EU-endepunkt styres server-side)
+      // Vi henter token én gang for å få wsUrl, SDK vil hente på nytt ved WebSocket-åpning
+      const preRes = await fetch("/api/soniox-token")
+      if (!preRes.ok) {
+        const d = await preRes.json().catch(() => ({}))
+        throw new Error(d.feil ?? `Serverfeil ${preRes.status}`)
       }
-      const { apiKey } = await res.json()
-      if (!apiKey) throw new Error("Mangler API-nøkkel i serverrespons")
+      const { token: _firstToken, wsUrl } = await preRes.json()
+      wsUrlRef.current = wsUrl
 
-      // 2. Hent mediestrøm
-      let stream: MediaStream
+      // Hent mediestrøm for NAV-møter (displayMedia) eller mikrofon
+      let stream: MediaStream | undefined = undefined
 
       if (type === "DIALOGMOTE_NAV") {
         const displayStream = await navigator.mediaDevices.getDisplayMedia({
@@ -126,161 +102,82 @@ export function useTranskribering(
           )
         }
         stream = new MediaStream(audioSpor)
-      } else {
-        stream = await navigator.mediaDevices.getUserMedia({
-          audio: mikofonId
-            ? {
-                deviceId: { exact: mikofonId },
-                echoCancellation: true,
-                noiseSuppression: true,
-                autoGainControl: true,
-              }
-            : {
-                echoCancellation: true,
-                noiseSuppression: true,
-                autoGainControl: true,
-              },
-        })
       }
 
-      streamRef.current = stream
-
-      // 3. Koble til Soniox WebSocket
-      const ws = new WebSocket(SONIOX_WS_URL)
-      wsRef.current = ws
-
-      await new Promise<void>((resolve, reject) => {
-        const tidBegrensning = setTimeout(
-          () => reject(new Error("Tidsavbrudd ved tilkobling til Soniox")),
-          10_000
-        )
-
-        ws.onopen = () => {
-          clearTimeout(tidBegrensning)
-
-          // Første melding: Soniox-konfigurasjon med API-nøkkel
-          ws.send(
-            JSON.stringify({
-              api_key: apiKey,
-              model: "stt-rt-v4",
-              language_hints: ["nb", "no"],
-              audio_format: "pcm_s16le",
-              sample_rate: SAMPLE_RATE,
-              num_channels: 1,
-              enable_endpoint_detection: true,
-              enable_speaker_diarization: false,
-              // Medisinsk kontekst for bedre gjenkjenning av fagtermer
-              context: {
-                general: [
-                  { key: "domain", value: "Healthcare" },
-                  { key: "topic", value: "Medical consultation in Norwegian" },
-                ],
-                terms: [
-                  "diagnose", "symptom", "behandling", "blodtrykk", "blodprøve",
-                  "resept", "sykmelding", "henvisning", "epikrise", "journal",
-                  "fastlege", "spesialist", "røntgen", "ultralyd", "spirometri",
-                  "hypertensjon", "kolesterol", "diabetes", "ekkokardiografi",
-                  "nav", "arbeidsevne", "uføretrygd", "rehabilitering",
-                ],
-              },
-            })
-          )
-
-          setStatus("opptar")
-          resolve()
-        }
-
-        ws.onerror = () => {
-          clearTimeout(tidBegrensning)
-          reject(new Error("WebSocket-tilkobling til Soniox feilet"))
-        }
+      // Opprett Soniox SDK-klient med temp-token-funksjon og EU-WebSocket-URL
+      const klient = new SonioxClient({
+        apiKey: hentToken,           // SDK kaller denne når WebSocket åpnes
+        webSocketUri: wsUrl,         // EU-endepunkt styrt fra server
       })
+      klientRef.current = klient
 
-      ws.onmessage = (e) => {
-        try {
-          const msg = JSON.parse(e.data as string) as SonioxMelding
+      await klient.start({
+        model: "stt-rt-v4",
+        languageHints: ["nb", "no"],
+        enableEndpointDetection: true,
+        enableSpeakerDiarization: false,
+        // Medisinsk kontekst for bedre norsk fagterminologi
+        context: {
+          general: [
+            { key: "domain", value: "Healthcare" },
+            { key: "topic", value: "Medical consultation in Norwegian" },
+          ],
+          terms: [
+            "diagnose", "symptom", "behandling", "blodtrykk", "blodprøve",
+            "resept", "sykmelding", "henvisning", "epikrise", "journal",
+            "fastlege", "spesialist", "røntgen", "ultralyd", "spirometri",
+            "hypertensjon", "kolesterol", "diabetes", "ekkokardiografi",
+            "nav", "arbeidsevne", "uføretrygd", "rehabilitering",
+          ],
+        },
+        // Tilpass lydkilde
+        ...(stream ? { stream } : mikofonId
+          ? { audioConstraints: { deviceId: { exact: mikofonId } } }
+          : {}),
 
-          if (msg.error_code) {
-            setFeil(`Soniox-feil: ${msg.error_message ?? msg.error_code}`)
-            setStatus("feil")
-            ryddOpp()
-            return
-          }
+        onStarted: () => setStatus("opptar"),
 
-          if (msg.tokens && msg.tokens.length > 0) {
-            let harNyeFinal = false
-            const nonFinal: SonioxToken[] = []
-
-            for (const token of msg.tokens) {
-              if (token.text) {
-                if (token.is_final) {
-                  transkriptRef.current = transkriptRef.current
-                    ? `${transkriptRef.current}${token.text}`
-                    : token.text
-                  harNyeFinal = true
-                } else {
-                  nonFinal.push(token)
-                }
-              }
-            }
-
-            if (harNyeFinal) {
-              setTranskript(transkriptRef.current)
-            }
-
-            // Vis foreløpige tokens som live-forhåndsvisning
-            setPartial(nonFinal.map((t) => t.text).join(""))
-          }
-
-          if (msg.finished) {
-            setPartial("")
-          }
-        } catch {
-          // Ignorer meldinger som ikke er gyldig JSON
-        }
-      }
-
-      ws.onerror = () => {
-        setFeil("Tilkoblingsfeil mot Soniox — prøv å starte på nytt")
-        setStatus("feil")
-        ryddOpp()
-      }
-
-      ws.onclose = (e) => {
-        if (e.code !== 1000 && e.code !== 1001) {
-          setFeil(`Soniox koblet fra uventet (kode ${e.code})`)
+        onError: (_status, message) => {
+          setFeil(`Soniox-feil: ${message}`)
           setStatus("feil")
-        }
-      }
+          klientRef.current = null
+        },
 
-      // 4. Lyd-prosessering: Float32 → Int16 PCM → WebSocket
-      const audioCtx = new AudioContext({ sampleRate: SAMPLE_RATE })
-      audioCtxRef.current = audioCtx
+        onStateChange: ({ newState }) => {
+          if (newState === "Finished") {
+            setPartial("")
+            setStatus("klar")
+            klientRef.current = null
+          }
+        },
 
-      const kilde = audioCtx.createMediaStreamSource(stream)
-      const prosessor = audioCtx.createScriptProcessor(4096, 1, 1)
-      processorRef.current = prosessor
+        onPartialResult: (result) => {
+          let harNyeFinal = false
+          const nonFinalTekst: string[] = []
 
-      prosessor.onaudioprocess = (e) => {
-        if (ws.readyState !== WebSocket.OPEN) return
-        const float32 = e.inputBuffer.getChannelData(0)
-        const int16 = new Int16Array(float32.length)
-        for (let i = 0; i < float32.length; i++) {
-          const s = Math.max(-1, Math.min(1, float32[i]))
-          int16[i] = s < 0 ? s * 0x8000 : s * 0x7fff
-        }
-        ws.send(int16.buffer)
-      }
+          for (const token of result.tokens) {
+            if (!token.text) continue
+            if (token.is_final) {
+              transkriptRef.current = transkriptRef.current
+                ? `${transkriptRef.current}${token.text}`
+                : token.text
+              harNyeFinal = true
+            } else {
+              nonFinalTekst.push(token.text)
+            }
+          }
 
-      kilde.connect(prosessor)
-      prosessor.connect(audioCtx.destination)
+          if (harNyeFinal) setTranskript(transkriptRef.current)
+          setPartial(nonFinalTekst.join(""))
+        },
+      })
     } catch (e) {
       const melding = e instanceof Error ? e.message : "Ukjent feil"
       setFeil(melding)
       setStatus("feil")
       ryddOpp()
     }
-  }, [type, mikofonId, ryddOpp])
+  }, [type, mikofonId, hentToken, ryddOpp])
 
   const nullstill = useCallback(() => {
     setTranskript("")
