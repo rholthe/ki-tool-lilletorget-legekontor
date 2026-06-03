@@ -72,6 +72,8 @@ export function KonsultasjonView() {
 
   const [visTranskript, setVisTranskript] = useState(false)
   const [kopiert, setKopiert] = useState(false)
+  // Sporer om vi legger til eksisterende transkript (fortsett opptak)
+  const [appendModus, setAppendModus] = useState(false)
 
   if (!aktiv) {
     return (
@@ -103,13 +105,29 @@ export function KonsultasjonView() {
     if (mikrofoner.length === 0 && !erNAV) {
       await beOmTillatelse()
     }
+    setAppendModus(false)
+    await transkribering.start()
+    if (aktiv) await oppdater({ status: "opptar" })
+  }
+
+  async function handleFortsettOpptak() {
+    if (mikrofoner.length === 0 && !erNAV) {
+      await beOmTillatelse()
+    }
+    setAppendModus(true)
     await transkribering.start()
     if (aktiv) await oppdater({ status: "opptar" })
   }
 
   async function handleStopp() {
-    const ferdigTranskript = await transkribering.stopp()
-    if (aktiv) await oppdater({ transkript: ferdigTranskript, status: "ferdig" })
+    const nyTranskript = await transkribering.stopp()
+    if (!aktiv) return
+    // Append-modus: legg ny transkript til etter eksisterende
+    const kombinert = appendModus && aktiv.transkript
+      ? `${aktiv.transkript}\n\n${nyTranskript}`.trim()
+      : nyTranskript
+    setAppendModus(false)
+    await oppdater({ transkript: kombinert, status: "ferdig" })
   }
 
   async function kopierNotat() {
@@ -219,7 +237,7 @@ export function KonsultasjonView() {
           )}
 
           <div className="flex items-center gap-3 flex-wrap">
-            {!erAktiv && (
+            {!erAktiv && aktiv.status !== "ferdig" && (
               <Button
                 size="sm"
                 className="gap-2 bg-blue-600 hover:bg-blue-700 text-white"
@@ -232,6 +250,19 @@ export function KonsultasjonView() {
                   <Mic className="w-4 h-4" />
                 )}
                 {erKobler ? "Kobler til…" : "Start opptak"}
+              </Button>
+            )}
+
+            {/* Fortsett opptak — vises kun på ferdige konsultasjoner */}
+            {!erAktiv && aktiv.status === "ferdig" && (
+              <Button
+                size="sm"
+                className="gap-2 bg-violet-600 hover:bg-violet-700 text-white"
+                onClick={handleFortsettOpptak}
+                disabled={erKobler}
+              >
+                <Mic className="w-4 h-4" />
+                {erKobler ? "Kobler til…" : "Fortsett opptak"}
               </Button>
             )}
 
