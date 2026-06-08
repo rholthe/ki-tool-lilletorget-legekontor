@@ -94,7 +94,7 @@ function statusFarger(status: Konsultasjon["status"]): string {
 function statusTekst(status: Konsultasjon["status"]): string {
   switch (status) {
     case "opptar":
-      return "Opptar"
+      return "Tar opp"
     case "pause":
       return "Pause"
     case "prosesserer":
