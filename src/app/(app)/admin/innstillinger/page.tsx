@@ -2,8 +2,9 @@ import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { isAdmin, hentSystemSetting, tilgjengeligeModeller, tilgjengeligeRegioner, standardModell, standardRegion } from "@/lib/admin"
 import { BedrockInnstillinger } from "@/components/admin/bedrock-innstillinger"
+import { SonioxStatus } from "@/components/admin/soniox-status"
 import { Separator } from "@/components/ui/separator"
-import { Shield, Cpu, Key } from "lucide-react"
+import { Shield, Cpu, Key, Mic } from "lucide-react"
 
 export default async function AdminInnstillingerSide() {
   const session = await auth()
@@ -18,6 +19,7 @@ export default async function AdminInnstillingerSide() {
 
   const harNokler =
     !!process.env.BEDROCK_API_KEY && !!process.env.BEDROCK_SECRET_KEY
+  const harSonioxNokkel = !!process.env.SONIOX_API_KEY
 
   return (
     <div className="max-w-2xl mx-auto px-6 py-8 space-y-8">
@@ -61,6 +63,25 @@ export default async function AdminInnstillingerSide() {
           <p className="text-xs text-slate-400">
             Nøklene leses fra <code>.env</code> på serveren. Endre dem ved å oppdatere{" "}
             <code>.env</code> og starte serveren på nytt.
+          </p>
+        </div>
+      </section>
+
+      <Separator />
+
+      {/* Soniox API-nøkkel */}
+      <section className="space-y-4">
+        <div className="flex items-center gap-2">
+          <Mic className="w-4 h-4 text-slate-500" />
+          <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">
+            Soniox (transkripsjon)
+          </h2>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-white p-5 space-y-3 text-sm">
+          <SonioxStatus harNokkel={harSonioxNokkel} />
+          <p className="text-xs text-slate-400">
+            Nøkkelen leses fra <code>.env</code> på serveren (SONIOX_API_KEY). Testen genererer
+            et midlertidig token for å bekrefte at nøkkelen fungerer.
           </p>
         </div>
       </section>
