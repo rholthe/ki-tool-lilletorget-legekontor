@@ -91,26 +91,8 @@ export function KonsultasjonView() {
   const transkriberingRef = useRef(transkribering)
   transkriberingRef.current = transkribering
 
-  if (!aktiv) {
-    return (
-      <div className="h-full flex items-center justify-center">
-        <div className="text-center space-y-3 max-w-sm">
-          <div className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center mx-auto">
-            <Stethoscope className="w-7 h-7 text-blue-400" />
-          </div>
-          <h2 className="text-lg font-semibold text-slate-700">
-            Ingen aktiv konsultasjon
-          </h2>
-          <p className="text-sm text-slate-400">
-            Klikk en av knappene i sidepanelet for å starte en ny konsultasjon.
-          </p>
-        </div>
-      </div>
-    )
-  }
-
-  // Sett automatisk på pause når bruker bytter konsultasjon midt i opptak
-  // eslint-disable-next-line react-hooks/rules-of-hooks
+  // Sett automatisk på pause når bruker bytter konsultasjon midt i opptak.
+  // Må ligge FØR tidlig return — hooks kan ikke kalles betinget.
   useEffect(() => {
     const prev = prevAktivRef.current
     const currId = aktiv?.id ?? null
@@ -137,6 +119,24 @@ export function KonsultasjonView() {
 
     prevAktivRef.current = aktiv ?? null
   }, [aktiv?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!aktiv) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="text-center space-y-3 max-w-sm">
+          <div className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center mx-auto">
+            <Stethoscope className="w-7 h-7 text-blue-400" />
+          </div>
+          <h2 className="text-lg font-semibold text-slate-700">
+            Ingen aktiv konsultasjon
+          </h2>
+          <p className="text-sm text-slate-400">
+            Klikk en av knappene i sidepanelet for å starte en ny konsultasjon.
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   const erOpptar = transkribering.status === "opptar"
   const erPause = transkribering.status === "pause"
