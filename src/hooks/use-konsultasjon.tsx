@@ -5,6 +5,7 @@ import {
   useContext,
   useState,
   useCallback,
+  useRef,
   type ReactNode,
 } from "react"
 import { lagreKonsultasjon, hentKonsultasjon } from "@/lib/idb"
@@ -21,19 +22,21 @@ const KonsultasjonContext = createContext<KonsultasjonContextValue | null>(null)
 export function KonsultasjonProvider({ children }: { children: ReactNode }) {
   const [aktiv, setAktivIntern] = useState<Konsultasjon | null>(null)
 
+  // Ref holder alltid ferskeste aktiv — unngår stale-closure-bug i async callbacks
+  const aktivRef = useRef(aktiv)
+  aktivRef.current = aktiv
+
   const setAktiv = useCallback((k: Konsultasjon | null) => {
     setAktivIntern(k)
   }, [])
 
-  const oppdater = useCallback(
-    async (felt: Partial<Konsultasjon>) => {
-      if (!aktiv) return
-      const oppdatert = { ...aktiv, ...felt }
-      setAktivIntern(oppdatert)
-      await lagreKonsultasjon(oppdatert)
-    },
-    [aktiv]
-  )
+  const oppdater = useCallback(async (felt: Partial<Konsultasjon>) => {
+    const current = aktivRef.current
+    if (!current) return
+    const oppdatert = { ...current, ...felt }
+    setAktivIntern(oppdatert)
+    await lagreKonsultasjon(oppdatert)
+  }, []) // ingen aktiv-dependency — bruker ref for å alltid lese ferskeste verdi
 
   return (
     <KonsultasjonContext.Provider value={{ aktiv, setAktiv, oppdater }}>
