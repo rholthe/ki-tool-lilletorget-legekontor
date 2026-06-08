@@ -51,7 +51,7 @@ import { useTranskribering, type MoteForm } from "@/hooks/use-transkribering"
 import { useClaude } from "@/hooks/use-claude"
 import { TYPE_LABELS, TYPE_STAGING, type Vedlegg, type Konsultasjon } from "@/types/konsultasjon"
 import { VedleggPanel } from "@/components/app/vedlegg-panel"
-import { lagreKonsultasjon } from "@/lib/idb"
+import { lagreKonsultasjon, hentKonsultasjon } from "@/lib/idb"
 
 const TYPE_IKON = {
   KONSULTASJON: <Stethoscope className="w-3.5 h-3.5" />,
@@ -86,18 +86,18 @@ export function KonsultasjonView() {
   // Buffer for streaming-tekst (vises i notat-feltet mens Claude genererer)
   const [streamingNotat, setStreamingNotat] = useState("")
 
-  // Refs for å spore forrige konsultasjon og siste hook-tilstand uten å trigge re-render
-  const prevAktivRef = useRef<Konsultasjon | null>(null)
+  // Kun ID lagres — hele objektet kan bli stale om brukeren redigerer felt mens det tas opp
+  const prevAktivIdRef = useRef<string | null>(null)
   const transkriberingRef = useRef(transkribering)
   transkriberingRef.current = transkribering
 
   // Sett automatisk på pause når bruker bytter konsultasjon midt i opptak.
   // Må ligge FØR tidlig return — hooks kan ikke kalles betinget.
   useEffect(() => {
-    const prev = prevAktivRef.current
+    const prevId = prevAktivIdRef.current
     const currId = aktiv?.id ?? null
 
-    if (prev !== null && prev.id !== currId) {
+    if (prevId !== null && prevId !== currId) {
       const t = transkriberingRef.current
       const wasActive =
         t.status === "opptar" || t.status === "kobler" || t.status === "pause"
@@ -106,18 +106,26 @@ export function KonsultasjonView() {
         if (t.status === "opptar" || t.status === "kobler") {
           t.pause()
         }
-        // Lagre transkript + "pause"-status direkte til DB (aktiv er nå ny konsultasjon)
-        lagreKonsultasjon({
-          ...prev,
-          transkript: t.transkript || prev.transkript,
-          status: "pause",
+        // Hent fersk versjon fra DB (aktiv i kontekst kan ha stale felt) og lagre med pause-status.
+        // Transcript tas fra hooken synkront nå, resten (kontekst, pasientId osv.) fra DB.
+        const transkriptNaa = t.transkript
+        hentKonsultasjon(prevId).then(fersk => {
+          if (!fersk) return
+          return lagreKonsultasjon({
+            ...fersk,
+            transkript: transkriptNaa || fersk.transkript,
+            status: "pause",
+          })
+        }).then(() => {
+          // Varsle sidebar om at listen bør oppdateres
+          window.dispatchEvent(new Event("legeassist:refresh-liste"))
         })
       }
 
       t.nullstill()
     }
 
-    prevAktivRef.current = aktiv ?? null
+    prevAktivIdRef.current = aktiv?.id ?? null
   }, [aktiv?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!aktiv) {
@@ -208,7 +216,7 @@ export function KonsultasjonView() {
   }
 
   async function handleFortsettFraPause() {
-    if (!aktiv?.transkript) return
+    if (!aktiv) return
     if (mikrofoner.length === 0 && brukerMikrofon) {
       await beOmTillatelse()
     }

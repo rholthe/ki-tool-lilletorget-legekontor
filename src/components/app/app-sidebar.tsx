@@ -124,6 +124,13 @@ export function AppSidebar({ brukerNavn, brukerEpost, erAdmin }: AppSidebarProps
     return () => clearInterval(intervall)
   }, [lastKonsultasjoner])
 
+  // Oppdater listen umiddelbart når en konsultasjon settes på pause via konsultasjon-view
+  useEffect(() => {
+    function handler() { lastKonsultasjoner() }
+    window.addEventListener("legeassist:refresh-liste", handler)
+    return () => window.removeEventListener("legeassist:refresh-liste", handler)
+  }, [lastKonsultasjoner])
+
   // Synkroniser listen når aktiv konsultasjon endres (f.eks. pasientId-oppdatering)
   useEffect(() => {
     if (!aktiv) return
