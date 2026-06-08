@@ -37,6 +37,7 @@ export function useClaude() {
             kontekst: konsultasjon.kontekst,
             tilleggsinfo: konsultasjon.tilleggsinfo,
             malInnhold: konsultasjon.malInnhold,
+            vedlegg: konsultasjon.vedlegg ?? [],
           }),
           signal: controller.signal,
         })

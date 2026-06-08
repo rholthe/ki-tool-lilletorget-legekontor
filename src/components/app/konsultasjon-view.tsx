@@ -49,7 +49,8 @@ import { useKonsultasjon } from "@/hooks/use-konsultasjon"
 import { useMikrofon } from "@/hooks/use-mikrofon"
 import { useTranskribering, type MoteForm } from "@/hooks/use-transkribering"
 import { useClaude } from "@/hooks/use-claude"
-import { TYPE_LABELS, TYPE_STAGING } from "@/types/konsultasjon"
+import { TYPE_LABELS, TYPE_STAGING, type Vedlegg } from "@/types/konsultasjon"
+import { VedleggPanel } from "@/components/app/vedlegg-panel"
 
 const TYPE_IKON = {
   KONSULTASJON: <Stethoscope className="w-3.5 h-3.5" />,
@@ -72,6 +73,7 @@ export function KonsultasjonView() {
   const [kopiert, setKopiert] = useState(false)
   const [appendModus, setAppendModus] = useState(false)
   const [moteform, setMoteform] = useState<MoteForm>("video")
+  const [visVedlegg, setVisVedlegg] = useState(false)
 
   const transkribering = useTranskribering(
     aktiv?.type ?? "KONSULTASJON",
@@ -224,33 +226,45 @@ export function KonsultasjonView() {
         </div>
 
         {/* Vedlegg + Mal */}
-        <div className="flex items-center gap-3 flex-wrap">
-          <Tooltip>
-            <TooltipTrigger render={<span />}>
-              <Button variant="outline" size="sm" className="gap-2 text-sm">
-                <Paperclip className="w-4 h-4" />
-                Bilder / PDF
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              Last opp EKG, spirometri, lab-utskrifter (kommer snart)
-            </TooltipContent>
-          </Tooltip>
+        <div className="space-y-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 text-sm"
+              onClick={() => setVisVedlegg((v) => !v)}
+            >
+              <Paperclip className="w-4 h-4" />
+              Bilder / PDF
+              {(aktiv.vedlegg?.length ?? 0) > 0 && (
+                <span className="ml-0.5 bg-blue-100 text-blue-700 text-xs font-medium px-1.5 py-0.5 rounded-full">
+                  {aktiv.vedlegg!.length}
+                </span>
+              )}
+            </Button>
 
-          <Tooltip>
-            <TooltipTrigger render={<span />}>
-              <Button variant="outline" size="sm" className="gap-2 text-sm">
-                <FileText className="w-4 h-4" />
-                {aktiv.malId ? "Bytt mal" : "Velg notatmal"}
-                <ChevronDown className="w-3 h-3 text-slate-400" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Velg systemprompt / notatmal (kommer snart)</TooltipContent>
-          </Tooltip>
+            <Tooltip>
+              <TooltipTrigger render={<span />}>
+                <Button variant="outline" size="sm" className="gap-2 text-sm">
+                  <FileText className="w-4 h-4" />
+                  {aktiv.malId ? "Bytt mal" : "Velg notatmal"}
+                  <ChevronDown className="w-3 h-3 text-slate-400" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Velg systemprompt / notatmal (kommer snart)</TooltipContent>
+            </Tooltip>
 
-          <p className="text-xs text-slate-400 italic">
-            {TYPE_STAGING[aktiv.type].substring(0, 55)}…
-          </p>
+            <p className="text-xs text-slate-400 italic">
+              {TYPE_STAGING[aktiv.type].substring(0, 55)}…
+            </p>
+          </div>
+
+          {visVedlegg && (
+            <VedleggPanel
+              vedlegg={aktiv.vedlegg ?? []}
+              onChange={(nyeVedlegg: Vedlegg[]) => oppdater({ vedlegg: nyeVedlegg })}
+            />
+          )}
         </div>
 
         {/* ─── Opptakskontroller ─── */}

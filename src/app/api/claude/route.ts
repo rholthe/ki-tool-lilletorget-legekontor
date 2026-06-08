@@ -1,12 +1,14 @@
 import { auth } from "@/lib/auth"
 import { NextResponse } from "next/server"
 import { AnthropicBedrock } from "@anthropic-ai/bedrock-sdk"
-import { TYPE_STAGING, type KonsultasjonsType } from "@/types/konsultasjon"
+import type { ContentBlockParam } from "@anthropic-ai/sdk/resources/messages"
+import { TYPE_STAGING, type KonsultasjonsType, type Vedlegg } from "@/types/konsultasjon"
 import {
   hentSystemSetting,
   standardModell,
   standardRegion,
 } from "@/lib/admin"
+import { lagVedleggInstruksjon } from "@/lib/vedlegg"
 
 interface RequestBody {
   type: KonsultasjonsType
@@ -14,6 +16,7 @@ interface RequestBody {
   kontekst: string
   tilleggsinfo: string
   malInnhold: string | null
+  vedlegg?: Pick<Vedlegg, "mimeType" | "base64" | "oppgave" | "spirometriType" | "egendefinertPrompt">[]
 }
 
 async function lagBedrockKlient() {
@@ -64,6 +67,29 @@ export async function POST(req: Request) {
   }
 
   const brukerMelding = deler.join("\n\n---\n\n")
+
+  // Bygg multi-modal content array (tekst + eventuelle vedlegg)
+  const contentBlocks: ContentBlockParam[] = [{ type: "text", text: brukerMelding }]
+
+  for (const v of body.vedlegg ?? []) {
+    contentBlocks.push({ type: "text", text: lagVedleggInstruksjon(v as Vedlegg) })
+    if (v.mimeType === "application/pdf") {
+      contentBlocks.push({
+        type: "document",
+        source: { type: "base64", media_type: "application/pdf", data: v.base64 },
+      })
+    } else {
+      contentBlocks.push({
+        type: "image",
+        source: {
+          type: "base64",
+          media_type: v.mimeType as "image/jpeg" | "image/png" | "image/gif" | "image/webp",
+          data: v.base64,
+        },
+      })
+    }
+  }
+
   const model = await hentSystemSetting("bedrock_model", standardModell())
   const client = await lagBedrockKlient()
   const encoder = new TextEncoder()
@@ -75,7 +101,7 @@ export async function POST(req: Request) {
           model,
           max_tokens: 8192,
           system: systemPrompt,
-          messages: [{ role: "user", content: brukerMelding }],
+          messages: [{ role: "user", content: contentBlocks }],
         })
 
         for await (const event of claudeStream) {

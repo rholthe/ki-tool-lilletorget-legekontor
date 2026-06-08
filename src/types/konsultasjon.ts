@@ -9,6 +9,33 @@ export type KonsultasjonsStatus =
   | "prosesserer"
   | "ferdig"
 
+export type VedleggOppgave =
+  | "ekg"
+  | "spirometri"
+  | "ocr"
+  | "egendefinert"
+  | "kontekst"
+
+export type SpirometriType =
+  | "uten_bronkodilator"
+  | "etter_aktivitet"
+  | "med_bronkodilator"
+
+export interface Vedlegg {
+  id: string
+  navn: string
+  mimeType:
+    | "image/jpeg"
+    | "image/png"
+    | "image/gif"
+    | "image/webp"
+    | "application/pdf"
+  base64: string
+  oppgave: VedleggOppgave
+  spirometriType?: SpirometriType
+  egendefinertPrompt?: string
+}
+
 export interface Konsultasjon {
   id: string
   type: KonsultasjonsType
@@ -19,6 +46,7 @@ export interface Konsultasjon {
   tilleggsinfo: string
   malId: string | null
   malInnhold: string | null
+  vedlegg?: Vedlegg[]
   status: KonsultasjonsStatus
   createdAt: number
   expiresAt: number

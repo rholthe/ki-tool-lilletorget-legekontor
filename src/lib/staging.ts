@@ -145,10 +145,20 @@ eller annet oppfølgingspunkt. Vær konkret og handlingsorientert.
 - Ikke inkluder innledning eller avslutningsfrase utenfor strukturen\
 `
 
+// ─── Vedleggsseksjon (felles for alle typer) ──────────────────────────────────
+
+const VEDLEGG_SEKSJON = `
+
+## Vedlegg
+Dersom det er vedlagt bilder eller dokumenter, er det angitt en instruksjon rett \
+før hvert vedlegg i meldingen. Følg instruksjonen for hvert vedlegg og integrer \
+funn i det aktuelle avsnittet i notatet. Vedlegg uten spesifikke instruksjoner \
+skal brukes som bakgrunnskontekst.`
+
 // ─── Eksport ──────────────────────────────────────────────────────────────────
 
 export const TYPE_STAGING: Record<KonsultasjonsType, string> = {
-  KONSULTASJON,
-  TELEFONKONSULTASJON,
-  DIALOGMOTE_NAV,
+  KONSULTASJON: KONSULTASJON + VEDLEGG_SEKSJON,
+  TELEFONKONSULTASJON: TELEFONKONSULTASJON + VEDLEGG_SEKSJON,
+  DIALOGMOTE_NAV: DIALOGMOTE_NAV + VEDLEGG_SEKSJON,
 }
