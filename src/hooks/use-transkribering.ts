@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useCallback } from "react"
+import { useState, useRef, useCallback, useEffect } from "react"
 import type { KonsultasjonsType } from "@/types/konsultasjon"
 
 // Dynamisk import — unngår "window is not defined" ved server-side rendering
@@ -38,6 +38,11 @@ export function useTranskribering(
     klientRef.current?.cancel()
     klientRef.current = null
   }, [])
+
+  // Lukk WebSocket-tilkobling ordentlig når komponenten unmountes
+  useEffect(() => {
+    return () => { ryddOpp() }
+  }, [ryddOpp])
 
   const stopp = useCallback(async (): Promise<string> => {
     klientRef.current?.stop()
