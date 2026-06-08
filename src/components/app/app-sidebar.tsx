@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/tooltip"
 import {
   hentAlleKonsultasjoner,
+  hentKonsultasjon,
   nyKonsultasjon,
   lagreKonsultasjon,
   slettKonsultasjon,
@@ -79,8 +80,10 @@ function statusFarger(status: Konsultasjon["status"]): string {
   switch (status) {
     case "opptar":
       return "bg-red-100 text-red-700"
-    case "prosesserer":
+    case "pause":
       return "bg-amber-100 text-amber-700"
+    case "prosesserer":
+      return "bg-blue-100 text-blue-700"
     case "ferdig":
       return "bg-green-100 text-green-700"
     default:
@@ -92,6 +95,8 @@ function statusTekst(status: Konsultasjon["status"]): string {
   switch (status) {
     case "opptar":
       return "Opptar"
+    case "pause":
+      return "Pause"
     case "prosesserer":
       return "Prosesserer"
     case "ferdig":
@@ -201,7 +206,12 @@ export function AppSidebar({ brukerNavn, brukerEpost, erAdmin }: AppSidebarProps
             {konsultasjoner.map((k) => (
               <div
                 key={k.id}
-                onClick={() => { setAktiv(k); router.push("/") }}
+                onClick={async () => {
+                  // Hent fersk versjon fra DB slik at status (f.eks. "pause") er oppdatert
+                  const fersk = await hentKonsultasjon(k.id)
+                  setAktiv(fersk ?? k)
+                  router.push("/")
+                }}
                 className={`w-full text-left px-3 py-2.5 rounded-lg transition-colors group cursor-pointer relative ${
                   aktiv?.id === k.id
                     ? "bg-blue-50 border border-blue-200"

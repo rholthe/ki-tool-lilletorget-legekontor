@@ -136,6 +136,13 @@ export function useTranskribering(
     }
   }, [])
 
+  // Fortsett fra lagret pause (byttet konsultasjon): laster inn eksisterende transkript og kobler til
+  const fortsetFraLagret = useCallback(async (eksisterendeTranskript: string) => {
+    transkriptRef.current = eksisterendeTranskript
+    setTranskript(eksisterendeTranskript)
+    await fortsett()
+  }, [fortsett])
+
   const start = useCallback(async () => {
     setFeil(null)
     setStatus("kobler")
@@ -283,6 +290,7 @@ export function useTranskribering(
     start,
     pause,
     fortsett,
+    fortsetFraLagret,
     stopp,
     nullstill,
   }

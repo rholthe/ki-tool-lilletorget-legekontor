@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import {
   Mic,
   Pause,
@@ -49,8 +49,9 @@ import { useKonsultasjon } from "@/hooks/use-konsultasjon"
 import { useMikrofon } from "@/hooks/use-mikrofon"
 import { useTranskribering, type MoteForm } from "@/hooks/use-transkribering"
 import { useClaude } from "@/hooks/use-claude"
-import { TYPE_LABELS, TYPE_STAGING, type Vedlegg } from "@/types/konsultasjon"
+import { TYPE_LABELS, TYPE_STAGING, type Vedlegg, type Konsultasjon } from "@/types/konsultasjon"
 import { VedleggPanel } from "@/components/app/vedlegg-panel"
+import { lagreKonsultasjon } from "@/lib/idb"
 
 const TYPE_IKON = {
   KONSULTASJON: <Stethoscope className="w-3.5 h-3.5" />,
@@ -85,6 +86,11 @@ export function KonsultasjonView() {
   // Buffer for streaming-tekst (vises i notat-feltet mens Claude genererer)
   const [streamingNotat, setStreamingNotat] = useState("")
 
+  // Refs for å spore forrige konsultasjon og siste hook-tilstand uten å trigge re-render
+  const prevAktivRef = useRef<Konsultasjon | null>(null)
+  const transkriberingRef = useRef(transkribering)
+  transkriberingRef.current = transkribering
+
   if (!aktiv) {
     return (
       <div className="h-full flex items-center justify-center">
@@ -103,10 +109,41 @@ export function KonsultasjonView() {
     )
   }
 
+  // Sett automatisk på pause når bruker bytter konsultasjon midt i opptak
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  useEffect(() => {
+    const prev = prevAktivRef.current
+    const currId = aktiv?.id ?? null
+
+    if (prev !== null && prev.id !== currId) {
+      const t = transkriberingRef.current
+      const wasActive =
+        t.status === "opptar" || t.status === "kobler" || t.status === "pause"
+
+      if (wasActive) {
+        if (t.status === "opptar" || t.status === "kobler") {
+          t.pause()
+        }
+        // Lagre transkript + "pause"-status direkte til DB (aktiv er nå ny konsultasjon)
+        lagreKonsultasjon({
+          ...prev,
+          transkript: t.transkript || prev.transkript,
+          status: "pause",
+        })
+      }
+
+      t.nullstill()
+    }
+
+    prevAktivRef.current = aktiv ?? null
+  }, [aktiv?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const erOpptar = transkribering.status === "opptar"
   const erPause = transkribering.status === "pause"
   const erAktiv = erOpptar || erPause
   const erKobler = transkribering.status === "kobler"
+  // Pause fra forrige sesjon (status i DB = "pause", men hook er fersk)
+  const erLagretPause = aktiv.status === "pause" && !erAktiv && !erKobler
   const harTranskript = Boolean(aktiv.transkript)
   const visNotat = isGenerating ? streamingNotat : aktiv.notat
   const harNotat = Boolean(visNotat)
@@ -162,6 +199,31 @@ export function KonsultasjonView() {
     setStreamingNotat("")
     await genererNotat(
       aktiv,
+      (delta) => setStreamingNotat((prev) => prev + delta),
+      async (fullTekst) => {
+        setStreamingNotat("")
+        await oppdater({ notat: fullTekst })
+      }
+    )
+  }
+
+  async function handleFortsettFraPause() {
+    if (!aktiv?.transkript) return
+    if (mikrofoner.length === 0 && brukerMikrofon) {
+      await beOmTillatelse()
+    }
+    setAppendModus(false) // transkript pre-loades inn i ref av fortsetFraLagret
+    await transkribering.fortsetFraLagret(aktiv.transkript)
+    await oppdater({ status: "opptar" })
+  }
+
+  async function handleStoppOgSendFraPause() {
+    if (!aktiv?.transkript) return
+    const oppdatert = { ...aktiv, status: "ferdig" as const }
+    await oppdater({ status: "ferdig" })
+    setStreamingNotat("")
+    await genererNotat(
+      oppdatert,
       (delta) => setStreamingNotat((prev) => prev + delta),
       async (fullTekst) => {
         setStreamingNotat("")
@@ -338,7 +400,8 @@ export function KonsultasjonView() {
           )}
 
           <div className="flex items-center gap-3 flex-wrap">
-            {!erAktiv && aktiv.status !== "ferdig" && (
+            {/* Start opptak — ny konsultasjon */}
+            {!erAktiv && !erLagretPause && aktiv.status !== "ferdig" && (
               <Button
                 size="sm"
                 className="gap-2 bg-blue-600 hover:bg-blue-700 text-white"
@@ -354,8 +417,8 @@ export function KonsultasjonView() {
               </Button>
             )}
 
-            {/* Fortsett opptak — vises kun på ferdige konsultasjoner */}
-            {!erAktiv && aktiv.status === "ferdig" && (
+            {/* Fortsett opptak — ferdig konsultasjon (legg til transkript) */}
+            {!erAktiv && !erLagretPause && aktiv.status === "ferdig" && (
               <Button
                 size="sm"
                 className="gap-2 bg-violet-600 hover:bg-violet-700 text-white"
@@ -365,6 +428,29 @@ export function KonsultasjonView() {
                 <Mic className="w-4 h-4" />
                 {erKobler ? "Kobler til…" : "Fortsett opptak"}
               </Button>
+            )}
+
+            {/* Pause-gjenoppretting — byttet konsultasjon midt i opptak */}
+            {erLagretPause && (
+              <>
+                <Button
+                  size="sm"
+                  className="gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+                  onClick={handleFortsettFraPause}
+                >
+                  <Mic className="w-4 h-4" />
+                  Fortsett
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 border-red-300 text-red-700 hover:bg-red-50"
+                  onClick={handleStoppOgSendFraPause}
+                >
+                  <Square className="w-4 h-4" />
+                  Stopp og send
+                </Button>
+              </>
             )}
 
             {erOpptar && (

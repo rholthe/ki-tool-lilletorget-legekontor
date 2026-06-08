@@ -6,6 +6,7 @@ export type KonsultasjonsType =
 export type KonsultasjonsStatus =
   | "ny"
   | "opptar"
+  | "pause"
   | "prosesserer"
   | "ferdig"
 
