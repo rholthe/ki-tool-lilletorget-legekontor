@@ -90,6 +90,9 @@ export function KonsultasjonView() {
   const prevAktivIdRef = useRef<string | null>(null)
   const transkriberingRef = useRef(transkribering)
   transkriberingRef.current = transkribering
+  // appendModus-ref: auto-pause-effekten trenger riktig verdi for å kombinere transkript
+  const appendModusRef = useRef(appendModus)
+  appendModusRef.current = appendModus
 
   // Sett automatisk på pause når bruker bytter konsultasjon midt i opptak.
   // Må ligge FØR tidlig return — hooks kan ikke kalles betinget.
@@ -109,11 +112,16 @@ export function KonsultasjonView() {
         // Hent fersk versjon fra DB (aktiv i kontekst kan ha stale felt) og lagre med pause-status.
         // Transcript tas fra hooken synkront nå, resten (kontekst, pasientId osv.) fra DB.
         const transkriptNaa = t.transkript
+        const varAppendModus = appendModusRef.current
         hentKonsultasjon(prevId).then(fersk => {
           if (!fersk) return
+          // Dersom "Fortsett opptak" var aktiv kombineres nytt og gammelt transkript
+          const kombinert = varAppendModus && fersk.transkript
+            ? `${fersk.transkript}\n\n${transkriptNaa}`.trim()
+            : (transkriptNaa || fersk.transkript)
           return lagreKonsultasjon({
             ...fersk,
-            transkript: transkriptNaa || fersk.transkript,
+            transkript: kombinert,
             status: "pause",
           })
         }).then(() => {
@@ -123,6 +131,7 @@ export function KonsultasjonView() {
       }
 
       t.nullstill()
+      setAppendModus(false)
     }
 
     prevAktivIdRef.current = aktiv?.id ?? null
@@ -175,6 +184,16 @@ export function KonsultasjonView() {
     setAppendModus(true)
     await transkribering.start()
     if (aktiv) await oppdater({ status: "opptar" })
+  }
+
+  async function handlePause() {
+    transkribering.pause()
+    await oppdater({ status: "pause" })
+  }
+
+  async function handleFortsettInSession() {
+    await transkribering.fortsett()
+    await oppdater({ status: "opptar" })
   }
 
   async function handleStopp() {
@@ -466,7 +485,7 @@ export function KonsultasjonView() {
                 variant="outline"
                 size="sm"
                 className="gap-2 border-amber-300 text-amber-700 hover:bg-amber-50"
-                onClick={() => transkribering.pause()}
+                onClick={handlePause}
               >
                 <Pause className="w-4 h-4" />
                 Pause
@@ -478,7 +497,7 @@ export function KonsultasjonView() {
                 variant="outline"
                 size="sm"
                 className="gap-2 border-blue-300 text-blue-700 hover:bg-blue-50"
-                onClick={() => { transkribering.fortsett() }}
+                onClick={handleFortsettInSession}
               >
                 <Mic className="w-4 h-4" />
                 Fortsett
