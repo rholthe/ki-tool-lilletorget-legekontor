@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { signOut } from "next-auth/react"
 import {
   Phone,
@@ -12,6 +12,7 @@ import {
   LogOut,
   Trash2,
   Clock,
+  ShieldCheck,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -40,6 +41,7 @@ import { useKonsultasjon } from "@/hooks/use-konsultasjon"
 interface AppSidebarProps {
   brukerNavn: string | null
   brukerEpost: string | null
+  erAdmin: boolean
 }
 
 const NY_KNAPPER: {
@@ -99,10 +101,11 @@ function statusTekst(status: Konsultasjon["status"]): string {
   }
 }
 
-export function AppSidebar({ brukerNavn, brukerEpost }: AppSidebarProps) {
+export function AppSidebar({ brukerNavn, brukerEpost, erAdmin }: AppSidebarProps) {
   const [konsultasjoner, setKonsultasjoner] = useState<Konsultasjon[]>([])
   const { aktiv, setAktiv } = useKonsultasjon()
   const pathname = usePathname()
+  const router = useRouter()
 
   const lastKonsultasjoner = useCallback(async () => {
     await slettUtlopteKonsultasjoner()
@@ -131,6 +134,7 @@ export function AppSidebar({ brukerNavn, brukerEpost }: AppSidebarProps) {
     await lagreKonsultasjon(ny)
     await lastKonsultasjoner()
     setAktiv(ny)
+    router.push("/")
   }
 
   async function slettEn(id: string, e: React.MouseEvent) {
@@ -197,7 +201,7 @@ export function AppSidebar({ brukerNavn, brukerEpost }: AppSidebarProps) {
             {konsultasjoner.map((k) => (
               <div
                 key={k.id}
-                onClick={() => setAktiv(k)}
+                onClick={() => { setAktiv(k); router.push("/") }}
                 className={`w-full text-left px-3 py-2.5 rounded-lg transition-colors group cursor-pointer relative ${
                   aktiv?.id === k.id
                     ? "bg-blue-50 border border-blue-200"
@@ -206,7 +210,8 @@ export function AppSidebar({ brukerNavn, brukerEpost }: AppSidebarProps) {
               >
                 <div className="flex items-start justify-between gap-1">
                   <span className="text-sm font-medium text-slate-700 truncate leading-tight">
-                    {k.pasientId || "Uten ID"}
+                    {new Date(k.createdAt).toLocaleTimeString("nb-NO", { hour: "2-digit", minute: "2-digit", hour12: false })}
+                    {k.pasientId ? ` · ${k.pasientId}` : ""}
                   </span>
                   <div className="flex items-center gap-1 shrink-0">
                     <span
@@ -253,6 +258,20 @@ export function AppSidebar({ brukerNavn, brukerEpost }: AppSidebarProps) {
           <Settings className="w-4 h-4" />
           Innstillinger
         </Link>
+
+        {erAdmin && (
+          <Link
+            href="/admin/innstillinger"
+            className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors ${
+              pathname === "/admin/innstillinger"
+                ? "bg-blue-50 text-blue-700 font-medium"
+                : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+            }`}
+          >
+            <ShieldCheck className="w-4 h-4" />
+            Admin
+          </Link>
+        )}
 
         {konsultasjoner.length > 0 && (
           <Tooltip>

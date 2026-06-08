@@ -2,6 +2,11 @@ import { auth } from "@/lib/auth"
 import { NextResponse } from "next/server"
 import { AnthropicBedrock } from "@anthropic-ai/bedrock-sdk"
 import { TYPE_STAGING, type KonsultasjonsType } from "@/types/konsultasjon"
+import {
+  hentSystemSetting,
+  standardModell,
+  standardRegion,
+} from "@/lib/admin"
 
 interface RequestBody {
   type: KonsultasjonsType
@@ -11,15 +16,12 @@ interface RequestBody {
   malInnhold: string | null
 }
 
-function lagBedrockKlient() {
+async function lagBedrockKlient() {
+  const region = await hentSystemSetting("bedrock_region", standardRegion())
   return new AnthropicBedrock({
-    // AWS Bedrock krever to nøkler:
-    // BEDROCK_API_KEY  = AWS Access Key ID (starter typisk med AKIA...)
-    // BEDROCK_SECRET_KEY = AWS Secret Access Key
     awsAccessKey: process.env.BEDROCK_API_KEY ?? "",
     awsSecretKey: process.env.BEDROCK_SECRET_KEY ?? "",
-    // EU North 1 (Stockholm) for GDPR/personvern
-    awsRegion: "eu-north-1",
+    awsRegion: region,
   })
 }
 
@@ -33,7 +35,7 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         feil:
-          "Bedrock-nøkler mangler. Sett BEDROCK_API_KEY (Access Key ID) og BEDROCK_SECRET_KEY i .env",
+          "Bedrock-nøkler mangler. Sett BEDROCK_API_KEY og BEDROCK_SECRET_KEY i .env",
       },
       { status: 500 }
     )
@@ -41,13 +43,11 @@ export async function POST(req: Request) {
 
   const body: RequestBody = await req.json()
 
-  // Bygg systemprompt: staging-tekst + eventuell notatmal
   const stagingTekst = TYPE_STAGING[body.type]
   const systemPrompt = body.malInnhold
     ? `${stagingTekst}\n\n${body.malInnhold}`
     : stagingTekst
 
-  // Bygg brukermelding
   const deler: string[] = []
   if (body.kontekst?.trim())
     deler.push(`**Kontekst (epikriser, tidligere notater):**\n${body.kontekst}`)
@@ -64,12 +64,8 @@ export async function POST(req: Request) {
   }
 
   const brukerMelding = deler.join("\n\n---\n\n")
-
-  // Bedrock-modell: krever "anthropic."-prefiks
-  const model =
-    process.env.ANTHROPIC_MODEL ?? "anthropic.claude-opus-4-8"
-
-  const client = lagBedrockKlient()
+  const model = await hentSystemSetting("bedrock_model", standardModell())
+  const client = await lagBedrockKlient()
   const encoder = new TextEncoder()
 
   const stream = new ReadableStream({
@@ -78,7 +74,6 @@ export async function POST(req: Request) {
         const claudeStream = client.messages.stream({
           model,
           max_tokens: 8192,
-          thinking: { type: "adaptive" },
           system: systemPrompt,
           messages: [{ role: "user", content: brukerMelding }],
         })

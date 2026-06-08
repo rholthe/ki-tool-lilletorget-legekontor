@@ -16,9 +16,12 @@ export type TranskriberingsStatus =
   | "pause"
   | "feil"
 
+export type MoteForm = "video" | "telefon" | "fysisk"
+
 export function useTranskribering(
   type: KonsultasjonsType,
-  mikofonId: string | null
+  mikofonId: string | null,
+  moteform: MoteForm = "video"
 ) {
   const [status, setStatus] = useState<TranskriberingsStatus>("klar")
   const [transkript, setTranskript] = useState("")
@@ -148,7 +151,7 @@ export function useTranskribering(
       // 2. Hent mediestrøm
       let stream: MediaStream | undefined = undefined
 
-      if (type === "DIALOGMOTE_NAV") {
+      if (type === "DIALOGMOTE_NAV" && moteform === "video") {
         const displayStream = await navigator.mediaDevices.getDisplayMedia({
           video: true,
           audio: {
@@ -255,7 +258,7 @@ export function useTranskribering(
       setStatus("feil")
       ryddOpp()
     }
-  }, [type, mikofonId, ryddOpp, status])
+  }, [type, mikofonId, moteform, ryddOpp, status])
 
   const nullstill = useCallback(() => {
     setTranskript("")

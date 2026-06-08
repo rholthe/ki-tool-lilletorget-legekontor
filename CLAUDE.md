@@ -20,15 +20,20 @@ VPS (legeassist-server)
   ├── Autentisering (login/session)
   ├── Promptmaler og notatmaler
   ├── Brukerpreferanser
-  └── Genererer kortlivede temp-tokens for AssemblyAI (ingen pasientinnhold)
+  ├── Genererer kortlivede temp-tokens for Soniox (ingen pasientinnhold)
+  │
+  └──→ AWS Bedrock (eu-west-1)
+          Claude API-forespørsler med transkript + prompt
+          Returnerer SSE-stream av generert notat
 
 Nettleser (klinikkens datamaskin)
   │
-  ├──→ AssemblyAI EU-endpoint (direkte, med temp-token)
+  ├──→ Soniox EU-endpoint (direkte, med temp-token)
   │       Lydstream → sanntidstranskript → tilbake til browser
   │
-  └──→ Claude API (direkte fra browser)
-          Transkript + prompt + kontekst → generert notat → tilbake til browser
+  └──→ VPS /api/claude (SSE)
+          Browser sender transkript + kontekst
+          Server streamer notatgenerering i sanntid (text deltas)
 ```
 
 ### Stack
@@ -38,19 +43,22 @@ Nettleser (klinikkens datamaskin)
 | Frontend | Next.js (React) | Fullstack i ett prosjekt, god DX |
 | UI-komponenter | shadcn/ui + Tailwind CSS | Moderne, tilgjengelig, tilpassbart |
 | Backend/API | Next.js API Routes | Integrert med frontend, enkelt å deploye |
-| Database | PostgreSQL (selvhosted på VPS) | Full kontroll, ingen tredjepart |
+| Database | MariaDB (selvhosted på VPS) | Full kontroll, ingen tredjepart |
 | ORM | Prisma | Typesikker DB-tilgang |
-| Autentisering | NextAuth.js | Fleksibel, støtter credentials + 2FA |
-| Transkripsjon | AssemblyAI (EU-endpoint) | Sanntid, norsk språkstøtte, GDPR-compliant |
-| AI-tekstgenerering | Anthropic Claude API | Direkte fra browser med brukerens nøkkel |
+| Autentisering | NextAuth v5 | Fleksibel, støtter credentials + 2FA |
+| Transkripsjon | Soniox (EU-endpoint) | Sanntid, norsk språkstøtte, GDPR-compliant |
+| AI-tekstgenerering | Anthropic Claude via AWS Bedrock | Server-side SSE streaming (eu-west-1), EU-databehandling |
 | Hosting | Selvhosted VPS (EU) | Full kontroll, ingen tredjepart for pasientdata |
 
 ### Nøkkelhåndtering
 
-- AssemblyAI API-nøkkel lagres på serveren; brukes kun til å generere kortlivede temp-tokens
+- Soniox API-nøkkel lagres på serveren; brukes kun til å generere kortlivede temp-tokens
 - Temp-tokens er gyldige i ~60 sekunder og er sesjonsspesifikke
-- Claude API-nøkkel: Klinikkens nøkkel lagres kryptert i brukerens konto (kryptert med brukerens passord/PIN, serveren kan ikke lese klartekst)
-- Dekryptert kun i nettleseren ved behov
+- Claude via AWS Bedrock: IAM-nøkler (ikke root) lagres på serveren i `.env`
+  - `BEDROCK_API_KEY` = AWS Access Key ID (starter typisk med `AKIA...`)
+  - `BEDROCK_SECRET_KEY` = AWS Secret Access Key
+  - Region: eu-central-1 (Frankfurt) er anbefalt for EU-dataresidens med `eu.`-prefiks modeller
+  - Autentisering: `AnthropicBedrock` klient fra `@anthropic-ai/bedrock-sdk`
 
 ## Funksjonalitet (planlagt)
 
@@ -81,67 +89,213 @@ Nettleser (klinikkens datamaskin)
 
 ## GDPR og personvern
 
-- Pasientdata behandles utelukkende i nettleseren og hos AssemblyAI/Anthropic
-- VPS er ikke databehandler for pasientopplysninger
-- AssemblyAI: EU-databehandling, DPA tilgjengelig — bruk `eu.assemblyai.com`
-- Anthropic: DPA tilgjengelig; vurder Claude via AWS Bedrock (eu-central-1) for EU-dataresidens
-- Ingen lydopptak lagres — streames direkte og kastes
-- Transkript og notater beholdes kun i nettlesersesjon (ikke sendt til server)
+- Pasientdata behandles i nettleseren og hos Soniox/AWS Bedrock
+- VPS håndterer autentisering og proxier notatgenerering (ikke databehandler av pasientinnhold selv)
+- Soniox: EU-databehandling, DPA tilgjengelig
+- AWS Bedrock (eu-west-1 Irland): EU-databehandling for Claude-modeller
+  - Bedrock API key (langtidstoken) lagres på server som miljøvariabel
+  - Pasienttranskript sendes fra browser → server → Bedrock
+  - Generert notat returneres som SSE-stream tilbake til browser
+- Ingen lydopptak lagres — streames direkte gjennom Soniox
+- Transkript og notater beholdes kun i nettlesersesjon (eller IndexedDB med TTL)
 - Logging på serveren skal ikke inneholde pasientrelatert innhold
 - 2FA anbefalt for alle brukere
 
-## Mappestruktur (planlagt)
+## Mappestruktur
 
 ```
 legeassist/
 ├── CLAUDE.md
 ├── package.json
 ├── next.config.ts
+├── tsconfig.json
+├── .env                           # Miljøvariabler (server-side)
+├── .env.local                     # Lokal override
 ├── prisma/
-│   └── schema.prisma          # Brukere, maler, tokens
+│   └── schema.prisma              # Brukere, maler, sesjon
 ├── src/
-│   ├── app/                   # Next.js App Router
-│   │   ├── (auth)/            # Login, registrering
-│   │   ├── (app)/             # Hovedapp (beskyttet)
-│   │   │   └── konsultasjon/
-│   │   └── api/
-│   │       ├── auth/          # NextAuth
-│   │       ├── assemblyai-token/  # Genererer temp-tokens
-│   │       └── maler/         # CRUD for promptmaler
+│   ├── app/                       # Next.js App Router
+│   │   ├── (auth)/                # Login, registrering
+│   │   ├── (app)/                 # Hovedapp (beskyttet)
+│   │   │   ├── konsultasjon/      # Konsultasjonsvisning + notatgenerering
+│   │   │   ├── innstillinger/     # Brukerinnstillinger (2FA, Bedrock-info)
+│   │   │   └── admin/
+│   │   │       └── innstillinger/ # Adminside: modell/region/nøkler (kun admin)
+│   │   ├── api/
+│   │   │   ├── auth/              # NextAuth
+│   │   │   ├── soniox-token/      # Genererer temp-tokens for Soniox
+│   │   │   ├── claude/            # SSE-endpoint for notatgenerering via Bedrock
+│   │   │   └── admin/
+│   │   │       ├── settings/      # GET/POST for SystemSetting (modell, region)
+│   │   │       └── test-bedrock/  # Tilkoblingstest mot Bedrock
+│   │   ├── global-error.tsx       # Global error boundary
+│   │   └── (app)/error.tsx        # App-level error boundary
 │   ├── components/
-│   │   ├── ui/                # shadcn/ui-komponenter
-│   │   ├── opptak/            # Opptaks- og transkripsjonskontroller
-│   │   └── notat/             # Notatvisning og -redigering
+│   │   ├── ui/                    # shadcn/ui-komponenter
+│   │   ├── app/
+│   │   │   └── konsultasjon-view.tsx  # KonsultasjonsUI med Claude-integrasjon
+│   │   └── admin/
+│   │       └── bedrock-innstillinger.tsx  # Client-komponent for admin-konfig
 │   ├── lib/
-│   │   ├── assemblyai.ts      # Temp-token-generering
-│   │   ├── claude.ts          # Claude API-wrapper (browser-side)
-│   │   └── db.ts              # Prisma-klient
+│   │   ├── auth.ts                # NextAuth konfigurasjon
+│   │   ├── db.ts                  # Prisma-klient
+│   │   ├── admin.ts               # isAdmin(), hentSystemSetting(), tilgjengeligeModeller/Regioner()
+│   │   └── staging.ts             # TYPE_STAGING: detaljerte systemprompts per notattype
+│   ├── types/
+│   │   └── konsultasjon.ts        # Typedefinisjon for Konsultasjon
 │   └── hooks/
-│       ├── useRecording.ts    # Web Audio API + AssemblyAI WebSocket
-│       └── useTranscript.ts   # Sanntidstranskript-state
+│       └── use-claude.ts          # Client-side hook for SSE-streaming
 └── public/
 ```
 
 ## Miljøvariabler (server)
 
 ```env
-# Database
-DATABASE_URL=postgresql://...
+# Database (MariaDB)
+DATABASE_URL="mysql://bruker:passord@host:3306/databasenavn"
 
-# AssemblyAI (kun server-side, kun for token-generering)
-ASSEMBLYAI_API_KEY=...
+# NextAuth v5
+AUTH_SECRET=...                    # 32 bytes, hex-encodet
 
-# NextAuth
-NEXTAUTH_SECRET=...
-NEXTAUTH_URL=https://...
+# TOTP-kryptering (for 2FA)
+TOTP_ENCRYPTION_KEY=...           # 32 bytes, hex-encodet
 
-# Valgfritt: Anthropic (hvis server-side proxy ønskes)
-# ANTHROPIC_API_KEY=...
+# Soniox (kun server-side, kun for token-generering)
+SONIOX_API_KEY=...
+SONIOX_API_HOST=https://api.soniox.com
+SONIOX_WS_URL=wss://stt-rt.soniox.com/transcribe-websocket
+
+# AWS Bedrock (Claude via Bedrock)
+BEDROCK_API_KEY=AKIA...           # AWS Access Key ID
+BEDROCK_SECRET_KEY=...            # AWS Secret Access Key
+ANTHROPIC_MODEL=eu.anthropic.claude-sonnet-4-6  # Standard Bedrock-modell-ID
+AWS_REGION=eu-central-1           # Frankfurt (EU-databehandling)
+BEDROCK_MODELS=eu.anthropic.claude-sonnet-4-6,eu.anthropic.claude-opus-4-8  # Tilgjengelige modeller (kommaseparert)
+BEDROCK_REGIONS=eu-central-1,eu-west-1  # Tilgjengelige regioner (kommaseparert)
+
+# Administrasjon
+ADMIN_EMAILS=admin@klinikk.no     # Kommaseparert liste over admin-e-poster
 ```
+
+## Claude-integrasjon
+
+### Arkitektur
+
+Notatgenerering bruker **server-side SSE-streaming** for å strømme Claude-utdata i sanntid til nettleseren.
+
+```
+1. Browser (konsultasjon-view.tsx)
+   ├─ Bruker har opptak og transkript
+   ├─ Klikker "Regenerer" → useClaude.genererNotat()
+   │
+   ↓
+2. Server (/api/claude/route.ts)
+   ├─ Mottaker: {transkript, kontekst, tilleggsinfo, malInnhold, type}
+   ├─ Bygger system prompt fra TYPE_STAGING + template
+   ├─ Instansier AnthropicBedrock klient
+   ├─ Caller client.messages.stream()
+   │
+   ↓
+3. AWS Bedrock (eu-west-1)
+   ├─ Behandler med Claude-modell (opus-4-8)
+   ├─ Returnerer streaming response
+   │
+   ↓
+4. Server (SSE-formatering)
+   ├─ Konverterer text deltas til "data: {text: ...}\n"
+   ├─ Streamer [DONE] til slutt
+   │
+   ↓
+5. Browser (useClaude hook)
+   ├─ Lytter på SSE event stream
+   ├─ Parser "data: " linjer, JSON.parse() payload
+   ├─ Akkumulerer tekst + kaller onDelta() per chunk
+   ├─ Kaller onFerdig() når ferdig
+   │
+   ↓
+6. Browser UI (konsultasjon-view.tsx)
+   ├─ onDelta() oppdaterer textarea i sanntid
+   ├─ onFerdig() lagrer notat i konsultasjon + IndexedDB
+   └─ Bruker kan avbryte med abortRef.current?.abort()
+```
+
+### Bedrock-autentisering
+
+**Nøkkelformat:** To separate nøkler — `BEDROCK_API_KEY` (Access Key ID) og `BEDROCK_SECRET_KEY` (Secret Access Key).
+
+```typescript
+// src/app/api/claude/route.ts
+async function lagBedrockKlient() {
+  const region = await hentSystemSetting("bedrock_region", standardRegion())
+  return new AnthropicBedrock({
+    awsAccessKey: process.env.BEDROCK_API_KEY ?? "",
+    awsSecretKey: process.env.BEDROCK_SECRET_KEY ?? "",
+    awsRegion: region,
+  })
+}
+```
+
+Region og modell leses fra `SystemSetting` i databasen (satt av admin), med fallback til `ANTHROPIC_MODEL`/`AWS_REGION` i `.env`.
+
+**Generering av nøkler:**
+1. AWS Console → IAM → Users → (din IAM bruker, IKKE root)
+2. Security Credentials → Create access key
+3. Velg "Application running outside AWS"
+4. Kopier begge nøklene (vises kun én gang)
+5. Legg inn i `.env` som `BEDROCK_API_KEY=AKIA...` og `BEDROCK_SECRET_KEY=...`
+
+### useClaude hook
+
+Client-side hook i `src/hooks/use-claude.ts` håndterer SSE-parsing og streaming state:
+
+```typescript
+const { genererNotat, isGenerating, feil, avbryt } = useClaude()
+
+await genererNotat(
+  konsultasjon,
+  (tekst) => { /* per-chunk callback */ },
+  async (fullTekst) => { /* når ferdig, lagre */ }
+)
+```
+
+**Streaming lifecycle:**
+- `isGenerating=true` mens streaming pågår
+- `onDelta` kalles for hvert tekstfragment fra server
+- `onFerdig` kalles med akkumulert tekst når `[DONE]` mottas
+- `avbryt()` sender AbortController.abort()
+
+### Notatmaler
+
+Notatgenerering bruker type-spesifikke **system prompts**:
+
+```typescript
+// SOAP, Epikriser, Sykemelding, osv.
+// Definert i type-systemer + template-override
+const systemPrompt = lagSystemPrompt(type, malInnhold)
+```
+
+Server bygger prompten fra:
+1. `TYPE_STAGING[konsultasjon.type]` — standard prompt for notattypen
+2. `malInnhold` — brukerens fritekst-override/tilpassning
+
+### Modell og innstillinger
+
+**Modell og region** lagres i `SystemSetting`-tabellen i databasen og administreres via admin-siden. Fallback: `ANTHROPIC_MODEL` og `AWS_REGION` i `.env`.
+
+**Tilgjengelige modeller/regioner** defineres i `.env` med `BEDROCK_MODELS` og `BEDROCK_REGIONS` (kommaseparert). Modeller med `eu.`-prefiks bruker Bedrock cross-region inference og holder data innenfor EU.
+
+**Admin-side** (`/admin/innstillinger`, kun for e-poster i `ADMIN_EMAILS`):
+- Velg aktiv modell og region fra dropdowns
+- Test Bedrock-tilkobling
+- Se nøkkelstatus
+
+**Brukerinnstillinger** (`/innstillinger`) viser aktiv modell/region (skrivebeskyttet) og 2FA.
 
 ## Konvensjoner
 
 - Norsk brukergrensesnitt
 - TypeScript overalt
-- Server Components der mulig, Client Components kun ved behov (opptak, real-time)
+- Server Components der mulig, Client Components kun ved behov (opptak, real-time, streaming)
 - Ingen pasientdata i serverlogs — bruk strukturert logging med allowlist for felter
+- Bedrock API-nøkkel behandles som hemmelighet (aldri logg, aldri git)
+- SSE-streaming for optimale ytelse og brukeropplevelse (real-time notatgenerering)

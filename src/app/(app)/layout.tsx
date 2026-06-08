@@ -1,6 +1,7 @@
 import { AppSidebar } from "@/components/app/app-sidebar"
 import { KonsultasjonProvider } from "@/hooks/use-konsultasjon"
 import { auth } from "@/lib/auth"
+import { isAdmin } from "@/lib/admin"
 
 export default async function AppLayout({
   children,
@@ -8,6 +9,7 @@ export default async function AppLayout({
   children: React.ReactNode
 }) {
   const session = await auth()
+  const erAdmin = isAdmin(session?.user?.email)
 
   return (
     <KonsultasjonProvider>
@@ -15,6 +17,7 @@ export default async function AppLayout({
         <AppSidebar
           brukerNavn={session?.user?.name ?? null}
           brukerEpost={session?.user?.email ?? null}
+          erAdmin={erAdmin}
         />
         <main className="flex-1 overflow-y-auto">{children}</main>
       </div>

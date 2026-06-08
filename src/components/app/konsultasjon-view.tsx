@@ -17,6 +17,8 @@ import {
   MonitorPlay,
   AlertCircle,
   Check,
+  Video,
+  PersonStanding,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -45,7 +47,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useKonsultasjon } from "@/hooks/use-konsultasjon"
 import { useMikrofon } from "@/hooks/use-mikrofon"
-import { useTranskribering } from "@/hooks/use-transkribering"
+import { useTranskribering, type MoteForm } from "@/hooks/use-transkribering"
 import { useClaude } from "@/hooks/use-claude"
 import { TYPE_LABELS, TYPE_STAGING } from "@/types/konsultasjon"
 
@@ -66,16 +68,18 @@ export function KonsultasjonView() {
   const { mikrofoner, valgtId, valgtEtikett, velgMikrofon, beOmTillatelse } =
     useMikrofon()
 
-  const transkribering = useTranskribering(
-    aktiv?.type ?? "KONSULTASJON",
-    valgtId
-  )
-
-  const { genererNotat, isGenerating, feil: claudeFeil, avbryt } = useClaude()
-
   const [visTranskript, setVisTranskript] = useState(false)
   const [kopiert, setKopiert] = useState(false)
   const [appendModus, setAppendModus] = useState(false)
+  const [moteform, setMoteform] = useState<MoteForm>("video")
+
+  const transkribering = useTranskribering(
+    aktiv?.type ?? "KONSULTASJON",
+    valgtId,
+    moteform
+  )
+
+  const { genererNotat, isGenerating, feil: claudeFeil, avbryt } = useClaude()
   // Buffer for streaming-tekst (vises i notat-feltet mens Claude genererer)
   const [streamingNotat, setStreamingNotat] = useState("")
 
@@ -106,8 +110,10 @@ export function KonsultasjonView() {
   const harNotat = Boolean(visNotat)
   const erNAV = aktiv.type === "DIALOGMOTE_NAV"
 
+  const brukerMikrofon = !erNAV || moteform !== "video"
+
   async function handleStart() {
-    if (mikrofoner.length === 0 && !erNAV) {
+    if (mikrofoner.length === 0 && brukerMikrofon) {
       await beOmTillatelse()
     }
     setAppendModus(false)
@@ -116,7 +122,7 @@ export function KonsultasjonView() {
   }
 
   async function handleFortsettOpptak() {
-    if (mikrofoner.length === 0 && !erNAV) {
+    if (mikrofoner.length === 0 && brukerMikrofon) {
       await beOmTillatelse()
     }
     setAppendModus(true)
@@ -257,15 +263,63 @@ export function KonsultasjonView() {
                 : "border-slate-200 bg-white"
           }`}
         >
-          {/* Veiledning for NAV-dialogmøte */}
+          {/* Møteform-velger for NAV-dialogmøte */}
           {erNAV && !erAktiv && (
-            <div className="flex items-start gap-2 mb-3 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
-              <MonitorPlay className="w-4 h-4 shrink-0 mt-0.5" />
-              <span>
-                Klikk «Start opptak», velg <strong>nettleserfanen</strong> der
-                NAV-videomøtet kjører, og huk av{" "}
-                <strong>«Del lyd fra fane»</strong>. Begge stemmer fanges.
-              </span>
+            <div className="mb-3 space-y-2">
+              <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                Møteform
+              </p>
+              <div className="flex gap-2">
+                {(
+                  [
+                    { id: "video", ikon: <Video className="w-3.5 h-3.5" />, label: "Video" },
+                    { id: "telefon", ikon: <Phone className="w-3.5 h-3.5" />, label: "Telefon" },
+                    { id: "fysisk", ikon: <PersonStanding className="w-3.5 h-3.5" />, label: "Fysisk" },
+                  ] as { id: MoteForm; ikon: React.ReactNode; label: string }[]
+                ).map(({ id, ikon, label }) => (
+                  <button
+                    key={id}
+                    onClick={() => setMoteform(id)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors ${
+                      moteform === id
+                        ? "border-emerald-500 bg-emerald-50 text-emerald-700"
+                        : "border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-700"
+                    }`}
+                  >
+                    {ikon}
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <div className="flex items-start gap-2 text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
+                {moteform === "video" && (
+                  <>
+                    <MonitorPlay className="w-4 h-4 shrink-0 mt-0.5 text-emerald-600" />
+                    <span>
+                      Velg <strong>nettleserfanen</strong> der videomøtet kjører og huk av{" "}
+                      <strong>«Del lyd fra fane»</strong>. Begge stemmer fanges.
+                    </span>
+                  </>
+                )}
+                {moteform === "telefon" && (
+                  <>
+                    <Phone className="w-4 h-4 shrink-0 mt-0.5 text-emerald-600" />
+                    <span>
+                      Mikrofon brukes. Legg telefonen nær mikrofonen eller bruk høyttaler
+                      slik at alle stemmer fanges.
+                    </span>
+                  </>
+                )}
+                {moteform === "fysisk" && (
+                  <>
+                    <PersonStanding className="w-4 h-4 shrink-0 mt-0.5 text-emerald-600" />
+                    <span>
+                      Mikrofon brukes. Plasser enheten sentralt i rommet slik at alle
+                      deltakere høres tydelig.
+                    </span>
+                  </>
+                )}
+              </div>
             </div>
           )}
 
@@ -277,7 +331,7 @@ export function KonsultasjonView() {
                 onClick={handleStart}
                 disabled={erKobler}
               >
-                {erNAV ? (
+                {erNAV && moteform === "video" ? (
                   <MonitorPlay className="w-4 h-4" />
                 ) : (
                   <Mic className="w-4 h-4" />
@@ -335,8 +389,8 @@ export function KonsultasjonView() {
               </Button>
             )}
 
-            {/* Mikrofon-velger for vanlige konsultasjoner */}
-            {!erNAV && (
+            {/* Mikrofon-velger — alle typer unntatt NAV-video */}
+            {(!erNAV || moteform !== "video") && (
               <DropdownMenu>
                 <DropdownMenuTrigger
                   disabled={erAktiv}

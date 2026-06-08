@@ -1,21 +1,22 @@
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/db"
+import { hentSystemSetting, standardModell, standardRegion } from "@/lib/admin"
 import { ToFaktorSeksjon } from "@/components/settings/to-faktor-seksjon"
 import { Separator } from "@/components/ui/separator"
 import { User, Shield, Key } from "lucide-react"
 
 export default async function InnstillingerSide() {
   const session = await auth()
-  const bruker = session?.user?.id
-    ? await prisma.user.findUnique({
-        where: { id: session.user.id },
-        select: {
-          name: true,
-          email: true,
-          twoFactorEnabled: true,
-        },
-      })
-    : null
+  const [bruker, aktivModell, aktivRegion] = await Promise.all([
+    session?.user?.id
+      ? prisma.user.findUnique({
+          where: { id: session.user.id },
+          select: { name: true, email: true, twoFactorEnabled: true },
+        })
+      : null,
+    hentSystemSetting("bedrock_model", standardModell()),
+    hentSystemSetting("bedrock_region", standardRegion()),
+  ])
 
   return (
     <div className="max-w-2xl mx-auto px-6 py-8 space-y-8">
@@ -115,14 +116,12 @@ export default async function InnstillingerSide() {
             <div className="text-xs text-slate-500 space-y-0.5">
               <p>
                 Modell:{" "}
-                <code className="bg-slate-100 px-1 rounded">
-                  {process.env.ANTHROPIC_MODEL ?? "anthropic.claude-opus-4-8"}
-                </code>
+                <code className="bg-slate-100 px-1 rounded">{aktivModell}</code>
               </p>
               <p>
                 Region:{" "}
-                <code className="bg-slate-100 px-1 rounded">eu-north-1</code>
-                {" "}(Stockholm) — data forlater ikke EU.
+                <code className="bg-slate-100 px-1 rounded">{aktivRegion}</code>
+                {" "}— data forlater ikke EU.
               </p>
               <p>
                 AWS Bedrock bruker ikke kundedata til modelltrening. Data lagres

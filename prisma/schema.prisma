@@ -108,3 +108,9 @@ model Mal {
   @@index([kategori])
   @@index([erDelt])
 }
+
+model SystemSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}

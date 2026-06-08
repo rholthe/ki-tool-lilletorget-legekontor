@@ -30,13 +30,6 @@ export const TYPE_LABELS: Record<KonsultasjonsType, string> = {
   DIALOGMOTE_NAV: "Dialogmøte NAV",
 }
 
-export const TYPE_STAGING: Record<KonsultasjonsType, string> = {
-  KONSULTASJON:
-    "Du er fastlege og har en pasient på kontoret. Generer et journalnotat basert på konsultasjonen.",
-  TELEFONKONSULTASJON:
-    "Du er fastlege og tar en telefonkonsultasjon med en pasient. Generer et journalnotat basert på samtalen.",
-  DIALOGMOTE_NAV:
-    "Du er fastlege og deltar i et dialogmøte med NAV og en pasient. Generer et referat/notat basert på møtet.",
-}
+export { TYPE_STAGING } from "@/lib/staging"
 
 export const TTL_MS = 24 * 60 * 60 * 1000 // 24 timer
