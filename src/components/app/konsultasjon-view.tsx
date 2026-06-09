@@ -72,7 +72,6 @@ export function KonsultasjonView() {
 
   const [visTranskript, setVisTranskript] = useState(false)
   const [kopiert, setKopiert] = useState(false)
-  const [appendModus, setAppendModus] = useState(false)
   const [moteform, setMoteform] = useState<MoteForm>("video")
   const [visVedlegg, setVisVedlegg] = useState(false)
 
@@ -90,9 +89,6 @@ export function KonsultasjonView() {
   const prevAktivIdRef = useRef<string | null>(null)
   const transkriberingRef = useRef(transkribering)
   transkriberingRef.current = transkribering
-  // appendModus-ref: auto-pause-effekten trenger riktig verdi for å kombinere transkript
-  const appendModusRef = useRef(appendModus)
-  appendModusRef.current = appendModus
 
   // Sett automatisk på pause når bruker bytter konsultasjon midt i opptak.
   // Må ligge FØR tidlig return — hooks kan ikke kalles betinget.
@@ -109,33 +105,36 @@ export function KonsultasjonView() {
         if (t.status === "opptar" || t.status === "kobler") {
           t.pause()
         }
-        // Hent fersk versjon fra DB (aktiv i kontekst kan ha stale felt) og lagre med pause-status.
-        // Transcript tas fra hooken synkront nå, resten (kontekst, pasientId osv.) fra DB.
+        // Hooken inneholder alltid fullstendig transkript (inkl. pre-lastet fra DB).
+        // Hent fersk versjon fra DB for øvrige felt, overskriv bare transkript + status.
         const transkriptNaa = t.transkript
-        const varAppendModus = appendModusRef.current
         hentKonsultasjon(prevId).then(fersk => {
           if (!fersk) return
-          // Dersom "Fortsett opptak" var aktiv kombineres nytt og gammelt transkript
-          const kombinert = varAppendModus && fersk.transkript
-            ? `${fersk.transkript}\n\n${transkriptNaa}`.trim()
-            : (transkriptNaa || fersk.transkript)
           return lagreKonsultasjon({
             ...fersk,
-            transkript: kombinert,
+            transkript: transkriptNaa || fersk.transkript,
             status: "pause",
           })
         }).then(() => {
-          // Varsle sidebar om at listen bør oppdateres
           window.dispatchEvent(new Event("legeassist:refresh-liste"))
         })
       }
 
       t.nullstill()
-      setAppendModus(false)
     }
 
     prevAktivIdRef.current = aktiv?.id ?? null
   }, [aktiv?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Autolagring av transkript til IndexedDB hvert 10. sekund under aktivt opptak.
+  useEffect(() => {
+    if (transkribering.status !== "opptar") return
+    const id = setInterval(() => {
+      const t = transkriberingRef.current.transkript
+      if (t) oppdater({ transkript: t })
+    }, 10_000)
+    return () => clearInterval(id)
+  }, [transkribering.status, oppdater]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!aktiv) {
     return (
@@ -161,7 +160,7 @@ export function KonsultasjonView() {
   const erKobler = transkribering.status === "kobler"
   // Pause fra forrige sesjon (status i DB = "pause", men hook er fersk)
   const erLagretPause = aktiv.status === "pause" && !erAktiv && !erKobler
-  const harTranskript = Boolean(aktiv.transkript)
+  const harTranskript = Boolean(aktiv.transkript) || Boolean(transkribering.transkript)
   const visNotat = isGenerating ? streamingNotat : aktiv.notat
   const harNotat = Boolean(visNotat)
   const erNAV = aktiv.type === "DIALOGMOTE_NAV"
@@ -172,23 +171,23 @@ export function KonsultasjonView() {
     if (mikrofoner.length === 0 && brukerMikrofon) {
       await beOmTillatelse()
     }
-    setAppendModus(false)
     await transkribering.start()
     if (aktiv) await oppdater({ status: "opptar" })
   }
 
   async function handleFortsettOpptak() {
+    if (!aktiv) return
     if (mikrofoner.length === 0 && brukerMikrofon) {
       await beOmTillatelse()
     }
-    setAppendModus(true)
-    await transkribering.start()
-    if (aktiv) await oppdater({ status: "opptar" })
+    await transkribering.fortsetFraLagret(aktiv.transkript)
+    await oppdater({ status: "opptar" })
   }
 
   async function handlePause() {
+    const transkriptNaa = transkribering.transkript
     transkribering.pause()
-    await oppdater({ status: "pause" })
+    await oppdater({ transkript: transkriptNaa, status: "pause" })
   }
 
   async function handleFortsettInSession() {
@@ -200,14 +199,8 @@ export function KonsultasjonView() {
     const nyTranskript = await transkribering.stopp()
     if (!aktiv) return
 
-    const kombinert = appendModus && aktiv.transkript
-      ? `${aktiv.transkript}\n\n${nyTranskript}`.trim()
-      : nyTranskript
-    setAppendModus(false)
-
-    // Lagre transkript
-    const oppdatert = { ...aktiv, transkript: kombinert, status: "ferdig" as const }
-    await oppdater({ transkript: kombinert, status: "ferdig" })
+    const oppdatert = { ...aktiv, transkript: nyTranskript, status: "ferdig" as const }
+    await oppdater({ transkript: nyTranskript, status: "ferdig" })
 
     // Auto-generer notat med Claude
     setStreamingNotat("")
@@ -239,7 +232,6 @@ export function KonsultasjonView() {
     if (mikrofoner.length === 0 && brukerMikrofon) {
       await beOmTillatelse()
     }
-    setAppendModus(false) // transkript pre-loades inn i ref av fortsetFraLagret
     await transkribering.fortsetFraLagret(aktiv.transkript)
     await oppdater({ status: "opptar" })
   }

@@ -58,34 +58,44 @@ export function lagVedleggInstruksjon(vedlegg: Vedlegg): string {
       return (
         "Analyser dette EKG-bildet etter standard mønster: rytme, frekvens, akse, " +
         "P-bølge, PQ-tid, QRS-kompleks, QT-tid, ST-segment og T-bølger. " +
-        "Poengtert og klinisk relevant — unngå overdiagnostisering. " +
-        "Integrer funn i O- og A-seksjonen i notatet."
+        "Poengtert og kortfattet. Unngå overdiagnostisering. Ikke inkluder pasientdata, ikke inkluder symptombeskrivelse. " +
+        "Start analysen med 'EKG:[**AI-tolket**]:', deretter kort sammenhengende beskrivelse kun med komma mellom. " +
+        "En god EKG-beskrivelse bør munne ut i en kort konklusjon, for eksempel: " +
+        "'Sinusrytme, normal akse. Ingen tegn til akutt iskemi eller tidligere infarkt. Normalt EKG.' " +
+        "eller 'Sinustakykardi. Signifikante ST-senkninger V4–V6 forenlig med lateral iskemi.' " +
+        "Integrer funn i O-seksjonen i notatet."
       )
 
     case "spirometri": {
       const testtype = vedlegg.spirometriType ?? "uten_bronkodilator"
       if (testtype === "uten_bronkodilator") {
         return (
-          "Tolk denne spirometrimålingen (baseline, uten bronkodilator). " +
-          "Vurder FEV1, FVC og FEV1/FVC-ratio mot forventede verdier. " +
-          "Klassifiser eventuelle obstruktive eller restriktive mønstre (GOLD-klassifisering der relevant). " +
-          "Integrer funn i O- og A-seksjonen."
+          "Tolk denne spirometrimålingen (baseline). " +
+          "Poengtert og kortfattet. Ikke inkluder pasientdata eller symptombeskrivelse. " +
+          "Start med 'Spirometri:[**AI-tolket**]:', deretter kort sammenhengende beskrivelse av FEV1, FVC og FEV1/FVC kun med komma mellom. " +
+          "Avslutt med én setning konklusjon, for eksempel: 'Moderat obstruksjon forenlig med KOLS GOLD 2. Ingen restriktiv komponent.' " +
+          "eller 'Normal spirometri, ingen obstruksjon eller restriksjon.' " +
+          "Integrer funn i O-seksjonen i notatet."
         )
       }
       if (testtype === "etter_aktivitet") {
         return (
           "Tolk denne spirometrimålingen tatt etter aktivitet (anstrengelsestest). " +
-          "Vurder om det er tegn til anstrengelsesutløst bronkospasme (FEV1-fall ≥10–15 %). " +
-          "Sammenlikn med baselineverdier hvis tilgjengelig i kontekst. " +
-          "Integrer funn i O- og A-seksjonen."
+          "Poengtert og kortfattet. Ikke inkluder pasientdata eller symptombeskrivelse. " +
+          "Start med 'Spirometri etter aktivitet:[**AI-tolket**]:', deretter kort sammenhengende beskrivelse med FEV1-endring fra baseline kun med komma mellom. " +
+          "Avslutt med én setning konklusjon, for eksempel: 'FEV1-fall på 18 % forenlig med anstrengelsesutløst bronkospasme.' " +
+          "eller 'Ingen signifikant FEV1-fall. Funn taler mot EIB.' " +
+          "Integrer funn i O-seksjonen i notatet."
         )
       }
       // med_bronkodilator
       return (
         "Tolk denne spirometrimålingen etter bronkodilator (post-BD). " +
-        "Vurder reversibilitet: en økning i FEV1 ≥12 % og ≥200 ml regnes som signifikant. " +
-        "Sammenlikn med pre-BD-verdier hvis tilgjengelig i kontekst. " +
-        "Integrer funn i O- og A-seksjonen."
+        "Poengtert og kortfattet. Ikke inkluder pasientdata eller symptombeskrivelse. " +
+        "Start med 'Spirometri post-BD:[**AI-tolket**]:', deretter kort sammenhengende beskrivelse av reversibilitet kun med komma mellom. " +
+        "Avslutt med én setning konklusjon, for eksempel: 'Signifikant reversibilitet, FEV1 +15 %, forenlig med astma.' " +
+        "eller 'Ingen signifikant reversibilitet. Funn forenlig med KOLS fremfor astma.' " +
+        "Integrer funn i O-seksjonen i notatet."
       )
     }
 
