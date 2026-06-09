@@ -51,6 +51,7 @@ import { useTranskribering, type MoteForm } from "@/hooks/use-transkribering"
 import { useClaude } from "@/hooks/use-claude"
 import { TYPE_LABELS, TYPE_STAGING, type Vedlegg, type Konsultasjon } from "@/types/konsultasjon"
 import { VedleggPanel } from "@/components/app/vedlegg-panel"
+import { ChatModal } from "@/components/app/chat-modal"
 import { lagreKonsultasjon, hentKonsultasjon } from "@/lib/idb"
 
 const TYPE_IKON = {
@@ -71,6 +72,7 @@ export function KonsultasjonView() {
     useMikrofon()
 
   const [visTranskript, setVisTranskript] = useState(false)
+  const [visChat, setVisChat] = useState(false)
   const [kopiert, setKopiert] = useState(false)
   const [moteform, setMoteform] = useState<MoteForm>("video")
   const [visVedlegg, setVisVedlegg] = useState(false)
@@ -641,13 +643,13 @@ export function KonsultasjonView() {
                 variant="outline"
                 size="sm"
                 className="gap-1.5 text-sm"
-                disabled={!harTranskript}
+                onClick={() => setVisChat(true)}
               >
                 <MessageSquare className="w-4 h-4" />
                 Chat / AI-hjelp
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Spør AI om konsultasjonen (kommer snart)</TooltipContent>
+            <TooltipContent>Spør AI om konsultasjonen</TooltipContent>
           </Tooltip>
 
           <div className="flex-1" />
@@ -718,6 +720,8 @@ export function KonsultasjonView() {
           />
         </DialogContent>
       </Dialog>
+
+      <ChatModal open={visChat} onClose={() => setVisChat(false)} />
     </div>
   )
 }

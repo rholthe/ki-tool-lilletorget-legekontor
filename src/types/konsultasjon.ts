@@ -37,6 +37,13 @@ export interface Vedlegg {
   egendefinertPrompt?: string
 }
 
+export interface ChatMelding {
+  id: string
+  role: "user" | "assistant" | "system"
+  content: string
+  timestamp: number
+}
+
 export interface Konsultasjon {
   id: string
   type: KonsultasjonsType
@@ -51,6 +58,13 @@ export interface Konsultasjon {
   status: KonsultasjonsStatus
   createdAt: number
   expiresAt: number
+  chatHistorikk?: ChatMelding[]
+  chatKontekstSnapshot?: {
+    transkript: string
+    kontekst: string
+    tilleggsinfo: string
+    vedleggIds: string[]
+  }
 }
 
 export const TYPE_LABELS: Record<KonsultasjonsType, string> = {

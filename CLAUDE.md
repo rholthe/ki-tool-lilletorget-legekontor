@@ -1,16 +1,16 @@
 # legeassist
 
-Nettbasert KI-assistent for fastleger. Tar opp konsultasjoner mellom lege og pasient, transkriberer tale i sanntid og genererer journalnotater og andre kliniske dokumenter ved hjelp av Claude AI.
+Nettbasert KI-assistent for fastleger. Tar opp konsultasjoner mellom lege og pasient, transkriberer tale i sanntid ved hjelp av Soniox og genererer journalnotater og andre kliniske dokumenter ved hjelp av Claude AI.
 
 ## Prosjektstatus
 
-Under planlegging / tidlig utvikling.
+Under aktiv utvikling. Kjerneflyt (opptak → transkript → notat) er implementert og fungerer.
 
 ## Arkitektur
 
 ### Overordnet prinsipp: Privacy-by-design
 
-Pasientdata (lydopptak, transkripsjon, notater) berører **aldri** applikasjonsserveren. All behandling av pasientrelatert innhold skjer direkte mellom nettleseren og tredjeparts-API-er (AssemblyAI, Claude). Serveren håndterer kun brukerkontoer og innholdsmaler.
+Pasientdata (lydopptak, transkripsjon, notater) berører **aldri** applikasjonsserveren. All behandling av pasientrelatert innhold skjer direkte mellom nettleseren og tredjeparts-API-er (Soniox, Claude). Serveren håndterer kun brukerkontoer og innholdsmaler.
 
 ### Dataflyt
 
@@ -22,7 +22,7 @@ VPS (legeassist-server)
   ├── Brukerpreferanser
   ├── Genererer kortlivede temp-tokens for Soniox (ingen pasientinnhold)
   │
-  └──→ AWS Bedrock (eu-west-1)
+  └──→ AWS Bedrock (eu-central-1)
           Claude API-forespørsler med transkript + prompt
           Returnerer SSE-stream av generert notat
 
@@ -60,32 +60,29 @@ Nettleser (klinikkens datamaskin)
   - Region: eu-central-1 (Frankfurt) er anbefalt for EU-dataresidens med `eu.`-prefiks modeller
   - Autentisering: `AnthropicBedrock` klient fra `@anthropic-ai/bedrock-sdk`
 
-## Funksjonalitet (planlagt)
+## Funksjonalitet
 
-### Kjerneflyt
-- Mikrofonfangst i nettleser (Web Audio API)
-- Sanntidstranskribering med AssemblyAI (speaker diarization: lege vs. pasient)
-- Live transkripsjon synlig under opptak
-- Pause/fortsett opptak
-- Generering av journalnotat (eller annen dokumenttype) via Claude etter opptak
+### Implementert
+- Mikrofonfangst i nettleser (Web Audio API) + skjermdeling for videomøter (NAV)
+- Sanntidstranskribering med Soniox, pause/fortsett opptak
+- Autolagring av transkript hvert 10 sek under opptak + lagring ved pause
+- Alle "fortsett"-knapper pre-laster eksisterende transkript (ingen appendModus)
+- SOAP-notatgenerering via Claude (SSE-streaming), auto-start etter stopp
+- Chat / AI-hjelp: multi-turn chat med konsultasjonskontekst, lagret i IndexedDB
+  - Historikk bevares ved lukking/gjenåpning (24t TTL)
+  - Endringsmarkører når transkript/kontekst/tilleggsinfo/vedlegg endres
+  - Vedlegg-toggles per chat-økt (velg hvilke filer AI ser)
+  - Tilgjengelig under aktivt opptak (bruker lagret transkript)
+- Vedlegg (bilder/PDF): opplasting, drag-and-drop, kamerabilde, kollapsert kortvisning
+  - Oppgaver: EKG, Spirometri (3 typer), Les tekst, Egendefinert, Kun kontekst
+  - AI-tolkede vedlegg merkes `[**AI-tolket**]` i notatet
+- 2FA (TOTP), admin-side for Bedrock-konfigurasjon (modell/region/tilkoblingstest)
 
-### Dokumenttyper
-- SOAP-notat
-- Epikriserespons / kontekstuell journalnotis
-- Sykemelding
-- Henvisning
-- Fritekst KI-chat med kontekst
-
-### Biblioteker og maler
-- Notatmaler (systemprompter) – lagret i DB, synkronisert på tvers av enheter
-- Diktatprompts
-- Frasebibliotek
-- Mulighet for deling mellom brukere på samme klinikk
-
-### Administrasjon
-- Brukerhåndtering (enkeltbruker og klinikk-team)
-- Innstillinger for språk (norsk bokmål, nynorsk, andre)
-- Tilkoblingstest for API-er
+### Planlagt
+- Notatmaler (systemprompter) – lagret i DB
+- Snarveier i chat (NAV 8-7, NAV 6-3, sykmelding, henvisning)
+- Frasebibliotek og diktatprompts
+- Klinikk-teamfunksjonalitet
 
 ## GDPR og personvern
 
@@ -125,6 +122,7 @@ legeassist/
 │   │   │   ├── auth/              # NextAuth
 │   │   │   ├── soniox-token/      # Genererer temp-tokens for Soniox
 │   │   │   ├── claude/            # SSE-endpoint for notatgenerering via Bedrock
+│   │   │   ├── chat/              # SSE-endpoint for multi-turn chat via Bedrock
 │   │   │   └── admin/
 │   │   │       ├── settings/      # GET/POST for SystemSetting (modell, region)
 │   │   │       └── test-bedrock/  # Tilkoblingstest mot Bedrock
@@ -133,18 +131,27 @@ legeassist/
 │   ├── components/
 │   │   ├── ui/                    # shadcn/ui-komponenter
 │   │   ├── app/
-│   │   │   └── konsultasjon-view.tsx  # KonsultasjonsUI med Claude-integrasjon
+│   │   │   ├── konsultasjon-view.tsx  # KonsultasjonsUI med Claude-integrasjon
+│   │   │   ├── chat-modal.tsx         # Chat / AI-hjelp modal
+│   │   │   ├── vedlegg-panel.tsx      # Vedlegg: opplasting, kamera, oppgavevalg
+│   │   │   └── app-sidebar.tsx        # Sidebar med konsultasjonsliste
 │   │   └── admin/
 │   │       └── bedrock-innstillinger.tsx  # Client-komponent for admin-konfig
 │   ├── lib/
 │   │   ├── auth.ts                # NextAuth konfigurasjon
 │   │   ├── db.ts                  # Prisma-klient
 │   │   ├── admin.ts               # isAdmin(), hentSystemSetting(), tilgjengeligeModeller/Regioner()
-│   │   └── staging.ts             # TYPE_STAGING: detaljerte systemprompts per notattype
+│   │   ├── idb.ts                 # IndexedDB-operasjoner (konsultasjoner, 24t TTL)
+│   │   ├── staging.ts             # TYPE_STAGING (notatprompts) + CHAT_STAGING
+│   │   └── vedlegg.ts             # VEDLEGG_OPPGAVE_INFO, lagVedleggInstruksjon()
 │   ├── types/
-│   │   └── konsultasjon.ts        # Typedefinisjon for Konsultasjon
+│   │   └── konsultasjon.ts        # Konsultasjon, ChatMelding, Vedlegg, typer
 │   └── hooks/
-│       └── use-claude.ts          # Client-side hook for SSE-streaming
+│       ├── use-claude.ts          # SSE-hook for notatgenerering
+│       ├── use-chat.ts            # SSE-hook for multi-turn chat + IndexedDB-persistering
+│       ├── use-konsultasjon.tsx   # KonsultasjonContext + oppdater()
+│       ├── use-transkribering.ts  # Soniox WebSocket-klient
+│       └── use-mikrofon.ts        # Mikrofontillatelse og enhetsliste
 └── public/
 ```
 
@@ -266,17 +273,32 @@ await genererNotat(
 
 ### Notatmaler
 
-Notatgenerering bruker type-spesifikke **system prompts**:
+Notatgenerering bruker type-spesifikke **system prompts** definert i `src/lib/staging.ts`:
 
-```typescript
-// SOAP, Epikriser, Sykemelding, osv.
-// Definert i type-systemer + template-override
-const systemPrompt = lagSystemPrompt(type, malInnhold)
+- `TYPE_STAGING[konsultasjon.type]` — standard SOAP-prompt per notattype
+- `malInnhold` — brukerens fritekst-override/tilpassning (legges til etter TYPE_STAGING)
+- `CHAT_STAGING` — system prompt for chat, med `{KONTEKST}`-plassholder som erstattes dynamisk
+
+### Chat / AI-hjelp
+
+Multi-turn chat tilgjengelig fra konsultasjonsvisningen via `ChatModal`.
+
+```
+Browser (chat-modal.tsx)
+  ├─ Bruker skriver melding
+  ├─ useChat.sendMelding() → POST /api/chat
+  │
+  ↓
+Server (/api/chat/route.ts)
+  ├─ Bygger system prompt: CHAT_STAGING + kontekstfelt
+  ├─ Vedlegg inkluderes kun i første melding (uten oppgave-instruksjon)
+  ├─ Sender historikk (maks 20 meldinger, system-meldinger filtrert)
+  │
+  ↓
+AWS Bedrock → SSE-stream tilbake til browser
 ```
 
-Server bygger prompten fra:
-1. `TYPE_STAGING[konsultasjon.type]` — standard prompt for notattypen
-2. `malInnhold` — brukerens fritekst-override/tilpassning
+**Historikk:** Lagres i `konsultasjon.chatHistorikk` (IndexedDB, 24t TTL). Overlever lukking av modal og sideoppdatering. `chatKontekstSnapshot` brukes til å detektere endringer og vise markørlinjer i chatvinduet.
 
 ### Modell og innstillinger
 
@@ -297,5 +319,5 @@ Server bygger prompten fra:
 - TypeScript overalt
 - Server Components der mulig, Client Components kun ved behov (opptak, real-time, streaming)
 - Ingen pasientdata i serverlogs — bruk strukturert logging med allowlist for felter
-- Bedrock API-nøkkel behandles som hemmelighet (aldri logg, aldri git)
+- Bedrock API-nøkkel og Soniox API-nøkkel behandles som hemmelighet (aldri logg, aldri git)
 - SSE-streaming for optimale ytelse og brukeropplevelse (real-time notatgenerering)
