@@ -1,7 +1,7 @@
 export type KonsultasjonsType =
   | "KONSULTASJON"
   | "TELEFONKONSULTASJON"
-  | "DIALOGMOTE_NAV"
+  | "MOTE"
 
 export type KonsultasjonsStatus =
   | "ny"
@@ -58,6 +58,7 @@ export interface Konsultasjon {
   status: KonsultasjonsStatus
   createdAt: number
   expiresAt: number
+  stikkord?: string[]
   chatHistorikk?: ChatMelding[]
   chatKontekstSnapshot?: {
     transkript: string
@@ -70,9 +71,9 @@ export interface Konsultasjon {
 export const TYPE_LABELS: Record<KonsultasjonsType, string> = {
   KONSULTASJON: "Konsultasjon",
   TELEFONKONSULTASJON: "Telefonkonsultasjon",
-  DIALOGMOTE_NAV: "Dialogmøte NAV",
+  MOTE: "Møte",
 }
 
-export { TYPE_STAGING } from "@/lib/staging"
+export { TYPE_STAGING, KONSULTASJON_FORM_STAGING, type KonsultasjonsForm } from "@/lib/staging"
 
 export const TTL_MS = 24 * 60 * 60 * 1000 // 24 timer

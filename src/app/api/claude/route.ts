@@ -2,7 +2,13 @@ import { auth } from "@/lib/auth"
 import { NextResponse } from "next/server"
 import { AnthropicBedrock } from "@anthropic-ai/bedrock-sdk"
 import type { ContentBlockParam } from "@anthropic-ai/sdk/resources/messages"
-import { TYPE_STAGING, type KonsultasjonsType, type Vedlegg } from "@/types/konsultasjon"
+import {
+  TYPE_STAGING,
+  KONSULTASJON_FORM_STAGING,
+  type KonsultasjonsType,
+  type KonsultasjonsForm,
+  type Vedlegg,
+} from "@/types/konsultasjon"
 import {
   hentSystemSetting,
   standardModell,
@@ -12,6 +18,7 @@ import { lagVedleggInstruksjon } from "@/lib/vedlegg"
 
 interface RequestBody {
   type: KonsultasjonsType
+  konsultasjonsform?: KonsultasjonsForm
   transkript: string
   kontekst: string
   tilleggsinfo: string
@@ -46,7 +53,10 @@ export async function POST(req: Request) {
 
   const body: RequestBody = await req.json()
 
-  const stagingTekst = TYPE_STAGING[body.type]
+  const stagingTekst =
+    body.type === "KONSULTASJON" && body.konsultasjonsform
+      ? KONSULTASJON_FORM_STAGING[body.konsultasjonsform]
+      : TYPE_STAGING[body.type]
   const systemPrompt = body.malInnhold
     ? `${stagingTekst}\n\n${body.malInnhold}`
     : stagingTekst

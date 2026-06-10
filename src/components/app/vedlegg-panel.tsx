@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState, useEffect } from "react"
+import { useRef, useState, useEffect, useCallback } from "react"
 import { X, FileText, Upload, ImageIcon, ChevronDown, ChevronUp, Camera } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
@@ -33,19 +33,26 @@ interface Props {
 
 export function VedleggPanel({ vedlegg, onChange }: Props) {
   const inputRef = useRef<HTMLInputElement>(null)
-  const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
   const [kameraStream, setKameraStream] = useState<MediaStream | null>(null)
   const [kameraFeil, setKameraFeil] = useState<string | null>(null)
+  const [videoEl, setVideoEl] = useState<HTMLVideoElement | null>(null)
+  const [tilgjengeligeKameraer, setTilgjengeligeKameraer] = useState<MediaDeviceInfo[]>([])
+  const [valgtKameraId, setValgtKameraId] = useState<string>("")
 
-  // Koble stream til video-elementet når kameraet åpner
+  // Callback-ref: kobler stream til video-elementet når det monteres i DOM
+  const videoRefCallback = useCallback((node: HTMLVideoElement | null) => {
+    setVideoEl(node)
+  }, [])
+
+  // Koble stream til video-elementet (kjører når enten stream eller videoEl endres)
   useEffect(() => {
-    if (videoRef.current && kameraStream) {
-      videoRef.current.srcObject = kameraStream
+    if (videoEl && kameraStream) {
+      videoEl.srcObject = kameraStream
     }
-  }, [kameraStream])
+  }, [videoEl, kameraStream])
 
   // Rydd opp stream hvis komponenten unmountes mens kameraet er åpent
   useEffect(() => {
@@ -91,13 +98,84 @@ export function VedleggPanel({ vedlegg, onChange }: Props) {
     })
   }
 
-  async function åpneKamera() {
-    setKameraFeil(null)
+  function kameraFeilmelding(err: unknown): string {
+    if (err instanceof Error) {
+      if (err.name === "NotReadableError" || err.name === "TrackStartError") {
+        return "Kameraet er i bruk av et annet program eller en annen nettleserfane."
+      }
+      if (err.name === "NotFoundError" || err.name === "DevicesNotFoundError") {
+        return "Ingen kamera funnet på denne enheten."
+      }
+      if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
+        return "Kameratilgang ble avvist. Sjekk nettleserens tillatelser for dette nettstedet."
+      }
+      if (err.name === "OverconstrainedError") {
+        return "Valgt kamera støtter ikke forespurt oppløsning. Prøv et annet kamera."
+      }
+      return `Kamerafeil (${err.name}): ${err.message}`
+    }
+    return "Ukjent kamerafeil. Se konsollen for detaljer."
+  }
+
+  async function hentVideoStream(deviceId?: string): Promise<MediaStream> {
+    if (deviceId) {
+      // Prøv exact, fall tilbake til ideal (ved driver-quirks)
+      try {
+        return await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: deviceId } } })
+      } catch {
+        return navigator.mediaDevices.getUserMedia({ video: { deviceId: { ideal: deviceId } } })
+      }
+    }
+    // Ingen deviceId: prøv uten constraints
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true })
+      return await navigator.mediaDevices.getUserMedia({ video: {} })
+    } catch (err) {
+      if (err instanceof Error && err.name === "OverconstrainedError") {
+        // Standard kamera feiler (IR-kamera, virtuelt kamera e.l.) — prøv alle enumerte kameraer
+        const enheter = await navigator.mediaDevices.enumerateDevices()
+        const kameraer = enheter.filter((e) => e.kind === "videoinput")
+        for (const k of kameraer) {
+          try {
+            return await navigator.mediaDevices.getUserMedia({ video: { deviceId: k.deviceId } })
+          } catch {
+            continue
+          }
+        }
+      }
+      throw err
+    }
+  }
+
+  async function åpneKamera(deviceId?: string) {
+    setKameraFeil(null)
+    let stream: MediaStream | null = null
+    try {
+      stream = await hentVideoStream(deviceId)
+
+      const enheter = await navigator.mediaDevices.enumerateDevices()
+      const kameraer = enheter.filter((e) => e.kind === "videoinput")
+      setTilgjengeligeKameraer(kameraer)
+
+      const aktivId = stream.getVideoTracks()[0]?.getSettings().deviceId ?? ""
+      setValgtKameraId(aktivId)
       setKameraStream(stream)
-    } catch {
-      setKameraFeil("Kunne ikke åpne kamera. Kontroller at nettleseren har tilgang.")
+    } catch (err) {
+      stream?.getTracks().forEach((t) => t.stop())
+      console.error("Kamerafeil:", err)
+      setKameraFeil(kameraFeilmelding(err))
+    }
+  }
+
+  async function byttKamera(deviceId: string) {
+    setValgtKameraId(deviceId)
+    kameraStream?.getTracks().forEach((t) => t.stop())
+    setKameraStream(null)
+    try {
+      const stream = await hentVideoStream(deviceId)
+      setKameraStream(stream)
+    } catch (err) {
+      console.error("Kamerafeil ved bytte:", err)
+      setKameraFeil(kameraFeilmelding(err))
     }
   }
 
@@ -105,10 +183,12 @@ export function VedleggPanel({ vedlegg, onChange }: Props) {
     kameraStream?.getTracks().forEach((t) => t.stop())
     setKameraStream(null)
     setKameraFeil(null)
+    setTilgjengeligeKameraer([])
+    setValgtKameraId("")
   }
 
   function fangBilde() {
-    const video = videoRef.current
+    const video = videoEl
     const canvas = canvasRef.current
     if (!video || !canvas) return
 
@@ -191,7 +271,7 @@ export function VedleggPanel({ vedlegg, onChange }: Props) {
 
           {/* Kamera-del */}
           <button
-            onClick={åpneKamera}
+            onClick={() => åpneKamera()}
             className="w-full flex items-center justify-center gap-2 p-3.5 text-sm text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-colors"
           >
             <Camera className="w-4 h-4" />
@@ -333,13 +413,26 @@ export function VedleggPanel({ vedlegg, onChange }: Props) {
           </DialogHeader>
           <div className="space-y-3">
             <video
-              ref={videoRef}
+              ref={videoRefCallback}
               autoPlay
               playsInline
               muted
               className="w-full rounded-lg bg-black"
             />
             <canvas ref={canvasRef} className="hidden" />
+            {tilgjengeligeKameraer.length > 1 && (
+              <select
+                value={valgtKameraId}
+                onChange={(e) => byttKamera(e.target.value)}
+                className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {tilgjengeligeKameraer.map((k, i) => (
+                  <option key={k.deviceId} value={k.deviceId}>
+                    {k.label || `Kamera ${i + 1}`}
+                  </option>
+                ))}
+              </select>
+            )}
             <div className="flex gap-2 justify-end">
               <Button variant="outline" onClick={lukkKamera}>Avbryt</Button>
               <Button onClick={fangBilde} className="gap-2 bg-blue-600 hover:bg-blue-700 text-white">

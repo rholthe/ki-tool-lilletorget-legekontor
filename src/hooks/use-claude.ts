@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useCallback, useRef } from "react"
-import type { Konsultasjon } from "@/types/konsultasjon"
+import type { Konsultasjon, KonsultasjonsForm } from "@/types/konsultasjon"
 
 export function useClaude() {
   const [isGenerating, setIsGenerating] = useState(false)
@@ -16,6 +16,7 @@ export function useClaude() {
   const genererNotat = useCallback(
     async (
       konsultasjon: Konsultasjon,
+      konsultasjonsform: KonsultasjonsForm | undefined,
       onDelta: (tekst: string) => void,
       onFerdig: (fullTekst: string) => Promise<void>
     ) => {
@@ -33,6 +34,7 @@ export function useClaude() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             type: konsultasjon.type,
+            konsultasjonsform: konsultasjon.type === "KONSULTASJON" ? konsultasjonsform : undefined,
             transkript: konsultasjon.transkript,
             kontekst: konsultasjon.kontekst,
             tilleggsinfo: konsultasjon.tilleggsinfo,

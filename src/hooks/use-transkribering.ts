@@ -163,7 +163,7 @@ export function useTranskribering(
       // 2. Hent mediestrøm
       let stream: MediaStream | undefined = undefined
 
-      if (type === "DIALOGMOTE_NAV" && moteform === "video") {
+      if (moteform === "video") {
         const displayStream = await navigator.mediaDevices.getDisplayMedia({
           video: true,
           audio: {

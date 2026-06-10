@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect, useCallback } from "react"
+import Link from "next/link"
 import { MessageSquare, Send, Trash2, X, AlertCircle, Info } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -21,12 +22,11 @@ interface Props {
   onClose: () => void
 }
 
-const SNARVEIER = [
-  { id: "nav_87", label: "NAV 8-7" },
-  { id: "nav_63", label: "NAV 6-3" },
-  { id: "sykmelding", label: "Sykmelding" },
-  { id: "henvisning", label: "Henvisning" },
-]
+interface ChatMal {
+  id: string
+  tittel: string
+  innhold: string
+}
 
 function ordTeller(tekst: string): number {
   return tekst.trim().split(/\s+/).filter(Boolean).length
@@ -37,6 +37,7 @@ export function ChatModal({ open, onClose }: Props) {
   const { meldinger, isSending, feil, streamingTekst, sendMelding, leggTilMarkør, nullstill } = useChat()
 
   const [inputTekst, setInputTekst] = useState("")
+  const [chatMaler, setChatMaler] = useState<ChatMal[]>([])
   const [aktiveVedleggIds, setAktiveVedleggIds] = useState<Set<string>>(
     new Set(aktiv?.vedlegg?.map((v) => v.id) ?? [])
   )
@@ -47,6 +48,15 @@ export function ChatModal({ open, onClose }: Props) {
     tilleggsinfo: string
     vedleggIds: string
   } | null>(null)
+
+  // Last chat-maler når modal åpnes
+  useEffect(() => {
+    if (!open) return
+    fetch("/api/maler?kategori=CHAT")
+      .then((r) => r.ok ? r.json() : [])
+      .then(setChatMaler)
+      .catch(() => setChatMaler([]))
+  }, [open])
 
   // Synkroniser vedlegg-toggles når vedlegg endres
   useEffect(() => {
@@ -163,7 +173,7 @@ export function ChatModal({ open, onClose }: Props) {
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose() }}>
       <DialogContent
         showCloseButton={false}
-        className="max-w-3xl h-[85vh] flex flex-col p-0 gap-0 overflow-hidden"
+        className="!w-[90vw] !max-w-[1400px] h-[90vh] flex flex-col p-0 gap-0 overflow-hidden"
       >
         {/* ── Header ── */}
         <div className="bg-slate-800 text-white px-5 py-4 rounded-t-xl flex items-center justify-between shrink-0">
@@ -323,21 +333,25 @@ export function ChatModal({ open, onClose }: Props) {
         {/* ── Snarveier ── */}
         <div className="px-5 py-2 border-t border-slate-100 flex items-center gap-2 overflow-x-auto shrink-0">
           <span className="text-xs text-slate-400 font-medium shrink-0 uppercase tracking-wide">Snarveier</span>
-          {SNARVEIER.map((s) => (
-            <Tooltip key={s.id}>
-              <TooltipTrigger render={<span />}>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled
-                  className="shrink-0 text-xs text-slate-400 border-slate-200 opacity-60 cursor-not-allowed h-7 px-2.5"
-                >
-                  {s.label}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Kommer snart</TooltipContent>
-            </Tooltip>
+          {chatMaler.map((mal) => (
+            <Button
+              key={mal.id}
+              variant="outline"
+              size="sm"
+              onClick={() => setInputTekst(mal.innhold)}
+              className="shrink-0 text-xs h-7 px-2.5"
+            >
+              {mal.tittel}
+            </Button>
           ))}
+          {chatMaler.length === 0 && (
+            <Link
+              href="/innstillinger?tab=prompts"
+              className="text-xs text-slate-400 hover:text-blue-600 transition-colors italic"
+            >
+              Ingen snarveier — legg til i Innstillinger
+            </Link>
+          )}
         </div>
 
         {/* ── Input ── */}

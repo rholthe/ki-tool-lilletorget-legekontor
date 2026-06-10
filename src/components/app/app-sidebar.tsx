@@ -5,7 +5,6 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { signOut } from "next-auth/react"
 import {
-  Phone,
   Users,
   Stethoscope,
   Settings,
@@ -56,12 +55,7 @@ const NY_KNAPPER: {
     farge: "bg-blue-600 hover:bg-blue-700",
   },
   {
-    type: "TELEFONKONSULTASJON",
-    ikon: <Phone className="w-4 h-4" />,
-    farge: "bg-violet-600 hover:bg-violet-700",
-  },
-  {
-    type: "DIALOGMOTE_NAV",
+    type: "MOTE",
     ikon: <Users className="w-4 h-4" />,
     farge: "bg-emerald-600 hover:bg-emerald-700",
   },
@@ -222,7 +216,7 @@ export function AppSidebar({ brukerNavn, brukerEpost, erAdmin }: AppSidebarProps
                 className={`w-full text-left px-3 py-2.5 rounded-lg transition-colors group cursor-pointer relative ${
                   aktiv?.id === k.id
                     ? "bg-blue-50 border border-blue-200"
-                    : "hover:bg-slate-50 border border-transparent"
+                    : "bg-white border border-slate-100 hover:bg-slate-50"
                 }`}
               >
                 <div className="flex items-start justify-between gap-1">
@@ -245,8 +239,11 @@ export function AppSidebar({ brukerNavn, brukerEpost, erAdmin }: AppSidebarProps
                     </button>
                   </div>
                 </div>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">
                   {TYPE_LABELS[k.type]}
+                  {k.stikkord && k.stikkord.length > 0 && (
+                    <> · {k.stikkord.join(" · ")}</>
+                  )}
                 </p>
                 <div className="flex items-center gap-1 mt-1">
                   <Clock className="w-3 h-3 text-slate-300" />

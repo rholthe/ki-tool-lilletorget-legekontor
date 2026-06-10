@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
+import Link from "next/link"
 import {
   Mic,
   Pause,
@@ -19,6 +20,7 @@ import {
   Check,
   Video,
   PersonStanding,
+  Maximize2,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -49,21 +51,30 @@ import { useKonsultasjon } from "@/hooks/use-konsultasjon"
 import { useMikrofon } from "@/hooks/use-mikrofon"
 import { useTranskribering, type MoteForm } from "@/hooks/use-transkribering"
 import { useClaude } from "@/hooks/use-claude"
-import { TYPE_LABELS, TYPE_STAGING, type Vedlegg, type Konsultasjon } from "@/types/konsultasjon"
+import { TYPE_LABELS, TYPE_STAGING, type Vedlegg, type Konsultasjon, type KonsultasjonsForm } from "@/types/konsultasjon"
 import { VedleggPanel } from "@/components/app/vedlegg-panel"
 import { ChatModal } from "@/components/app/chat-modal"
 import { lagreKonsultasjon, hentKonsultasjon } from "@/lib/idb"
 
+function parseStikkord(fullTekst: string): { notat: string; stikkord?: string[] } {
+  const match = fullTekst.match(/\nSTIKKORD:\s*(.+?)[\n\r]*$/)
+  if (!match) return { notat: fullTekst }
+  return {
+    notat: fullTekst.slice(0, match.index).trim(),
+    stikkord: match[1].split(",").map(s => s.trim()).filter(Boolean).slice(0, 3),
+  }
+}
+
 const TYPE_IKON = {
   KONSULTASJON: <Stethoscope className="w-3.5 h-3.5" />,
   TELEFONKONSULTASJON: <Phone className="w-3.5 h-3.5" />,
-  DIALOGMOTE_NAV: <Users className="w-3.5 h-3.5" />,
+  MOTE: <Users className="w-3.5 h-3.5" />,
 }
 
 const TYPE_FARGE = {
   KONSULTASJON: "bg-blue-100 text-blue-700 border-blue-200",
   TELEFONKONSULTASJON: "bg-violet-100 text-violet-700 border-violet-200",
-  DIALOGMOTE_NAV: "bg-emerald-100 text-emerald-700 border-emerald-200",
+  MOTE: "bg-emerald-100 text-emerald-700 border-emerald-200",
 }
 
 export function KonsultasjonView() {
@@ -74,8 +85,32 @@ export function KonsultasjonView() {
   const [visTranskript, setVisTranskript] = useState(false)
   const [visChat, setVisChat] = useState(false)
   const [kopiert, setKopiert] = useState(false)
-  const [moteform, setMoteform] = useState<MoteForm>("video")
+  const [utvidetFelt, setUtvidetFelt] = useState<"kontekst" | "tilleggsinfo" | null>(null)
+  const [moteform, setMoteform] = useState<MoteForm>("fysisk")
   const [visVedlegg, setVisVedlegg] = useState(false)
+  const [maler, setMaler] = useState<{ id: string; tittel: string; beskrivelse: string | null; innhold: string }[]>([])
+
+  // Reset moteform ved nytt konsultasjonsvalg: Møte starter på video, alt annet på fysisk
+  useEffect(() => {
+    if (!aktiv) return
+    setMoteform(aktiv.type === "MOTE" ? "video" : "fysisk")
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aktiv?.id])
+
+  // Last maler for aktiv konsultasjonstype
+  const lastMaler = useCallback(async (type: string) => {
+    const kat = type === "KONSULTASJON" ? "KONSULTASJON" : type === "MOTE" ? "MOTE" : null
+    if (!kat) { setMaler([]); return }
+    try {
+      const res = await fetch(`/api/maler?kategori=${kat}`)
+      if (res.ok) setMaler(await res.json())
+    } catch { /* stille */ }
+  }, [])
+
+  useEffect(() => {
+    if (aktiv?.type) lastMaler(aktiv.type)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aktiv?.type])
 
   const transkribering = useTranskribering(
     aktiv?.type ?? "KONSULTASJON",
@@ -165,9 +200,11 @@ export function KonsultasjonView() {
   const harTranskript = Boolean(aktiv.transkript) || Boolean(transkribering.transkript)
   const visNotat = isGenerating ? streamingNotat : aktiv.notat
   const harNotat = Boolean(visNotat)
-  const erNAV = aktiv.type === "DIALOGMOTE_NAV"
+  const erMote = aktiv.type === "MOTE"
+  const erKonsultasjon = aktiv.type === "KONSULTASJON"
+  const aktivMal = aktiv.malId ? (maler.find((m) => m.id === aktiv.malId) ?? null) : null
 
-  const brukerMikrofon = !erNAV || moteform !== "video"
+  const brukerMikrofon = moteform !== "video"
 
   async function handleStart() {
     if (mikrofoner.length === 0 && brukerMikrofon) {
@@ -208,10 +245,16 @@ export function KonsultasjonView() {
     setStreamingNotat("")
     await genererNotat(
       oppdatert,
-      (delta) => setStreamingNotat((prev) => prev + delta),
+      moteform as KonsultasjonsForm,
+      (delta) => setStreamingNotat((prev) => {
+        const combined = prev + delta
+        const idx = combined.indexOf("\nSTIKKORD:")
+        return idx !== -1 ? combined.slice(0, idx) : combined
+      }),
       async (fullTekst) => {
+        const { notat, stikkord } = parseStikkord(fullTekst)
         setStreamingNotat("")
-        await oppdater({ notat: fullTekst })
+        await oppdater({ notat, ...(stikkord ? { stikkord } : {}) })
       }
     )
   }
@@ -221,10 +264,16 @@ export function KonsultasjonView() {
     setStreamingNotat("")
     await genererNotat(
       aktiv,
-      (delta) => setStreamingNotat((prev) => prev + delta),
+      moteform as KonsultasjonsForm,
+      (delta) => setStreamingNotat((prev) => {
+        const combined = prev + delta
+        const idx = combined.indexOf("\nSTIKKORD:")
+        return idx !== -1 ? combined.slice(0, idx) : combined
+      }),
       async (fullTekst) => {
+        const { notat, stikkord } = parseStikkord(fullTekst)
         setStreamingNotat("")
-        await oppdater({ notat: fullTekst })
+        await oppdater({ notat, ...(stikkord ? { stikkord } : {}) })
       }
     )
   }
@@ -245,10 +294,16 @@ export function KonsultasjonView() {
     setStreamingNotat("")
     await genererNotat(
       oppdatert,
-      (delta) => setStreamingNotat((prev) => prev + delta),
+      moteform as KonsultasjonsForm,
+      (delta) => setStreamingNotat((prev) => {
+        const combined = prev + delta
+        const idx = combined.indexOf("\nSTIKKORD:")
+        return idx !== -1 ? combined.slice(0, idx) : combined
+      }),
       async (fullTekst) => {
+        const { notat, stikkord } = parseStikkord(fullTekst)
         setStreamingNotat("")
-        await oppdater({ notat: fullTekst })
+        await oppdater({ notat, ...(stikkord ? { stikkord } : {}) })
       }
     )
   }
@@ -284,29 +339,71 @@ export function KonsultasjonView() {
       <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
         {/* Kontekst + Tilleggsinfo */}
         <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
-              Kontekst
-            </label>
-            <Textarea
-              placeholder="Lim inn epikriser, tidligere journalnotater eller annen relevant bakgrunn..."
-              value={aktiv.kontekst}
-              onChange={(e) => oppdater({ kontekst: e.target.value })}
-              className="resize-none text-sm h-28 border-slate-200"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
-              Tilleggsinfo
-            </label>
-            <Textarea
-              placeholder="Blodprøvesvar, målinger, observasjoner eller annet..."
-              value={aktiv.tilleggsinfo}
-              onChange={(e) => oppdater({ tilleggsinfo: e.target.value })}
-              className="resize-none text-sm h-28 border-slate-200"
-            />
-          </div>
+          {(
+            [
+              {
+                id: "kontekst" as const,
+                label: "Kontekst",
+                placeholder: "Lim inn epikriser, tidligere journalnotater eller annen relevant bakgrunn...",
+                value: aktiv.kontekst,
+                onChange: (v: string) => oppdater({ kontekst: v }),
+              },
+              {
+                id: "tilleggsinfo" as const,
+                label: "Tilleggsinfo",
+                placeholder: "Blodprøvesvar, målinger, observasjoner eller annet...",
+                value: aktiv.tilleggsinfo,
+                onChange: (v: string) => oppdater({ tilleggsinfo: v }),
+              },
+            ] as const
+          ).map(({ id, label, placeholder, value, onChange }) => (
+            <div key={id} className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                  {label}
+                </label>
+                <button
+                  onClick={() => setUtvidetFelt(id)}
+                  className="text-slate-400 hover:text-slate-600 transition-colors"
+                  aria-label={`Utvid ${label}`}
+                >
+                  <Maximize2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <Textarea
+                placeholder={placeholder}
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+                className="resize-none text-sm h-28 border-slate-200"
+              />
+            </div>
+          ))}
         </div>
+
+        {/* Utvidet teksteditor-dialog */}
+        <Dialog open={utvidetFelt !== null} onOpenChange={(open) => { if (!open) setUtvidetFelt(null) }}>
+          <DialogContent className="!w-[90vw] !max-w-[1400px] h-[85vh] flex flex-col">
+            <DialogHeader>
+              <DialogTitle>
+                {utvidetFelt === "kontekst" ? "Kontekst" : "Tilleggsinfo"}
+              </DialogTitle>
+            </DialogHeader>
+            <Textarea
+              autoFocus
+              placeholder={
+                utvidetFelt === "kontekst"
+                  ? "Lim inn epikriser, tidligere journalnotater eller annen relevant bakgrunn..."
+                  : "Blodprøvesvar, målinger, observasjoner eller annet..."
+              }
+              value={utvidetFelt === "kontekst" ? aktiv.kontekst : aktiv.tilleggsinfo}
+              onChange={(e) => {
+                if (utvidetFelt === "kontekst") oppdater({ kontekst: e.target.value })
+                else oppdater({ tilleggsinfo: e.target.value })
+              }}
+              className="flex-1 resize-none text-sm border-slate-200 min-h-0"
+            />
+          </DialogContent>
+        </Dialog>
 
         {/* Vedlegg + Mal */}
         <div className="space-y-3">
@@ -326,19 +423,52 @@ export function KonsultasjonView() {
               )}
             </Button>
 
-            <Tooltip>
-              <TooltipTrigger render={<span />}>
-                <Button variant="outline" size="sm" className="gap-2 text-sm">
-                  <FileText className="w-4 h-4" />
-                  {aktiv.malId ? "Bytt mal" : "Velg notatmal"}
-                  <ChevronDown className="w-3 h-3 text-slate-400" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Velg systemprompt / notatmal (kommer snart)</TooltipContent>
-            </Tooltip>
+            <DropdownMenu>
+              <DropdownMenuTrigger className="inline-flex items-center gap-2 rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm hover:bg-accent hover:text-accent-foreground h-9">
+                <FileText className="w-4 h-4" />
+                {aktivMal ? aktivMal.tittel : "Velg notatmal"}
+                <ChevronDown className="w-3 h-3 text-slate-400" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-64">
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel className="text-xs">Notatmal</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => oppdater({ malId: null, malInnhold: null })}>
+                    <span className={!aktiv.malId ? "font-medium text-blue-600" : ""}>
+                      Standard (systemprompt)
+                    </span>
+                  </DropdownMenuItem>
+                  {maler.length > 0 && <DropdownMenuSeparator />}
+                  {maler.map((mal) => (
+                    <DropdownMenuItem
+                      key={mal.id}
+                      onClick={() => oppdater({ malId: mal.id, malInnhold: mal.innhold })}
+                    >
+                      <span className={`truncate ${aktiv.malId === mal.id ? "font-medium text-blue-600" : ""}`}>
+                        {mal.tittel}
+                      </span>
+                    </DropdownMenuItem>
+                  ))}
+                  {maler.length === 0 && (
+                    <DropdownMenuItem disabled>
+                      <span className="text-slate-400 text-xs">Ingen maler — opprett i Innstillinger</span>
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem>
+                    <Link href="/innstillinger?tab=prompts" className="text-xs text-blue-600 w-full">
+                      Administrer maler →
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             <p className="text-xs text-slate-400 italic">
-              {TYPE_STAGING[aktiv.type].substring(0, 55)}…
+              {aktivMal
+                ? (aktivMal.beskrivelse ?? aktivMal.innhold).substring(0, 60) + "…"
+                : TYPE_STAGING[aktiv.type].substring(0, 55) + "…"
+              }
             </p>
           </div>
 
@@ -360,11 +490,11 @@ export function KonsultasjonView() {
                 : "border-slate-200 bg-white"
           }`}
         >
-          {/* Møteform-velger for NAV-dialogmøte */}
-          {erNAV && !erAktiv && (
+          {/* Form-velger for konsultasjon og møte */}
+          {(erMote || erKonsultasjon) && !erAktiv && (
             <div className="mb-3 space-y-2">
               <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
-                Møteform
+                {erMote ? "Møteform" : "Konsultasjonsform"}
               </p>
               <div className="flex gap-2">
                 {(
@@ -379,7 +509,9 @@ export function KonsultasjonView() {
                     onClick={() => setMoteform(id)}
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors ${
                       moteform === id
-                        ? "border-emerald-500 bg-emerald-50 text-emerald-700"
+                        ? erMote
+                          ? "border-emerald-500 bg-emerald-50 text-emerald-700"
+                          : "border-blue-500 bg-blue-50 text-blue-700"
                         : "border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-700"
                     }`}
                   >
@@ -391,7 +523,7 @@ export function KonsultasjonView() {
               <div className="flex items-start gap-2 text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
                 {moteform === "video" && (
                   <>
-                    <MonitorPlay className="w-4 h-4 shrink-0 mt-0.5 text-emerald-600" />
+                    <MonitorPlay className={`w-4 h-4 shrink-0 mt-0.5 ${erMote ? "text-emerald-600" : "text-blue-600"}`} />
                     <span>
                       Velg <strong>nettleserfanen</strong> der videomøtet kjører og huk av{" "}
                       <strong>«Del lyd fra fane»</strong>. Begge stemmer fanges.
@@ -400,7 +532,7 @@ export function KonsultasjonView() {
                 )}
                 {moteform === "telefon" && (
                   <>
-                    <Phone className="w-4 h-4 shrink-0 mt-0.5 text-emerald-600" />
+                    <Phone className={`w-4 h-4 shrink-0 mt-0.5 ${erMote ? "text-emerald-600" : "text-blue-600"}`} />
                     <span>
                       Mikrofon brukes. Legg telefonen nær mikrofonen eller bruk høyttaler
                       slik at alle stemmer fanges.
@@ -409,7 +541,7 @@ export function KonsultasjonView() {
                 )}
                 {moteform === "fysisk" && (
                   <>
-                    <PersonStanding className="w-4 h-4 shrink-0 mt-0.5 text-emerald-600" />
+                    <PersonStanding className={`w-4 h-4 shrink-0 mt-0.5 ${erMote ? "text-emerald-600" : "text-blue-600"}`} />
                     <span>
                       Mikrofon brukes. Plasser enheten sentralt i rommet slik at alle
                       deltakere høres tydelig.
@@ -429,7 +561,7 @@ export function KonsultasjonView() {
                 onClick={handleStart}
                 disabled={erKobler}
               >
-                {erNAV && moteform === "video" ? (
+                {moteform === "video" ? (
                   <MonitorPlay className="w-4 h-4" />
                 ) : (
                   <Mic className="w-4 h-4" />
@@ -510,8 +642,8 @@ export function KonsultasjonView() {
               </Button>
             )}
 
-            {/* Mikrofon-velger — alle typer unntatt NAV-video */}
-            {(!erNAV || moteform !== "video") && (
+            {/* Mikrofon-velger — alle typer unntatt møte-video */}
+            {(!erMote || moteform !== "video") && (
               <DropdownMenu>
                 <DropdownMenuTrigger
                   disabled={erAktiv}
@@ -553,11 +685,11 @@ export function KonsultasjonView() {
             )}
 
             {/* Statusindikator */}
-            <div className={`flex items-center gap-2 text-xs ${!erNAV ? "" : "ml-auto"}`}>
+            <div className={`flex items-center gap-2 text-xs ${!erMote ? "" : "ml-auto"}`}>
               {erOpptar && (
                 <span className="flex items-center gap-1.5 text-red-600 font-medium">
                   <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                  Opptar
+                  Tar opp
                 </span>
               )}
               {erPause && (
@@ -709,7 +841,7 @@ export function KonsultasjonView() {
 
       {/* Transkript-modal */}
       <Dialog open={visTranskript} onOpenChange={setVisTranskript}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="!w-[80vw] !max-w-[1200px]">
           <DialogHeader>
             <DialogTitle>Transkript — {aktiv.pasientId || "Uten ID"}</DialogTitle>
           </DialogHeader>

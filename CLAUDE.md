@@ -77,10 +77,17 @@ Nettleser (klinikkens datamaskin)
   - Oppgaver: EKG, Spirometri (3 typer), Les tekst, Egendefinert, Kun kontekst
   - AI-tolkede vedlegg merkes `[**AI-tolket**]` i notatet
 - 2FA (TOTP), admin-side for Bedrock-konfigurasjon (modell/region/tilkoblingstest)
+- Promptbibliotek under Innstillinger: CRUD for maler per kategori (Konsultasjon, Møte, Chat)
+  - Maler kan merkes som delte; andre brukere kan importere delte maler
+  - Konsultasjon/Møte-maler: velges i «Velg notatmal»-dropdown i konsultasjonsvisningen
+  - Chat-maler: vises som snarveisknapper i Chat / AI-hjelp
+  - Valgt mal sendes til Claude etter systemprompt (kan overstyre)
+- AI-genererte stikkord: tre korte nøkkelord per konsultasjon/møte
+  - Instruksjon i systemprompt; Claude legger til `STIKKORD: ord1, ord2, ord3` sist i svaret
+  - Strippes fra notat og lagres separat som `stikkord: string[]` i `Konsultasjon`
+  - Vises i sidebar-kortene etter typenavnet (f.eks. «Konsultasjon · feber · hoste · tretthet»)
 
 ### Planlagt
-- Notatmaler (systemprompter) – lagret i DB
-- Snarveier i chat (NAV 8-7, NAV 6-3, sykmelding, henvisning)
 - Frasebibliotek og diktatprompts
 - Klinikk-teamfunksjonalitet
 
@@ -123,6 +130,7 @@ legeassist/
 │   │   │   ├── soniox-token/      # Genererer temp-tokens for Soniox
 │   │   │   ├── claude/            # SSE-endpoint for notatgenerering via Bedrock
 │   │   │   ├── chat/              # SSE-endpoint for multi-turn chat via Bedrock
+│   │   │   ├── maler/             # CRUD for Mal (GET/POST, PUT/DELETE per ID, delte maler, importer)
 │   │   │   └── admin/
 │   │   │       ├── settings/      # GET/POST for SystemSetting (modell, region)
 │   │   │       └── test-bedrock/  # Tilkoblingstest mot Bedrock
@@ -134,7 +142,10 @@ legeassist/
 │   │   │   ├── konsultasjon-view.tsx  # KonsultasjonsUI med Claude-integrasjon
 │   │   │   ├── chat-modal.tsx         # Chat / AI-hjelp modal
 │   │   │   ├── vedlegg-panel.tsx      # Vedlegg: opplasting, kamera, oppgavevalg
-│   │   │   └── app-sidebar.tsx        # Sidebar med konsultasjonsliste
+│   │   │   └── app-sidebar.tsx        # Sidebar med konsultasjonsliste (stikkord)
+│   │   ├── settings/
+│   │   │   ├── innstillinger-klient.tsx   # Tabulert innstillingsside (Konto / Promptbibliotek)
+│   │   │   └── promptbibliotek-klient.tsx # CRUD-UI for maler (Konsultasjon, Møte, Chat)
 │   │   └── admin/
 │   │       └── bedrock-innstillinger.tsx  # Client-komponent for admin-konfig
 │   ├── lib/
@@ -142,10 +153,10 @@ legeassist/
 │   │   ├── db.ts                  # Prisma-klient
 │   │   ├── admin.ts               # isAdmin(), hentSystemSetting(), tilgjengeligeModeller/Regioner()
 │   │   ├── idb.ts                 # IndexedDB-operasjoner (konsultasjoner, 24t TTL)
-│   │   ├── staging.ts             # TYPE_STAGING (notatprompts) + CHAT_STAGING
+│   │   ├── staging.ts             # TYPE_STAGING + KONSULTASJON_FORM_STAGING + CHAT_STAGING + STIKKORD_SEKSJON
 │   │   └── vedlegg.ts             # VEDLEGG_OPPGAVE_INFO, lagVedleggInstruksjon()
 │   ├── types/
-│   │   └── konsultasjon.ts        # Konsultasjon, ChatMelding, Vedlegg, typer
+│   │   └── konsultasjon.ts        # Konsultasjon (inkl. stikkord, malId), ChatMelding, Vedlegg, typer
 │   └── hooks/
 │       ├── use-claude.ts          # SSE-hook for notatgenerering
 │       ├── use-chat.ts            # SSE-hook for multi-turn chat + IndexedDB-persistering
@@ -271,13 +282,22 @@ await genererNotat(
 - `onFerdig` kalles med akkumulert tekst når `[DONE]` mottas
 - `avbryt()` sender AbortController.abort()
 
-### Notatmaler
+### Notatmaler og stikkord
 
 Notatgenerering bruker type-spesifikke **system prompts** definert i `src/lib/staging.ts`:
 
-- `TYPE_STAGING[konsultasjon.type]` — standard SOAP-prompt per notattype
-- `malInnhold` — brukerens fritekst-override/tilpassning (legges til etter TYPE_STAGING)
-- `CHAT_STAGING` — system prompt for chat, med `{KONTEKST}`-plassholder som erstattes dynamisk
+- `TYPE_STAGING[konsultasjon.type]` — standard SOAP-prompt per notattype (inkl. STIKKORD_SEKSJON)
+- `KONSULTASJON_FORM_STAGING[form]` — form-spesifikk variant (fysisk/telefon/video) for KONSULTASJON-typen
+- `malInnhold` — brukerens mal-instruksjon fra promptbiblioteket (legges til etter TYPE_STAGING)
+- `CHAT_STAGING` — system prompt for chat, med `{KONTEKST}`-plassholder; ingen stikkord-instruksjon
+- `STIKKORD_SEKSJON` — instruksjon om å avslutte notatet med `STIKKORD: ord1, ord2, ord3`
+
+**Stikkord-flyt:**
+1. Claude avslutter notatet med linjen `STIKKORD: ord1, ord2, ord3`
+2. `konsultasjon-view.tsx` skjuler linjen fra streaming-visningen (`indexOf('\nSTIKKORD:')`)
+3. `parseStikkord()` i samme fil ekstraherer ordene og renser notatteksten
+4. Lagres separat som `stikkord: string[]` på `Konsultasjon`-objektet i IndexedDB
+5. `app-sidebar.tsx` viser stikkordene etter typenavnet i kortlisten
 
 ### Chat / AI-hjelp
 

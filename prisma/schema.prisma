@@ -84,8 +84,8 @@ model Authenticator {
 
 enum MalKategori {
   KONSULTASJON
-  TELEFONKONSULTASJON
-  DIALOGMOTE_NAV
+  MOTE
+  CHAT
 }
 
 model Mal {
