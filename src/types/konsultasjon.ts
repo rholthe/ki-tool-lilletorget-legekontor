@@ -2,6 +2,7 @@ export type KonsultasjonsType =
   | "KONSULTASJON"
   | "TELEFONKONSULTASJON"
   | "MOTE"
+  | "JOURNALGJENNOMGANG"
 
 export type KonsultasjonsStatus =
   | "ny"
@@ -22,6 +23,11 @@ export type SpirometriType =
   | "etter_aktivitet"
   | "med_bronkodilator"
 
+export type VedleggOcrBruk =
+  | "kontekst"
+  | "tilleggsinfo"
+  | "ren_innlesing"
+
 export interface Vedlegg {
   id: string
   navn: string
@@ -35,6 +41,7 @@ export interface Vedlegg {
   oppgave: VedleggOppgave
   spirometriType?: SpirometriType
   egendefinertPrompt?: string
+  ocrBruk?: VedleggOcrBruk
 }
 
 export interface ChatMelding {
@@ -72,6 +79,7 @@ export const TYPE_LABELS: Record<KonsultasjonsType, string> = {
   KONSULTASJON: "Konsultasjon",
   TELEFONKONSULTASJON: "Telefonkonsultasjon",
   MOTE: "Møte",
+  JOURNALGJENNOMGANG: "Journalgjennomgang",
 }
 
 export { TYPE_STAGING, KONSULTASJON_FORM_STAGING, type KonsultasjonsForm } from "@/lib/staging"

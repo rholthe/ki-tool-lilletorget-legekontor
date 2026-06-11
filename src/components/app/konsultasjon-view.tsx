@@ -21,6 +21,8 @@ import {
   Video,
   PersonStanding,
   Maximize2,
+  ScanText,
+  BookOpen,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -69,12 +71,14 @@ const TYPE_IKON = {
   KONSULTASJON: <Stethoscope className="w-3.5 h-3.5" />,
   TELEFONKONSULTASJON: <Phone className="w-3.5 h-3.5" />,
   MOTE: <Users className="w-3.5 h-3.5" />,
+  JOURNALGJENNOMGANG: <BookOpen className="w-3.5 h-3.5" />,
 }
 
 const TYPE_FARGE = {
   KONSULTASJON: "bg-blue-100 text-blue-700 border-blue-200",
   TELEFONKONSULTASJON: "bg-violet-100 text-violet-700 border-violet-200",
   MOTE: "bg-emerald-100 text-emerald-700 border-emerald-200",
+  JOURNALGJENNOMGANG: "bg-violet-100 text-violet-700 border-violet-200",
 }
 
 export function KonsultasjonView() {
@@ -88,6 +92,7 @@ export function KonsultasjonView() {
   const [utvidetFelt, setUtvidetFelt] = useState<"kontekst" | "tilleggsinfo" | null>(null)
   const [moteform, setMoteform] = useState<MoteForm>("fysisk")
   const [visVedlegg, setVisVedlegg] = useState(false)
+  const [visOcr, setVisOcr] = useState(false)
   const [maler, setMaler] = useState<{ id: string; tittel: string; beskrivelse: string | null; innhold: string }[]>([])
 
   // Reset moteform ved nytt konsultasjonsvalg: Møte starter på video, alt annet på fysisk
@@ -98,17 +103,29 @@ export function KonsultasjonView() {
   }, [aktiv?.id])
 
   // Last maler for aktiv konsultasjonstype
-  const lastMaler = useCallback(async (type: string) => {
+  const lastMaler = useCallback(async (type: string, currentMalId: string | null) => {
     const kat = type === "KONSULTASJON" ? "KONSULTASJON" : type === "MOTE" ? "MOTE" : null
     if (!kat) { setMaler([]); return }
     try {
       const res = await fetch(`/api/maler?kategori=${kat}`)
-      if (res.ok) setMaler(await res.json())
+      if (!res.ok) return
+      const data: { id: string; tittel: string; beskrivelse: string | null; innhold: string }[] = await res.json()
+      setMaler(data)
+      if (currentMalId === null) {
+        const raw = localStorage.getItem(`legeassist_siste_mal_${type}`)
+        if (raw) {
+          const prefs = JSON.parse(raw) as { malId: string | null }
+          if (prefs.malId) {
+            const lagretMal = data.find((m) => m.id === prefs.malId)
+            if (lagretMal) oppdater({ malId: lagretMal.id, malInnhold: lagretMal.innhold })
+          }
+        }
+      }
     } catch { /* stille */ }
-  }, [])
+  }, [oppdater])
 
   useEffect(() => {
-    if (aktiv?.type) lastMaler(aktiv.type)
+    if (aktiv?.type) lastMaler(aktiv.type, aktiv?.malId ?? null)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [aktiv?.type])
 
@@ -119,8 +136,32 @@ export function KonsultasjonView() {
   )
 
   const { genererNotat, isGenerating, feil: claudeFeil, avbryt } = useClaude()
-  // Buffer for streaming-tekst (vises i notat-feltet mens Claude genererer)
   const [streamingNotat, setStreamingNotat] = useState("")
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+
+  const handleStreamDelta = useCallback((delta: string) => {
+    setStreamingNotat((prev) => {
+      const combined = prev + delta
+      const idx = combined.indexOf("\nSTIKKORD:")
+      return idx !== -1 ? combined.slice(0, idx) : combined
+    })
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight
+    }
+  }, [])
+
+  const handleStreamFerdig = useCallback(async (fullTekst: string) => {
+    const { notat, stikkord } = parseStikkord(fullTekst)
+    setStreamingNotat("")
+    await oppdater({ notat, ...(stikkord ? { stikkord } : {}) })
+  }, [oppdater])
+
+  const livTranskriptRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (livTranskriptRef.current) {
+      livTranskriptRef.current.scrollLeft = livTranskriptRef.current.scrollWidth
+    }
+  }, [transkribering.transkript, transkribering.partial])
 
   // Kun ID lagres — hele objektet kan bli stale om brukeren redigerer felt mens det tas opp
   const prevAktivIdRef = useRef<string | null>(null)
@@ -204,6 +245,17 @@ export function KonsultasjonView() {
   const erKonsultasjon = aktiv.type === "KONSULTASJON"
   const aktivMal = aktiv.malId ? (maler.find((m) => m.id === aktiv.malId) ?? null) : null
 
+  function velgMal(mal: { id: string; innhold: string } | null) {
+    if (!aktiv) return
+    if (mal) {
+      oppdater({ malId: mal.id, malInnhold: mal.innhold })
+      localStorage.setItem(`legeassist_siste_mal_${aktiv.type}`, JSON.stringify({ malId: mal.id }))
+    } else {
+      oppdater({ malId: null, malInnhold: null })
+      localStorage.setItem(`legeassist_siste_mal_${aktiv.type}`, JSON.stringify({ malId: null }))
+    }
+  }
+
   const brukerMikrofon = moteform !== "video"
 
   async function handleStart() {
@@ -243,39 +295,13 @@ export function KonsultasjonView() {
 
     // Auto-generer notat med Claude
     setStreamingNotat("")
-    await genererNotat(
-      oppdatert,
-      moteform as KonsultasjonsForm,
-      (delta) => setStreamingNotat((prev) => {
-        const combined = prev + delta
-        const idx = combined.indexOf("\nSTIKKORD:")
-        return idx !== -1 ? combined.slice(0, idx) : combined
-      }),
-      async (fullTekst) => {
-        const { notat, stikkord } = parseStikkord(fullTekst)
-        setStreamingNotat("")
-        await oppdater({ notat, ...(stikkord ? { stikkord } : {}) })
-      }
-    )
+    await genererNotat(oppdatert, moteform as KonsultasjonsForm, handleStreamDelta, handleStreamFerdig)
   }
 
   async function handleRegenerer() {
     if (!aktiv) return
     setStreamingNotat("")
-    await genererNotat(
-      aktiv,
-      moteform as KonsultasjonsForm,
-      (delta) => setStreamingNotat((prev) => {
-        const combined = prev + delta
-        const idx = combined.indexOf("\nSTIKKORD:")
-        return idx !== -1 ? combined.slice(0, idx) : combined
-      }),
-      async (fullTekst) => {
-        const { notat, stikkord } = parseStikkord(fullTekst)
-        setStreamingNotat("")
-        await oppdater({ notat, ...(stikkord ? { stikkord } : {}) })
-      }
-    )
+    await genererNotat(aktiv, moteform as KonsultasjonsForm, handleStreamDelta, handleStreamFerdig)
   }
 
   async function handleFortsettFraPause() {
@@ -292,20 +318,7 @@ export function KonsultasjonView() {
     const oppdatert = { ...aktiv, status: "ferdig" as const }
     await oppdater({ status: "ferdig" })
     setStreamingNotat("")
-    await genererNotat(
-      oppdatert,
-      moteform as KonsultasjonsForm,
-      (delta) => setStreamingNotat((prev) => {
-        const combined = prev + delta
-        const idx = combined.indexOf("\nSTIKKORD:")
-        return idx !== -1 ? combined.slice(0, idx) : combined
-      }),
-      async (fullTekst) => {
-        const { notat, stikkord } = parseStikkord(fullTekst)
-        setStreamingNotat("")
-        await oppdater({ notat, ...(stikkord ? { stikkord } : {}) })
-      }
-    )
+    await genererNotat(oppdatert, moteform as KonsultasjonsForm, handleStreamDelta, handleStreamFerdig)
   }
 
   async function kopierNotat() {
@@ -336,7 +349,7 @@ export function KonsultasjonView() {
         />
       </div>
 
-      <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
         {/* Kontekst + Tilleggsinfo */}
         <div className="grid grid-cols-2 gap-4">
           {(
@@ -416,9 +429,24 @@ export function KonsultasjonView() {
             >
               <Paperclip className="w-4 h-4" />
               Bilder / PDF
-              {(aktiv.vedlegg?.length ?? 0) > 0 && (
+              {(aktiv.vedlegg?.filter((v) => v.oppgave !== "ocr").length ?? 0) > 0 && (
                 <span className="ml-0.5 bg-blue-100 text-blue-700 text-xs font-medium px-1.5 py-0.5 rounded-full">
-                  {aktiv.vedlegg!.length}
+                  {aktiv.vedlegg!.filter((v) => v.oppgave !== "ocr").length}
+                </span>
+              )}
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 text-sm"
+              onClick={() => setVisOcr((v) => !v)}
+            >
+              <ScanText className="w-4 h-4" />
+              Les tekst
+              {(aktiv.vedlegg?.filter((v) => v.oppgave === "ocr").length ?? 0) > 0 && (
+                <span className="ml-0.5 bg-blue-100 text-blue-700 text-xs font-medium px-1.5 py-0.5 rounded-full">
+                  {aktiv.vedlegg!.filter((v) => v.oppgave === "ocr").length}
                 </span>
               )}
             </Button>
@@ -433,16 +461,16 @@ export function KonsultasjonView() {
                 <DropdownMenuGroup>
                   <DropdownMenuLabel className="text-xs">Notatmal</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => oppdater({ malId: null, malInnhold: null })}>
+                  <DropdownMenuItem onClick={() => velgMal(null)}>
                     <span className={!aktiv.malId ? "font-medium text-blue-600" : ""}>
-                      Standard (systemprompt)
+                      Ingen tilleggsmal
                     </span>
                   </DropdownMenuItem>
                   {maler.length > 0 && <DropdownMenuSeparator />}
                   {maler.map((mal) => (
                     <DropdownMenuItem
                       key={mal.id}
-                      onClick={() => oppdater({ malId: mal.id, malInnhold: mal.innhold })}
+                      onClick={() => velgMal(mal)}
                     >
                       <span className={`truncate ${aktiv.malId === mal.id ? "font-medium text-blue-600" : ""}`}>
                         {mal.tittel}
@@ -474,6 +502,14 @@ export function KonsultasjonView() {
 
           {visVedlegg && (
             <VedleggPanel
+              vedlegg={aktiv.vedlegg ?? []}
+              onChange={(nyeVedlegg: Vedlegg[]) => oppdater({ vedlegg: nyeVedlegg })}
+            />
+          )}
+
+          {visOcr && (
+            <VedleggPanel
+              modus="ocr"
               vedlegg={aktiv.vedlegg ?? []}
               onChange={(nyeVedlegg: Vedlegg[]) => oppdater({ vedlegg: nyeVedlegg })}
             />
@@ -711,18 +747,24 @@ export function KonsultasjonView() {
 
           {/* Live transkript-forhåndsvisning */}
           {(erAktiv || erKobler) && (
-            <div className="mt-3 text-xs text-slate-600 bg-white border border-slate-200 rounded-lg px-3 py-2 min-h-8 leading-relaxed">
-              {transkribering.visTekst ? (
-                <>
-                  <span>{transkribering.transkript}</span>
-                  {transkribering.partial && (
-                    <span className="text-slate-400 italic">
-                      {transkribering.transkript ? " " : ""}
-                      {transkribering.partial}
-                    </span>
-                  )}
-                </>
-              ) : (
+            <div ref={livTranskriptRef} className="mt-3 text-xs text-slate-600 bg-white border border-slate-200 rounded-lg px-3 py-2 h-8 flex items-center overflow-x-hidden">
+              {transkribering.visTekst ? (() => {
+                const sisteLinje = transkribering.transkript
+                  .split('\n')
+                  .filter((l: string) => l.trim())
+                  .at(-1) ?? ''
+                return (
+                  <span className="whitespace-nowrap">
+                    {sisteLinje}
+                    {transkribering.partial && (
+                      <span className="text-slate-400 italic">
+                        {sisteLinje ? ' ' : ''}
+                        {transkribering.partial}
+                      </span>
+                    )}
+                  </span>
+                )
+              })() : (
                 <span className="text-slate-300 italic">
                   {erKobler ? "Kobler til…" : "Venter på tale…"}
                 </span>

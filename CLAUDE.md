@@ -74,18 +74,33 @@ Nettleser (klinikkens datamaskin)
   - Vedlegg-toggles per chat-økt (velg hvilke filer AI ser)
   - Tilgjengelig under aktivt opptak (bruker lagret transkript)
 - Vedlegg (bilder/PDF): opplasting, drag-and-drop, kamerabilde, kollapsert kortvisning
-  - Oppgaver: EKG, Spirometri (3 typer), Les tekst, Egendefinert, Kun kontekst
+  - Oppgaver: EKG, Spirometri (3 typer), Egendefinert, Kun kontekst
   - AI-tolkede vedlegg merkes `[**AI-tolket**]` i notatet
+- OCR / Les tekst: egen knapp ved siden av «Bilder/PDF», med samme opplastingsfunksjonalitet
+  - Filene deles med vedlegg-arrayet men vises kun i sin respektive panel (`modus`-prop)
+  - Tre bruksalternativer per OCR-fil: Inkluder i kontekst · Inkluder i tilleggsinfo · Ren innlesing
+  - Ekstrahert tekst legges alltid til slutt i notatet under overskriften `--- OCR ---`
+- Transkriptviser (enkeltlinje): fortløpende transkripsjon vises som én linje — kun siste segment
+  - Container: `overflow-x-hidden` med `scrollLeft = scrollWidth` via ref/useEffect
 - 2FA (TOTP), admin-side for Bedrock-konfigurasjon (modell/region/tilkoblingstest)
 - Promptbibliotek under Innstillinger: CRUD for maler per kategori (Konsultasjon, Møte, Chat)
   - Maler kan merkes som delte; andre brukere kan importere delte maler
   - Konsultasjon/Møte-maler: velges i «Velg notatmal»-dropdown i konsultasjonsvisningen
   - Chat-maler: vises som snarveisknapper i Chat / AI-hjelp
   - Valgt mal sendes til Claude etter systemprompt (kan overstyre)
+  - Dropdown har ikke lenger «Standard (systemprompt)» — stagingprompt er alltid skjult for bruker
+  - Valgt mal huskes per konsultasjonstype i localStorage og brukes automatisk på neste sesjon
 - AI-genererte stikkord: tre korte nøkkelord per konsultasjon/møte
   - Instruksjon i systemprompt; Claude legger til `STIKKORD: ord1, ord2, ord3` sist i svaret
   - Strippes fra notat og lagres separat som `stikkord: string[]` i `Konsultasjon`
   - Vises i sidebar-kortene etter typenavnet (f.eks. «Konsultasjon · feber · hoste · tretthet»)
+- Journalgjennomgang: gjennomgang av pasientjournal fra tidligere fastlege
+  - Last opp PDF → klientside-ekstraksjon med `pdfjs-dist` (side-for-side fremgang)
+  - Redigerbart tekstfelt med ekstrahert tekst + live tokenteller og NOK-kostnadsestimat
+  - Advarsel ved >180 000 tokens; valgfrie fokusspørsmål (→ `tilleggsinfo`)
+  - Claude genererer strukturert oppsummering med 9 seksjoner: SOSIALT, KLINISK OPPSUMMERING, ALLERGIER OG BIVIRKNINGER, OPERASJONER OG INNLEGGELSER, FAMILIEHISTORIKK, SCREENINGHISTORIKK, VIKTIGE PUNKTER, MEDIKAMENTHISTORIKK (SISTE 5 ÅR), SYKMELDINGSHISTORIKK OG NAV-HISTORIKK + FOKUS-seksjon ved fokusspørsmål
+  - Sesjoner lagres i IndexedDB og vises i sidebar (violet BookOpen-ikon)
+  - Routing: `page.tsx` → `HovedInnhold` → `JournalgjennomgangView` eller `KonsultasjonView`
 
 ### Planlagt
 - Frasebibliotek og diktatprompts
@@ -139,10 +154,12 @@ legeassist/
 │   ├── components/
 │   │   ├── ui/                    # shadcn/ui-komponenter
 │   │   ├── app/
-│   │   │   ├── konsultasjon-view.tsx  # KonsultasjonsUI med Claude-integrasjon
-│   │   │   ├── chat-modal.tsx         # Chat / AI-hjelp modal
-│   │   │   ├── vedlegg-panel.tsx      # Vedlegg: opplasting, kamera, oppgavevalg
-│   │   │   └── app-sidebar.tsx        # Sidebar med konsultasjonsliste (stikkord)
+│   │   │   ├── konsultasjon-view.tsx      # KonsultasjonsUI med Claude-integrasjon
+│   │   │   ├── journalgjennomgang-view.tsx# Journalgjennomgang: PDF-opplasting + oppsummering
+│   │   │   ├── hoved-innhold.tsx          # Ruter mellom KonsultasjonView og JournalgjennomgangView
+│   │   │   ├── chat-modal.tsx             # Chat / AI-hjelp modal
+│   │   │   ├── vedlegg-panel.tsx          # Vedlegg: opplasting, kamera, oppgavevalg (modus: ocr|standard)
+│   │   │   └── app-sidebar.tsx            # Sidebar med konsultasjonsliste (stikkord)
 │   │   ├── settings/
 │   │   │   ├── innstillinger-klient.tsx   # Tabulert innstillingsside (Konto / Promptbibliotek)
 │   │   │   └── promptbibliotek-klient.tsx # CRUD-UI for maler (Konsultasjon, Møte, Chat)
@@ -153,10 +170,10 @@ legeassist/
 │   │   ├── db.ts                  # Prisma-klient
 │   │   ├── admin.ts               # isAdmin(), hentSystemSetting(), tilgjengeligeModeller/Regioner()
 │   │   ├── idb.ts                 # IndexedDB-operasjoner (konsultasjoner, 24t TTL)
-│   │   ├── staging.ts             # TYPE_STAGING + KONSULTASJON_FORM_STAGING + CHAT_STAGING + STIKKORD_SEKSJON
-│   │   └── vedlegg.ts             # VEDLEGG_OPPGAVE_INFO, lagVedleggInstruksjon()
+│   │   ├── staging.ts             # TYPE_STAGING + KONSULTASJON_FORM_STAGING + CHAT_STAGING + JOURNALGJENNOMGANG
+│   │   └── vedlegg.ts             # VEDLEGG_OPPGAVE_INFO, VEDLEGG_OCR_BRUK_INFO, lagVedleggInstruksjon()
 │   ├── types/
-│   │   └── konsultasjon.ts        # Konsultasjon (inkl. stikkord, malId), ChatMelding, Vedlegg, typer
+│   │   └── konsultasjon.ts        # Konsultasjon (inkl. stikkord, malId), ChatMelding, Vedlegg, VedleggOcrBruk, typer
 │   └── hooks/
 │       ├── use-claude.ts          # SSE-hook for notatgenerering
 │       ├── use-chat.ts            # SSE-hook for multi-turn chat + IndexedDB-persistering

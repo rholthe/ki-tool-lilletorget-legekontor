@@ -1,4 +1,4 @@
-import type { Vedlegg, VedleggOppgave, SpirometriType } from "@/types/konsultasjon"
+import type { Vedlegg, VedleggOppgave, VedleggOcrBruk, SpirometriType } from "@/types/konsultasjon"
 
 // ─── Brukervendte labels og beskrivelser ──────────────────────────────────────
 
@@ -47,6 +47,21 @@ export const SPIROMETRI_TYPE_INFO: Record<
   med_bronkodilator: {
     label: "Med bronkodilator",
     beskrivelse: "Reversibilitetstest — post-BD",
+  },
+}
+
+export const VEDLEGG_OCR_BRUK_INFO: Record<VedleggOcrBruk, { label: string; beskrivelse: string }> = {
+  kontekst: {
+    label: "Inkluder i kontekst",
+    beskrivelse: "Teksten brukes som bakgrunn for notatet, tilsvarende kontekstfeltet.",
+  },
+  tilleggsinfo: {
+    label: "Inkluder i tilleggsinfo",
+    beskrivelse: "Teksten behandles som tilleggsopplysninger til konsultasjonen.",
+  },
+  ren_innlesing: {
+    label: "Ren innlesing",
+    beskrivelse: "Teksten transkriberes til slutt i notatet uten å påvirke notatinnholdet.",
   },
 }
 
@@ -99,13 +114,24 @@ export function lagVedleggInstruksjon(vedlegg: Vedlegg): string {
       )
     }
 
-    case "ocr":
-      return (
+    case "ocr": {
+      const base =
         "Transkriber teksten i dette bildet/dokumentet nøyaktig. " +
         "Bevar struktur og tabellformat der det er meningsfylt. " +
-        "Ikke kommenter innholdet — bare transkriber. " +
-        "Inkluder teksten i notatet der det er naturlig."
-      )
+        "Ikke kommenter innholdet — bare transkriber. "
+      const bruk = vedlegg.ocrBruk ?? "kontekst"
+      if (bruk === "tilleggsinfo")
+        return base +
+          "Behandle den transkriberte teksten som tilleggsopplysninger til konsultasjonen. " +
+          "Legg den til slutt i notatet under overskriften '--- OCR ---'."
+      if (bruk === "ren_innlesing")
+        return base +
+          "Den transkriberte teksten skal IKKE påvirke notatinnholdet. " +
+          "Legg den til slutt i notatet under overskriften '--- OCR ---'."
+      return base +
+        "Bruk den transkriberte teksten som kontekst og bakgrunn for notatet. " +
+        "Legg den til slutt i notatet under overskriften '--- OCR ---'."
+    }
 
     case "egendefinert":
       return vedlegg.egendefinertPrompt?.trim() ||

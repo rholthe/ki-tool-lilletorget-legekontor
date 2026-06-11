@@ -10,8 +10,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import type { Vedlegg, VedleggOppgave, SpirometriType } from "@/types/konsultasjon"
-import { VEDLEGG_OPPGAVE_INFO, SPIROMETRI_TYPE_INFO } from "@/lib/vedlegg"
+import type { Vedlegg, VedleggOppgave, VedleggOcrBruk, SpirometriType } from "@/types/konsultasjon"
+import { VEDLEGG_OPPGAVE_INFO, VEDLEGG_OCR_BRUK_INFO, SPIROMETRI_TYPE_INFO } from "@/lib/vedlegg"
 import { cuid } from "@/lib/cuid"
 
 const MAKS_STORRELSE_MB = 8
@@ -29,9 +29,13 @@ type GodkjentMimeType = (typeof GODKJENTE_TYPER)[number]
 interface Props {
   vedlegg: Vedlegg[]
   onChange: (vedlegg: Vedlegg[]) => void
+  modus?: "ocr"
 }
 
-export function VedleggPanel({ vedlegg, onChange }: Props) {
+export function VedleggPanel({ vedlegg, onChange, modus }: Props) {
+  const synligeVedlegg = modus === "ocr"
+    ? vedlegg.filter((v) => v.oppgave === "ocr")
+    : vedlegg.filter((v) => v.oppgave !== "ocr")
   const inputRef = useRef<HTMLInputElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
@@ -81,7 +85,7 @@ export function VedleggPanel({ vedlegg, onChange }: Props) {
       if (!GODKJENTE_TYPER.includes(fil.type as GodkjentMimeType)) continue
       if (fil.size > MAKS_STORRELSE_MB * 1024 * 1024) continue
       const base64 = await lesFil(fil)
-      nye.push({ id: cuid(), navn: fil.name, mimeType: fil.type as GodkjentMimeType, base64, oppgave: "kontekst" })
+      nye.push({ id: cuid(), navn: fil.name, mimeType: fil.type as GodkjentMimeType, base64, oppgave: modus === "ocr" ? "ocr" : "kontekst", ...(modus === "ocr" ? { ocrBruk: "kontekst" as VedleggOcrBruk } : {}) })
     }
     if (nye.length > 0) {
       onChange([...vedlegg, ...nye])
@@ -203,7 +207,8 @@ export function VedleggPanel({ vedlegg, onChange }: Props) {
       navn: `Kamerabilde ${tid}.jpg`,
       mimeType: "image/jpeg",
       base64,
-      oppgave: "kontekst",
+      oppgave: modus === "ocr" ? "ocr" : "kontekst",
+      ...(modus === "ocr" ? { ocrBruk: "kontekst" as VedleggOcrBruk } : {}),
     }
     onChange([...vedlegg, nytt])
     setExpandedIds((prev) => new Set([...prev, nytt.id]))
@@ -231,7 +236,7 @@ export function VedleggPanel({ vedlegg, onChange }: Props) {
     if (e.dataTransfer.files.length > 0) leggTilFiler(e.dataTransfer.files)
   }
 
-  const kanLeggeTilFler = vedlegg.length < MAKS_ANTALL
+  const kanLeggeTilFler = synligeVedlegg.length < MAKS_ANTALL
 
   return (
     <div className="space-y-3">
@@ -285,9 +290,9 @@ export function VedleggPanel({ vedlegg, onChange }: Props) {
       )}
 
       {/* Liste over vedlegg */}
-      {vedlegg.length > 0 && (
+      {synligeVedlegg.length > 0 && (
         <ul className="space-y-2">
-          {vedlegg.map((v) => {
+          {synligeVedlegg.map((v) => {
             const erEkspandert = expandedIds.has(v.id)
             const FileIkon =
               v.mimeType === "application/pdf" ? (
@@ -304,10 +309,9 @@ export function VedleggPanel({ vedlegg, onChange }: Props) {
                     {FileIkon}
                     <span className="text-sm text-slate-700 truncate flex-1 min-w-0">{v.navn}</span>
                     <span className="shrink-0 text-xs px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200 font-medium">
-                      {VEDLEGG_OPPGAVE_INFO[v.oppgave].label}
-                      {v.oppgave === "spirometri" && v.spirometriType
-                        ? ` · ${SPIROMETRI_TYPE_INFO[v.spirometriType].label}`
-                        : ""}
+                      {modus === "ocr"
+                        ? VEDLEGG_OCR_BRUK_INFO[v.ocrBruk ?? "kontekst"].label
+                        : VEDLEGG_OPPGAVE_INFO[v.oppgave].label + (v.oppgave === "spirometri" && v.spirometriType ? ` · ${SPIROMETRI_TYPE_INFO[v.spirometriType].label}` : "")}
                     </span>
                     <button onClick={() => toggleExpand(v.id)} className="shrink-0 text-slate-400 hover:text-slate-600 transition-colors" aria-label="Vis detaljer">
                       <ChevronDown className="w-4 h-4" />
@@ -334,30 +338,54 @@ export function VedleggPanel({ vedlegg, onChange }: Props) {
                       </div>
                     </div>
 
-                    <div className="space-y-1.5">
-                      <p className="text-xs font-medium text-slate-500">Claude sin oppgave med dette vedlegget</p>
-                      <div className="flex flex-wrap gap-2">
-                        {(Object.entries(VEDLEGG_OPPGAVE_INFO) as [VedleggOppgave, { label: string; beskrivelse: string }][]).map(
-                          ([oppgave, info]) => (
-                            <button
-                              key={oppgave}
-                              onClick={() => velgOppgave(v.id, oppgave, {
-                                spirometriType: oppgave === "spirometri" ? (v.spirometriType ?? "uten_bronkodilator") : undefined,
-                                egendefinertPrompt: oppgave === "egendefinert" ? (v.egendefinertPrompt ?? "") : undefined,
-                              })}
-                              className={`px-2.5 py-1 rounded-lg border text-xs font-medium transition-colors ${
-                                v.oppgave === oppgave
-                                  ? "border-blue-500 bg-blue-50 text-blue-700"
-                                  : "border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-700"
-                              }`}
-                            >
-                              {info.label}
-                            </button>
-                          )
-                        )}
+                    {modus === "ocr" ? (
+                      <div className="space-y-1.5">
+                        <p className="text-xs font-medium text-slate-500">Bruk i notatet</p>
+                        <div className="flex flex-wrap gap-2">
+                          {(Object.entries(VEDLEGG_OCR_BRUK_INFO) as [VedleggOcrBruk, { label: string; beskrivelse: string }][]).map(
+                            ([bruk, info]) => (
+                              <button
+                                key={bruk}
+                                onClick={() => { oppdaterVedlegg(v.id, { ocrBruk: bruk }); setExpanded(v.id, false) }}
+                                className={`px-2.5 py-1 rounded-lg border text-xs font-medium transition-colors ${
+                                  (v.ocrBruk ?? "kontekst") === bruk
+                                    ? "border-blue-500 bg-blue-50 text-blue-700"
+                                    : "border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-700"
+                                }`}
+                              >
+                                {info.label}
+                              </button>
+                            )
+                          )}
+                        </div>
+                        <p className="text-xs text-slate-400">{VEDLEGG_OCR_BRUK_INFO[v.ocrBruk ?? "kontekst"].beskrivelse}</p>
                       </div>
-                      <p className="text-xs text-slate-400">{VEDLEGG_OPPGAVE_INFO[v.oppgave].beskrivelse}</p>
-                    </div>
+                    ) : (
+                      <div className="space-y-1.5">
+                        <p className="text-xs font-medium text-slate-500">Claude sin oppgave med dette vedlegget</p>
+                        <div className="flex flex-wrap gap-2">
+                          {(Object.entries(VEDLEGG_OPPGAVE_INFO) as [VedleggOppgave, { label: string; beskrivelse: string }][])
+                            .filter(([oppgave]) => oppgave !== "ocr")
+                            .map(([oppgave, info]) => (
+                              <button
+                                key={oppgave}
+                                onClick={() => velgOppgave(v.id, oppgave, {
+                                  spirometriType: oppgave === "spirometri" ? (v.spirometriType ?? "uten_bronkodilator") : undefined,
+                                  egendefinertPrompt: oppgave === "egendefinert" ? (v.egendefinertPrompt ?? "") : undefined,
+                                })}
+                                className={`px-2.5 py-1 rounded-lg border text-xs font-medium transition-colors ${
+                                  v.oppgave === oppgave
+                                    ? "border-blue-500 bg-blue-50 text-blue-700"
+                                    : "border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-700"
+                                }`}
+                              >
+                                {info.label}
+                              </button>
+                            ))}
+                        </div>
+                        <p className="text-xs text-slate-400">{VEDLEGG_OPPGAVE_INFO[v.oppgave].beskrivelse}</p>
+                      </div>
+                    )}
 
                     {v.oppgave === "spirometri" && (
                       <div className="space-y-1.5">
@@ -401,7 +429,7 @@ export function VedleggPanel({ vedlegg, onChange }: Props) {
         </ul>
       )}
 
-      {vedlegg.length >= MAKS_ANTALL && (
+      {synligeVedlegg.length >= MAKS_ANTALL && (
         <p className="text-xs text-slate-400 text-center">Maks {MAKS_ANTALL} vedlegg nådd.</p>
       )}
 
