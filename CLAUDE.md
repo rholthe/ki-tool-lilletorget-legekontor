@@ -83,7 +83,7 @@ Nettleser (klinikkens datamaskin)
 - Transkriptviser (enkeltlinje): fortløpende transkripsjon vises som én linje — kun siste segment
   - Container: `overflow-x-hidden` med `scrollLeft = scrollWidth` via ref/useEffect
 - 2FA (TOTP), admin-side for Bedrock-konfigurasjon (modell/region/tilkoblingstest)
-- Promptbibliotek under Innstillinger: CRUD for maler per kategori (Konsultasjon, Møte, Chat)
+- Promptbibliotek under Innstillinger: CRUD for maler per kategori (Konsultasjon, Møte, Diktat, Chat)
   - Maler kan merkes som delte; andre brukere kan importere delte maler
   - Konsultasjon/Møte-maler: velges i «Velg notatmal»-dropdown i konsultasjonsvisningen
   - Chat-maler: vises som snarveisknapper i Chat / AI-hjelp
@@ -94,13 +94,30 @@ Nettleser (klinikkens datamaskin)
   - Instruksjon i systemprompt; Claude legger til `STIKKORD: ord1, ord2, ord3` sist i svaret
   - Strippes fra notat og lagres separat som `stikkord: string[]` i `Konsultasjon`
   - Vises i sidebar-kortene etter typenavnet (f.eks. «Konsultasjon · feber · hoste · tretthet»)
+- Konsultasjonsform (fysisk/telefon/video) lagres på `Konsultasjon.form`
+  - Knappevalg, sidebar-etikett (Telefon-/Videokonsultasjon) og notatlogikk overlever sidebytte
+  - Telefon/video bruker egen staging via `KONSULTASJON_FORM_STAGING`; `konsultasjonEtikett()` gir riktig visningsnavn
+- Fargetema per type (`src/lib/tema.ts`: `TYPE_TEMA` + `TYPE_IKON_KOMP`)
+  - Hovedvisning og sidebar-kort fargelegges etter type: Konsultasjon (blå), Møte (grønn), Diktat (amber), Journalgjennomgang (violett)
+  - Sidebar-kort viser samme ikon som oppgaveknappen, uavhengig av form; aktivt kort markeres i temafargen
+- Diktat: fri diktering med språkvask (egen oppgaveknapp i sidebar, amber Mic-ikon)
+  - Staging (`DIKTAT` i `staging.ts`) gjør primært språkvask uten å endre form/innhold
+  - Innebygde instruksjoner i diktatet (f.eks. «list opp matvarer rike på jern») utføres
+    kortfattet, i sammenhengende tekst (ingen stjerne-lister)
+  - Egen kategori `DIKTAT` i promptbiblioteket → maler velges i «Velg mal»-dropdown
+    (f.eks. brev til/om pasient); mal har forrang for sluttformen
+  - Egen `DiktatView` (rutes via `HovedInnhold`): kun Notat-ID + opptak (pause/fortsett,
+    fortløpende transkript) + resultatfelt — ingen kontekst/tilleggsinfo/vedlegg/chat
+  - Original/bearbeidet-toggle over resultatfeltet (verifiser at språkvask ikke endret innhold)
+  - «Tøm»: nullstiller transkript/notat/stikkord og starter på nytt
+  - Lagres i IndexedDB (24t TTL) med stikkord, som øvrige typer
 - Journalgjennomgang: gjennomgang av pasientjournal fra tidligere fastlege
   - Last opp PDF → klientside-ekstraksjon med `pdfjs-dist` (side-for-side fremgang)
   - Redigerbart tekstfelt med ekstrahert tekst + live tokenteller og NOK-kostnadsestimat
   - Advarsel ved >180 000 tokens; valgfrie fokusspørsmål (→ `tilleggsinfo`)
   - Claude genererer strukturert oppsummering med 9 seksjoner: SOSIALT, KLINISK OPPSUMMERING, ALLERGIER OG BIVIRKNINGER, OPERASJONER OG INNLEGGELSER, FAMILIEHISTORIKK, SCREENINGHISTORIKK, VIKTIGE PUNKTER, MEDIKAMENTHISTORIKK (SISTE 5 ÅR), SYKMELDINGSHISTORIKK OG NAV-HISTORIKK + FOKUS-seksjon ved fokusspørsmål
   - Sesjoner lagres i IndexedDB og vises i sidebar (violet BookOpen-ikon)
-  - Routing: `page.tsx` → `HovedInnhold` → `JournalgjennomgangView` eller `KonsultasjonView`
+  - Routing: `page.tsx` → `HovedInnhold` → `JournalgjennomgangView` / `DiktatView` / `KonsultasjonView`
 
 ### Planlagt
 - Frasebibliotek og diktatprompts
@@ -156,7 +173,8 @@ legeassist/
 │   │   ├── app/
 │   │   │   ├── konsultasjon-view.tsx      # KonsultasjonsUI med Claude-integrasjon
 │   │   │   ├── journalgjennomgang-view.tsx# Journalgjennomgang: PDF-opplasting + oppsummering
-│   │   │   ├── hoved-innhold.tsx          # Ruter mellom KonsultasjonView og JournalgjennomgangView
+│   │   │   ├── diktat-view.tsx            # Diktat: fri diktering + språkvask (opptak, mal, resultat)
+│   │   │   ├── hoved-innhold.tsx          # Ruter mellom KonsultasjonView / DiktatView / JournalgjennomgangView
 │   │   │   ├── chat-modal.tsx             # Chat / AI-hjelp modal
 │   │   │   ├── vedlegg-panel.tsx          # Vedlegg: opplasting, kamera, oppgavevalg (modus: ocr|standard)
 │   │   │   └── app-sidebar.tsx            # Sidebar med konsultasjonsliste (stikkord)
@@ -170,7 +188,8 @@ legeassist/
 │   │   ├── db.ts                  # Prisma-klient
 │   │   ├── admin.ts               # isAdmin(), hentSystemSetting(), tilgjengeligeModeller/Regioner()
 │   │   ├── idb.ts                 # IndexedDB-operasjoner (konsultasjoner, 24t TTL)
-│   │   ├── staging.ts             # TYPE_STAGING + KONSULTASJON_FORM_STAGING + CHAT_STAGING + JOURNALGJENNOMGANG
+│   │   ├── staging.ts             # TYPE_STAGING + KONSULTASJON_FORM_STAGING + CHAT_STAGING + DIKTAT + JOURNALGJENNOMGANG
+│   │   ├── tema.ts                # TYPE_TEMA (fargetema) + TYPE_IKON_KOMP (ikon per type)
 │   │   └── vedlegg.ts             # VEDLEGG_OPPGAVE_INFO, VEDLEGG_OCR_BRUK_INFO, lagVedleggInstruksjon()
 │   ├── types/
 │   │   └── konsultasjon.ts        # Konsultasjon (inkl. stikkord, malId), ChatMelding, Vedlegg, VedleggOcrBruk, typer

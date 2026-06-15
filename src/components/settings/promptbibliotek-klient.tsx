@@ -13,7 +13,7 @@ export interface MalData {
   tittel: string
   beskrivelse: string | null
   innhold: string
-  kategori: "KONSULTASJON" | "MOTE" | "CHAT"
+  kategori: "KONSULTASJON" | "MOTE" | "CHAT" | "DIKTAT"
   erDelt: boolean
   createdAt: string
   updatedAt: string
@@ -24,16 +24,17 @@ interface DeltMalData {
   tittel: string
   beskrivelse: string | null
   innhold: string
-  kategori: "KONSULTASJON" | "MOTE" | "CHAT"
+  kategori: "KONSULTASJON" | "MOTE" | "CHAT" | "DIKTAT"
   eier: { name: string | null; email: string | null }
   createdAt: string
 }
 
-type Kategori = "KONSULTASJON" | "MOTE" | "CHAT"
+type Kategori = "KONSULTASJON" | "MOTE" | "CHAT" | "DIKTAT"
 
 const KATEGORI_FANER: { id: Kategori; label: string }[] = [
   { id: "KONSULTASJON", label: "Konsultasjon" },
   { id: "MOTE", label: "Møte" },
+  { id: "DIKTAT", label: "Diktat" },
   { id: "CHAT", label: "Chat" },
 ]
 
@@ -222,6 +223,7 @@ export function PromptbibliotekKlient() {
             <p className="text-xs text-slate-500">
               {f.id === "KONSULTASJON" && "Vises i «Velg notatmal»-menyen for konsultasjonsoppgaver."}
               {f.id === "MOTE" && "Vises i «Velg notatmal»-menyen for møteoppgaver."}
+              {f.id === "DIKTAT" && "Vises i «Velg mal»-menyen i Diktat — f.eks. brev til eller om pasienten."}
               {f.id === "CHAT" && "Vises som snarveisknapper i Chat / AI-hjelp-dialogen."}
             </p>
 

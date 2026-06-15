@@ -53,7 +53,8 @@ import { useKonsultasjon } from "@/hooks/use-konsultasjon"
 import { useMikrofon } from "@/hooks/use-mikrofon"
 import { useTranskribering, type MoteForm } from "@/hooks/use-transkribering"
 import { useClaude } from "@/hooks/use-claude"
-import { TYPE_LABELS, TYPE_STAGING, type Vedlegg, type Konsultasjon, type KonsultasjonsForm } from "@/types/konsultasjon"
+import { TYPE_STAGING, konsultasjonEtikett, type Vedlegg, type Konsultasjon, type KonsultasjonsForm } from "@/types/konsultasjon"
+import { TYPE_TEMA } from "@/lib/tema"
 import { VedleggPanel } from "@/components/app/vedlegg-panel"
 import { ChatModal } from "@/components/app/chat-modal"
 import { lagreKonsultasjon, hentKonsultasjon } from "@/lib/idb"
@@ -72,13 +73,7 @@ const TYPE_IKON = {
   TELEFONKONSULTASJON: <Phone className="w-3.5 h-3.5" />,
   MOTE: <Users className="w-3.5 h-3.5" />,
   JOURNALGJENNOMGANG: <BookOpen className="w-3.5 h-3.5" />,
-}
-
-const TYPE_FARGE = {
-  KONSULTASJON: "bg-blue-100 text-blue-700 border-blue-200",
-  TELEFONKONSULTASJON: "bg-violet-100 text-violet-700 border-violet-200",
-  MOTE: "bg-emerald-100 text-emerald-700 border-emerald-200",
-  JOURNALGJENNOMGANG: "bg-violet-100 text-violet-700 border-violet-200",
+  DIKTAT: <Mic className="w-3.5 h-3.5" />,
 }
 
 export function KonsultasjonView() {
@@ -95,10 +90,11 @@ export function KonsultasjonView() {
   const [visOcr, setVisOcr] = useState(false)
   const [maler, setMaler] = useState<{ id: string; tittel: string; beskrivelse: string | null; innhold: string }[]>([])
 
-  // Reset moteform ved nytt konsultasjonsvalg: Møte starter på video, alt annet på fysisk
+  // Init moteform ved nytt konsultasjonsvalg: bruk lagret form hvis den finnes,
+  // ellers standard (Møte starter på video, alt annet på fysisk).
   useEffect(() => {
     if (!aktiv) return
-    setMoteform(aktiv.type === "MOTE" ? "video" : "fysisk")
+    setMoteform(aktiv.form ?? (aktiv.type === "MOTE" ? "video" : "fysisk"))
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [aktiv?.id])
 
@@ -243,6 +239,7 @@ export function KonsultasjonView() {
   const harNotat = Boolean(visNotat)
   const erMote = aktiv.type === "MOTE"
   const erKonsultasjon = aktiv.type === "KONSULTASJON"
+  const tema = TYPE_TEMA[aktiv.type]
   const aktivMal = aktiv.malId ? (maler.find((m) => m.id === aktiv.malId) ?? null) : null
 
   function velgMal(mal: { id: string; innhold: string } | null) {
@@ -335,10 +332,14 @@ export function KonsultasjonView() {
       <div className="px-6 py-4 border-b border-slate-200 bg-white flex items-center gap-4">
         <Badge
           variant="outline"
-          className={`flex items-center gap-1.5 text-xs font-medium shrink-0 ${TYPE_FARGE[aktiv.type]}`}
+          className={`flex items-center gap-1.5 text-xs font-medium shrink-0 ${tema.badge}`}
         >
-          {TYPE_IKON[aktiv.type]}
-          {TYPE_LABELS[aktiv.type]}
+          {aktiv.type === "KONSULTASJON" && aktiv.form === "telefon"
+            ? <Phone className="w-3.5 h-3.5" />
+            : aktiv.type === "KONSULTASJON" && aktiv.form === "video"
+              ? <Video className="w-3.5 h-3.5" />
+              : TYPE_IKON[aktiv.type]}
+          {konsultasjonEtikett(aktiv)}
         </Badge>
         <Input
           placeholder="Pasient / Notat-ID (f.eks. Frank Hansen 210182)"
@@ -542,7 +543,7 @@ export function KonsultasjonView() {
                 ).map(({ id, ikon, label }) => (
                   <button
                     key={id}
-                    onClick={() => setMoteform(id)}
+                    onClick={() => { setMoteform(id); oppdater({ form: id }) }}
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors ${
                       moteform === id
                         ? erMote
@@ -593,7 +594,7 @@ export function KonsultasjonView() {
             {!erAktiv && !erLagretPause && aktiv.status !== "ferdig" && (
               <Button
                 size="sm"
-                className="gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+                className={`gap-2 ${tema.knapp}`}
                 onClick={handleStart}
                 disabled={erKobler}
               >
@@ -610,7 +611,7 @@ export function KonsultasjonView() {
             {!erAktiv && !erLagretPause && aktiv.status === "ferdig" && (
               <Button
                 size="sm"
-                className="gap-2 bg-violet-600 hover:bg-violet-700 text-white"
+                className={`gap-2 ${tema.knapp}`}
                 onClick={handleFortsettOpptak}
                 disabled={erKobler}
               >
@@ -624,7 +625,7 @@ export function KonsultasjonView() {
               <>
                 <Button
                   size="sm"
-                  className="gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+                  className={`gap-2 ${tema.knapp}`}
                   onClick={handleFortsettFraPause}
                 >
                   <Mic className="w-4 h-4" />
@@ -658,7 +659,7 @@ export function KonsultasjonView() {
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-2 border-blue-300 text-blue-700 hover:bg-blue-50"
+                className={`gap-2 ${tema.utlinje}`}
                 onClick={handleFortsettInSession}
               >
                 <Mic className="w-4 h-4" />
@@ -865,8 +866,8 @@ export function KonsultasjonView() {
               Generert notat
             </label>
             {isGenerating && (
-              <span className="flex items-center gap-1.5 text-xs text-blue-600">
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+              <span className={`flex items-center gap-1.5 text-xs ${tema.tekst}`}>
+                <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
                 Claude skriver…
               </span>
             )}

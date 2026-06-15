@@ -67,7 +67,9 @@ export async function POST(req: Request) {
   if (body.tilleggsinfo?.trim())
     deler.push(`**Tilleggsopplysninger:**\n${body.tilleggsinfo}`)
   if (body.transkript?.trim())
-    deler.push(`**Transkript av konsultasjonen:**\n${body.transkript}`)
+    deler.push(
+      `**${body.type === "DIKTAT" ? "Diktat" : "Transkript av konsultasjonen"}:**\n${body.transkript}`
+    )
 
   if (deler.length === 0) {
     return NextResponse.json(

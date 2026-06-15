@@ -86,6 +86,7 @@ enum MalKategori {
   KONSULTASJON
   MOTE
   CHAT
+  DIKTAT
 }
 
 model Mal {

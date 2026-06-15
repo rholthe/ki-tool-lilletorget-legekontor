@@ -1,8 +1,11 @@
+import type { KonsultasjonsForm } from "@/lib/staging"
+
 export type KonsultasjonsType =
   | "KONSULTASJON"
   | "TELEFONKONSULTASJON"
   | "MOTE"
   | "JOURNALGJENNOMGANG"
+  | "DIKTAT"
 
 export type KonsultasjonsStatus =
   | "ny"
@@ -54,6 +57,9 @@ export interface ChatMelding {
 export interface Konsultasjon {
   id: string
   type: KonsultasjonsType
+  /** Valgt form for KONSULTASJON (fysisk/telefon/video). Persisteres slik at
+   *  knappevalg, sidebar-etikett og notatlogikk overlever sidebytte. */
+  form?: KonsultasjonsForm
   pasientId: string
   transkript: string
   notat: string
@@ -80,6 +86,23 @@ export const TYPE_LABELS: Record<KonsultasjonsType, string> = {
   TELEFONKONSULTASJON: "Telefonkonsultasjon",
   MOTE: "Møte",
   JOURNALGJENNOMGANG: "Journalgjennomgang",
+  DIKTAT: "Diktat",
+}
+
+/** Etikett per konsultasjonsform — brukes når en KONSULTASJON har valgt form. */
+export const FORM_LABELS: Record<KonsultasjonsForm, string> = {
+  fysisk: "Konsultasjon",
+  telefon: "Telefonkonsultasjon",
+  video: "Videokonsultasjon",
+}
+
+/** Visningsetikett som tar hensyn til valgt form for KONSULTASJON. */
+export function konsultasjonEtikett(k: {
+  type: KonsultasjonsType
+  form?: KonsultasjonsForm
+}): string {
+  if (k.type === "KONSULTASJON" && k.form) return FORM_LABELS[k.form]
+  return TYPE_LABELS[k.type]
 }
 
 export { TYPE_STAGING, KONSULTASJON_FORM_STAGING, type KonsultasjonsForm } from "@/lib/staging"
