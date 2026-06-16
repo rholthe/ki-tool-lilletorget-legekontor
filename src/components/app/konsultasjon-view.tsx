@@ -23,6 +23,7 @@ import {
   Maximize2,
   ScanText,
   BookOpen,
+  Sparkles,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -74,6 +75,7 @@ const TYPE_IKON = {
   MOTE: <Users className="w-3.5 h-3.5" />,
   JOURNALGJENNOMGANG: <BookOpen className="w-3.5 h-3.5" />,
   DIKTAT: <Mic className="w-3.5 h-3.5" />,
+  AIHJELP: <Sparkles className="w-3.5 h-3.5" />,
 }
 
 export function KonsultasjonView() {

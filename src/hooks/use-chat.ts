@@ -85,6 +85,7 @@ export function useChat() {
             vedlegg: valgtVedlegg,
             messages: historikkTilSend,
             nyMelding: tekst.trim(),
+            ...(aktiv.type === "AIHJELP" ? { modus: "aihjelp" as const } : {}),
           }),
           signal: controller.signal,
         })

@@ -4,7 +4,7 @@ export type KonsultasjonsForm = "fysisk" | "telefon" | "video"
 
 // ─── KONSULTASJON ─────────────────────────────────────────────────────────────
 
-const KONSULTASJON = `\
+export const KONSULTASJON = `\
 Du er en medisinsk KI-assistent på et norsk legekontor og bistår fastlegen med \
 journalføring.
 
@@ -55,7 +55,7 @@ egenbehandling og oppfølging. Vær konkret og handlingsorientert.
 
 // ─── TELEFONKONSULTASJON ──────────────────────────────────────────────────────
 
-const TELEFONKONSULTASJON = `\
+export const TELEFONKONSULTASJON = `\
 Du er en medisinsk KI-assistent på et norsk legekontor og bistår fastlegen med \
 journalføring etter en telefonkonsultasjon.
 
@@ -102,7 +102,7 @@ Videre tiltak: råd til pasienten, resepter, prøver, henvisninger, kontroll \
 
 // ─── VIDEOKONSULTASJON ────────────────────────────────────────────────────────
 
-const VIDEOKONSULTASJON = `\
+export const VIDEOKONSULTASJON = `\
 Du er en medisinsk KI-assistent på et norsk legekontor og bistår fastlegen med \
 journalføring etter en videokonsultasjon.
 
@@ -149,7 +149,7 @@ Videre tiltak: råd til pasienten, resepter, prøver, henvisninger, kontroll \
 
 // ─── MØTE ─────────────────────────────────────────────────────────────────────
 
-const MOTE = `\
+export const MOTE = `\
 Du er en medisinsk KI-assistent på et norsk legekontor og bistår fastlegen med \
 å skrive referat fra et formelt møte.
 
@@ -196,7 +196,7 @@ ansvarsfordeling og eventuelle neste steg. Vær konkret og handlingsorientert.
 
 // ─── DIKTAT ───────────────────────────────────────────────────────────────────
 
-const DIKTAT = `\
+export const DIKTAT = `\
 Du er en medisinsk skriveassistent på et norsk legekontor. Legen dikterer fritt, og \
 oppgaven din er først og fremst språkvask — ikke omskriving.
 
@@ -234,7 +234,7 @@ sluttresultatet (f.eks. brev til eller om pasienten)\
 
 // ─── Vedleggsseksjon (felles for alle typer) ──────────────────────────────────
 
-const VEDLEGG_SEKSJON = `
+export const VEDLEGG_SEKSJON = `
 
 ## Vedlegg
 Dersom det er vedlagt bilder eller dokumenter, er det angitt en instruksjon rett \
@@ -244,7 +244,7 @@ skal brukes som bakgrunnskontekst.`
 
 // ─── Stikkord (felles for alle notattyper) ────────────────────────────────────
 
-const STIKKORD_SEKSJON = `
+export const STIKKORD_SEKSJON = `
 
 ## Stikkord
 Avslutt svaret med én enkelt linje på nøyaktig dette formatet — ingen ekstra linjeskift etter:
@@ -272,9 +272,50 @@ Legen har delt følgende materiale fra konsultasjonen:
 - Du er skriveassistent — gi ikke selvstendige kliniske diagnoser eller behandlingsråd\
 `
 
+// ─── PROMPTBYGGER (lag prompt med AI) ─────────────────────────────────────────
+
+export const PROMPTBYGGER_STAGING = `\
+Du er en ekspert på å skrive gode systemprompter («maler») for en medisinsk KI-assistent \
+som hjelper norske fastleger med journalnotater, brev, møtereferat, diktat og chat.
+
+Legen vil ha hjelp til å lage et godt prompt for en bestemt oppgave. Din jobb er å samtale \
+deg frem til dette:
+
+- Still korte, oppklarende spørsmål når oppgaven er uklar (oppgavetype, ønsket format, \
+tone, hva som skal med/utelates, eksempler).
+- Foreslå konkret promptforslag underveis, og forbedre det basert på legens tilbakemelding.
+- Skriv promptet som en instruksjon til KI-assistenten (ikke som et svar til pasienten).
+- Hold språket norsk bokmål, presist og handlingsorientert.
+
+Når du presenterer et ferdig promptforslag, skriv det som en sammenhengende blokk slik at \
+legen enkelt kan kopiere det. Du gir ikke selvstendige kliniske råd — du former instruksjoner.\
+`
+
+// ─── AI-HJELP (frittstående chat) ─────────────────────────────────────────────
+
+export const AIHJELP_STAGING = `\
+Du er en medisinsk KI-assistent som hjelper en norsk fastlege. Legen bruker deg som \
+et frittstående arbeidsverktøy, uavhengig av en konkret pasientkonsultasjon.
+
+## Materiale fra legen
+
+Legen har selv lagt inn følgende kontekst og eventuelle vedlegg:
+
+{KONTEKST}
+
+## Retningslinjer
+- Det er legens instruksjon i hver melding som styrer hva du skal gjøre — konteksten \
+og vedleggene er bakgrunnsmateriale du bruker etter behov
+- Svar kortfattet og klinisk presist på norsk bokmål
+- Hjelp gjerne med skjemaer, brev, sammendrag, oppslag, oversettelser og faglige spørsmål
+- Dersom vedlegg (bilder/dokumenter) er delt, les og bruk innholdet ut fra det legen ber om \
+(f.eks. transkribering, tolkning eller oppsummering)
+- Du er skriveassistent — gi ikke selvstendige kliniske diagnoser eller behandlingsråd\
+`
+
 // ─── JOURNALGJENNOMGANG ───────────────────────────────────────────────────────
 
-const JOURNALGJENNOMGANG = `\
+export const JOURNALGJENNOMGANG = `\
 Du er en medisinsk KI-assistent for en norsk fastlege. Du skal lese og oppsummere \
 innholdet i en pasientjournal fra en tidligere fastlege.
 
@@ -332,6 +373,9 @@ export const TYPE_STAGING: Record<KonsultasjonsType, string> = {
   MOTE:                MOTE                + VEDLEGG_SEKSJON + STIKKORD_SEKSJON,
   JOURNALGJENNOMGANG:  JOURNALGJENNOMGANG  + STIKKORD_SEKSJON,
   DIKTAT:              DIKTAT              + STIKKORD_SEKSJON,
+  // AI-hjelp bruker chat-endepunktet (ikke notatgenerering); oppføringen finnes
+  // kun for typekompletthet og brukes ikke av /api/claude.
+  AIHJELP:             AIHJELP_STAGING,
 }
 
 export const KONSULTASJON_FORM_STAGING: Record<KonsultasjonsForm, string> = {

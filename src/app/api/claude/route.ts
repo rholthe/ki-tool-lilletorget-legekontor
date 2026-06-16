@@ -3,8 +3,6 @@ import { NextResponse } from "next/server"
 import { AnthropicBedrock } from "@anthropic-ai/bedrock-sdk"
 import type { ContentBlockParam } from "@anthropic-ai/sdk/resources/messages"
 import {
-  TYPE_STAGING,
-  KONSULTASJON_FORM_STAGING,
   type KonsultasjonsType,
   type KonsultasjonsForm,
   type Vedlegg,
@@ -14,7 +12,11 @@ import {
   standardModell,
   standardRegion,
 } from "@/lib/admin"
-import { lagVedleggInstruksjon } from "@/lib/vedlegg"
+import {
+  hentStagingOverrides,
+  byggStaging,
+  resolverVedleggInstruksjon,
+} from "@/lib/staging-server"
 
 interface RequestBody {
   type: KonsultasjonsType
@@ -53,10 +55,8 @@ export async function POST(req: Request) {
 
   const body: RequestBody = await req.json()
 
-  const stagingTekst =
-    body.type === "KONSULTASJON" && body.konsultasjonsform
-      ? KONSULTASJON_FORM_STAGING[body.konsultasjonsform]
-      : TYPE_STAGING[body.type]
+  const overrides = await hentStagingOverrides()
+  const stagingTekst = byggStaging(body.type, body.konsultasjonsform, overrides)
   const systemPrompt = body.malInnhold
     ? `${stagingTekst}\n\n${body.malInnhold}`
     : stagingTekst
@@ -84,7 +84,7 @@ export async function POST(req: Request) {
   const contentBlocks: ContentBlockParam[] = [{ type: "text", text: brukerMelding }]
 
   for (const v of body.vedlegg ?? []) {
-    contentBlocks.push({ type: "text", text: lagVedleggInstruksjon(v as Vedlegg) })
+    contentBlocks.push({ type: "text", text: resolverVedleggInstruksjon(v as Vedlegg, overrides) })
     if (v.mimeType === "application/pdf") {
       contentBlocks.push({
         type: "document",

@@ -12,9 +12,10 @@ interface Props {
   aktivModell: string
   aktivRegion: string
   harBedrockNokler: boolean
+  erAdmin: boolean
 }
 
-export function InnstillingerKlient({ bruker, aktivModell, aktivRegion, harBedrockNokler }: Props) {
+export function InnstillingerKlient({ bruker, aktivModell, aktivRegion, harBedrockNokler, erAdmin }: Props) {
   const searchParams = useSearchParams()
   const router = useRouter()
   const aktivFane = searchParams.get("tab") === "prompts" ? "prompts" : "konto"
@@ -127,7 +128,7 @@ export function InnstillingerKlient({ bruker, aktivModell, aktivRegion, harBedro
 
         {/* ── Promptbibliotek-fane ── */}
         <TabsContent value="prompts" className="mt-0">
-          <PromptbibliotekKlient />
+          <PromptbibliotekKlient erAdmin={erAdmin} />
         </TabsContent>
       </Tabs>
     </div>

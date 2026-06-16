@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { Users, Stethoscope, Trash2, Clock, BookOpen, Mic } from "lucide-react"
+import { Users, Stethoscope, Trash2, Clock, BookOpen, Mic, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
@@ -54,6 +54,11 @@ const NY_KNAPPER: {
     type: "JOURNALGJENNOMGANG",
     ikon: <BookOpen className="w-4 h-4" />,
     farge: "bg-violet-600 hover:bg-violet-700",
+  },
+  {
+    type: "AIHJELP",
+    ikon: <Sparkles className="w-4 h-4" />,
+    farge: "bg-teal-600 hover:bg-teal-700",
   },
 ]
 

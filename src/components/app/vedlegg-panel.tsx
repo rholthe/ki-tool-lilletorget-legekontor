@@ -29,13 +29,16 @@ type GodkjentMimeType = (typeof GODKJENTE_TYPER)[number]
 interface Props {
   vedlegg: Vedlegg[]
   onChange: (vedlegg: Vedlegg[]) => void
-  modus?: "ocr"
+  /** "ocr" = les tekst-modus, "enkel" = ren kontekst uten oppgave-/OCR-instruks. */
+  modus?: "ocr" | "enkel"
 }
 
 export function VedleggPanel({ vedlegg, onChange, modus }: Props) {
   const synligeVedlegg = modus === "ocr"
     ? vedlegg.filter((v) => v.oppgave === "ocr")
-    : vedlegg.filter((v) => v.oppgave !== "ocr")
+    : modus === "enkel"
+      ? vedlegg
+      : vedlegg.filter((v) => v.oppgave !== "ocr")
   const inputRef = useRef<HTMLInputElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
@@ -303,19 +306,23 @@ export function VedleggPanel({ vedlegg, onChange, modus }: Props) {
 
             return (
               <li key={v.id} className="rounded-xl border border-slate-200 bg-white">
-                {!erEkspandert ? (
+                {(!erEkspandert || modus === "enkel") ? (
                   /* ── Kollapsert ── */
                   <div className="flex items-center gap-2 px-4 py-2.5">
                     {FileIkon}
                     <span className="text-sm text-slate-700 truncate flex-1 min-w-0">{v.navn}</span>
-                    <span className="shrink-0 text-xs px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200 font-medium">
-                      {modus === "ocr"
-                        ? VEDLEGG_OCR_BRUK_INFO[v.ocrBruk ?? "kontekst"].label
-                        : VEDLEGG_OPPGAVE_INFO[v.oppgave].label + (v.oppgave === "spirometri" && v.spirometriType ? ` · ${SPIROMETRI_TYPE_INFO[v.spirometriType].label}` : "")}
-                    </span>
-                    <button onClick={() => toggleExpand(v.id)} className="shrink-0 text-slate-400 hover:text-slate-600 transition-colors" aria-label="Vis detaljer">
-                      <ChevronDown className="w-4 h-4" />
-                    </button>
+                    {modus !== "enkel" && (
+                      <span className="shrink-0 text-xs px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200 font-medium">
+                        {modus === "ocr"
+                          ? VEDLEGG_OCR_BRUK_INFO[v.ocrBruk ?? "kontekst"].label
+                          : VEDLEGG_OPPGAVE_INFO[v.oppgave].label + (v.oppgave === "spirometri" && v.spirometriType ? ` · ${SPIROMETRI_TYPE_INFO[v.spirometriType].label}` : "")}
+                      </span>
+                    )}
+                    {modus !== "enkel" && (
+                      <button onClick={() => toggleExpand(v.id)} className="shrink-0 text-slate-400 hover:text-slate-600 transition-colors" aria-label="Vis detaljer">
+                        <ChevronDown className="w-4 h-4" />
+                      </button>
+                    )}
                     <button onClick={() => fjernVedlegg(v.id)} className="shrink-0 text-slate-400 hover:text-slate-600 transition-colors" aria-label="Fjern vedlegg">
                       <X className="w-4 h-4" />
                     </button>

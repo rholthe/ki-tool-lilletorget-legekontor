@@ -1,9 +1,9 @@
 import { auth } from "@/lib/auth"
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
-import type { MalKategori } from "@prisma/client"
+import type { MalKategori } from "@/generated/prisma/client"
 
-const GYLDIGE_KATEGORIER: MalKategori[] = ["KONSULTASJON", "MOTE", "CHAT", "DIKTAT"]
+const GYLDIGE_KATEGORIER: MalKategori[] = ["KONSULTASJON", "MOTE", "CHAT", "DIKTAT", "AIHJELP"]
 
 export async function GET(req: Request) {
   const session = await auth()

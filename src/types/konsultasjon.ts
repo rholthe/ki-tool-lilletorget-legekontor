@@ -6,6 +6,7 @@ export type KonsultasjonsType =
   | "MOTE"
   | "JOURNALGJENNOMGANG"
   | "DIKTAT"
+  | "AIHJELP"
 
 export type KonsultasjonsStatus =
   | "ny"
@@ -87,6 +88,7 @@ export const TYPE_LABELS: Record<KonsultasjonsType, string> = {
   MOTE: "Møte",
   JOURNALGJENNOMGANG: "Journalgjennomgang",
   DIKTAT: "Diktat",
+  AIHJELP: "AI-hjelp",
 }
 
 /** Etikett per konsultasjonsform — brukes når en KONSULTASJON har valgt form. */

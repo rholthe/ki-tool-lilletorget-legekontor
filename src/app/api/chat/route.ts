@@ -4,7 +4,8 @@ import { AnthropicBedrock } from "@anthropic-ai/bedrock-sdk"
 import type { ContentBlockParam, MessageParam } from "@anthropic-ai/sdk/resources/messages"
 import type { Vedlegg } from "@/types/konsultasjon"
 import { hentSystemSetting, standardModell, standardRegion } from "@/lib/admin"
-import { CHAT_STAGING } from "@/lib/staging"
+import { PROMPTBYGGER_STAGING } from "@/lib/staging"
+import { hentStagingOverrides, byggChatStaging } from "@/lib/staging-server"
 
 interface ChatRequestBody {
   transkript: string
@@ -14,6 +15,11 @@ interface ChatRequestBody {
   vedlegg?: Pick<Vedlegg, "mimeType" | "base64" | "oppgave" | "spirometriType" | "egendefinertPrompt">[]
   messages: { role: "user" | "assistant"; content: string }[]
   nyMelding: string
+  /**
+   * "aihjelp" = frittstående AI-hjelp, "promptbygger" = lag prompt med AI,
+   * ellers konsultasjonschat.
+   */
+  modus?: "aihjelp" | "promptbygger"
 }
 
 async function lagBedrockKlient() {
@@ -51,8 +57,18 @@ export async function POST(req: Request) {
   if (body.notat?.trim())
     deler.push(`**Generert journalnotat (SOAP):**\n${body.notat}`)
 
-  const kontekstTekst = deler.length > 0 ? deler.join("\n\n---\n\n") : "(Ingen konsultasjonsdata tilgjengelig ennå)"
-  const systemPrompt = CHAT_STAGING.replace("{KONTEKST}", kontekstTekst)
+  const kontekstTekst = deler.length > 0 ? deler.join("\n\n---\n\n") : "(Ingen kontekst lagt til ennå)"
+  let systemPrompt: string
+  if (body.modus === "promptbygger") {
+    systemPrompt = PROMPTBYGGER_STAGING
+  } else {
+    const overrides = await hentStagingOverrides()
+    systemPrompt = byggChatStaging(
+      body.modus === "aihjelp" ? "aihjelp" : "chat",
+      kontekstTekst,
+      overrides
+    )
+  }
 
   // Bygg ny brukermelding — inkluder vedlegg kun på første melding
   const erFørsteMelding = body.messages.length === 0

@@ -44,7 +44,7 @@ Nettleser (klinikkens datamaskin)
 | UI-komponenter | shadcn/ui + Tailwind CSS | Moderne, tilgjengelig, tilpassbart |
 | Backend/API | Next.js API Routes | Integrert med frontend, enkelt å deploye |
 | Database | MariaDB (selvhosted på VPS) | Full kontroll, ingen tredjepart |
-| ORM | Prisma | Typesikker DB-tilgang |
+| ORM | Prisma 7 (Rust-fri, mariadb-driveradapter) | Typesikker DB-tilgang |
 | Autentisering | NextAuth v5 | Fleksibel, støtter credentials + 2FA |
 | Transkripsjon | Soniox (EU-endpoint) | Sanntid, norsk språkstøtte, GDPR-compliant |
 | AI-tekstgenerering | Anthropic Claude via AWS Bedrock | Server-side SSE streaming (eu-west-1), EU-databehandling |
@@ -83,10 +83,19 @@ Nettleser (klinikkens datamaskin)
 - Transkriptviser (enkeltlinje): fortløpende transkripsjon vises som én linje — kun siste segment
   - Container: `overflow-x-hidden` med `scrollLeft = scrollWidth` via ref/useEffect
 - 2FA (TOTP), admin-side for Bedrock-konfigurasjon (modell/region/tilkoblingstest)
-- Promptbibliotek under Innstillinger: CRUD for maler per kategori (Konsultasjon, Møte, Diktat, Chat)
+- Promptbibliotek under Innstillinger: CRUD for maler per kategori (Konsultasjon, Møte, Diktat, Chat, AI-hjelp)
   - Maler kan merkes som delte; andre brukere kan importere delte maler
   - Konsultasjon/Møte-maler: velges i «Velg notatmal»-dropdown i konsultasjonsvisningen
-  - Chat-maler: vises som snarveisknapper i Chat / AI-hjelp
+  - Chat-maler: vises som snarveisknapper i Chat / AI-hjelp; AI-hjelp-maler i frittstående AI-hjelp
+  - Snarvei til promptbiblioteket i toppheaderen (foran brukernavnet) → `/innstillinger?tab=prompts`
+  - Fane «Lag med AI» (alle brukere): chat med Claude (`modus: "promptbygger"`) for å utforme et prompt;
+    «Bruk som ny mal» forhåndsutfyller skjemaet i valgt kategori (`promptbygger-klient.tsx`)
+  - Fane «Staging (admin)» (kun admin): redigerer systemprompter lagret i DB med fil-fallback
+    - Overstyringer lagres i `SystemSetting` med nøkkel `staging:<key>` (ingen egen tabell)
+    - Registry i `src/lib/staging-registry.ts` (grunntekst per notattype, vedlegg-instrukser, felles Stikkord/Vedlegg-seksjon)
+    - Server-resolver `src/lib/staging-server.ts`: `hentStagingOverrides` + `byggStaging`/`byggChatStaging`/`resolverVedleggInstruksjon`
+    - `STIKKORD:` og `{KONTEKST}` styres sentralt via felles-oppføringer; grunntekst per type kan ikke brekke dem
+    - Vanlige brukere ser aldri staging-tekst; `/api/admin/staging` krever admin (`isAdmin`)
   - Valgt mal sendes til Claude etter systemprompt (kan overstyre)
   - Dropdown har ikke lenger «Standard (systemprompt)» — stagingprompt er alltid skjult for bruker
   - Valgt mal huskes per konsultasjonstype i localStorage og brukes automatisk på neste sesjon
@@ -118,9 +127,17 @@ Nettleser (klinikkens datamaskin)
   - Claude genererer strukturert oppsummering med 9 seksjoner: SOSIALT, KLINISK OPPSUMMERING, ALLERGIER OG BIVIRKNINGER, OPERASJONER OG INNLEGGELSER, FAMILIEHISTORIKK, SCREENINGHISTORIKK, VIKTIGE PUNKTER, MEDIKAMENTHISTORIKK (SISTE 5 ÅR), SYKMELDINGSHISTORIKK OG NAV-HISTORIKK + FOKUS-seksjon ved fokusspørsmål
   - Sesjoner lagres i IndexedDB og vises i sidebar (violet BookOpen-ikon)
   - Routing: `page.tsx` → `HovedInnhold` → `JournalgjennomgangView` / `DiktatView` / `KonsultasjonView`
+- AI-hjelp: frittstående Chat / AI-hjelp uavhengig av pasient/konsultasjon (egen oppgaveknapp, teal Sparkles-ikon)
+  - Egen `AiHjelpView` (rutes via `HovedInnhold`): sammenleggbart Kontekst-felt + vedlegg, chat-tråd, snarveier og inputfelt
+  - All kontekst legges inn manuelt av bruker (`Konsultasjon.kontekst`); ingen transkript/opptak
+  - Opplasting + OCR «helt tilsvarende konsultasjonsbildet», men uten bilde-/OCR-instruks: `VedleggPanel modus="enkel"`
+    legger filer til som `oppgave: "kontekst"` uten oppgavevalg — det er prompten som styrer hva Claude gjør
+  - Snarveier fra egen promptkategori `AIHJELP`; klikk legger malteksten i inputfeltet (ikke direkte send)
+  - Gjenbruker `useChat` + `/api/chat` med `modus: "aihjelp"` → egen systemprompt `AIHJELP_STAGING` (ikke konsultasjonsbundet)
+  - Chat-historikk lagres i IndexedDB (24t TTL); «Tøm» nullstiller tråden
 
 ### Planlagt
-- Frasebibliotek og diktatprompts
+- Frasebibliotek
 - Klinikk-teamfunksjonalitet
 
 ## GDPR og personvern
@@ -145,10 +162,11 @@ legeassist/
 ├── package.json
 ├── next.config.ts
 ├── tsconfig.json
+├── prisma.config.ts               # Prisma 7-konfig: schema-sti + datasource-URL (for CLI)
 ├── .env                           # Miljøvariabler (server-side)
 ├── .env.local                     # Lokal override
 ├── prisma/
-│   └── schema.prisma              # Brukere, maler, sesjon
+│   └── schema.prisma              # Brukere, maler, sesjon (generator: prisma-client → src/generated/prisma)
 ├── src/
 │   ├── app/                       # Next.js App Router
 │   │   ├── (auth)/                # Login, registrering
@@ -174,21 +192,24 @@ legeassist/
 │   │   │   ├── konsultasjon-view.tsx      # KonsultasjonsUI med Claude-integrasjon
 │   │   │   ├── journalgjennomgang-view.tsx# Journalgjennomgang: PDF-opplasting + oppsummering
 │   │   │   ├── diktat-view.tsx            # Diktat: fri diktering + språkvask (opptak, mal, resultat)
+│   │   │   ├── ai-hjelp-view.tsx          # Frittstående AI-hjelp: kontekst + vedlegg + chat (modus: aihjelp)
 │   │   │   ├── hoved-innhold.tsx          # Ruter mellom KonsultasjonView / DiktatView / JournalgjennomgangView
 │   │   │   ├── chat-modal.tsx             # Chat / AI-hjelp modal
 │   │   │   ├── vedlegg-panel.tsx          # Vedlegg: opplasting, kamera, oppgavevalg (modus: ocr|standard)
 │   │   │   └── app-sidebar.tsx            # Sidebar med konsultasjonsliste (stikkord)
 │   │   ├── settings/
 │   │   │   ├── innstillinger-klient.tsx   # Tabulert innstillingsside (Konto / Promptbibliotek)
-│   │   │   └── promptbibliotek-klient.tsx # CRUD-UI for maler (Konsultasjon, Møte, Chat)
+│   │   │   └── promptbibliotek-klient.tsx # CRUD-UI for maler (Konsultasjon, Møte, Diktat, Chat, AI-hjelp)
 │   │   └── admin/
 │   │       └── bedrock-innstillinger.tsx  # Client-komponent for admin-konfig
 │   ├── lib/
 │   │   ├── auth.ts                # NextAuth konfigurasjon
-│   │   ├── db.ts                  # Prisma-klient
+│   │   ├── db.ts                  # Prisma-klient (Prisma 7 + mariadb-driveradapter, parser DATABASE_URL)
 │   │   ├── admin.ts               # isAdmin(), hentSystemSetting(), tilgjengeligeModeller/Regioner()
 │   │   ├── idb.ts                 # IndexedDB-operasjoner (konsultasjoner, 24t TTL)
-│   │   ├── staging.ts             # TYPE_STAGING + KONSULTASJON_FORM_STAGING + CHAT_STAGING + DIKTAT + JOURNALGJENNOMGANG
+│   │   ├── staging.ts             # Grunntekster + TYPE_STAGING + CHAT/AIHJELP/PROMPTBYGGER_STAGING + felles seksjoner
+│   │   ├── staging-registry.ts    # STAGING_REGISTRY: overstyrbare staging-tekster (fil-standard)
+│   │   ├── staging-server.ts      # Server-resolver: DB-override + fil-fallback, bygger system prompt
 │   │   ├── tema.ts                # TYPE_TEMA (fargetema) + TYPE_IKON_KOMP (ikon per type)
 │   │   └── vedlegg.ts             # VEDLEGG_OPPGAVE_INFO, VEDLEGG_OCR_BRUK_INFO, lagVedleggInstruksjon()
 │   ├── types/
@@ -230,6 +251,16 @@ BEDROCK_REGIONS=eu-central-1,eu-west-1  # Tilgjengelige regioner (kommaseparert)
 # Administrasjon
 ADMIN_EMAILS=admin@klinikk.no     # Kommaseparert liste over admin-e-poster
 ```
+
+## Database (Prisma 7)
+
+Prosjektet bruker Prisma 7 med den Rust-frie query-compileren og **mariadb-driveradapteren** (kompatibel med MySQL).
+
+- **Generator:** `prisma-client` (ny) med `output = "../src/generated/prisma"`. Den genererte klienten er gitignored og importeres via `@/generated/prisma/client`.
+- **Runtime-tilkobling:** `src/lib/db.ts` parser `DATABASE_URL` og setter opp `PrismaMariaDb`; `new PrismaClient({ adapter })`. Uten adapter kaster v7 («engine type "client" requires adapter»).
+- **CLI-tilkobling:** `prisma.config.ts` (rot) leser `DATABASE_URL` via `dotenv` og oppgir `datasource.url` for `prisma db push` / `generate`.
+- **Viktig arbeidsflyt-endring:** `db push` kjører **ikke** lenger `generate` automatisk — kjør `npx prisma generate` eksplisitt etter skjemaendringer.
+- **Destruktive kommandoer:** v7 blokkerer AI-agenter fra `db push --force-reset` o.l. uten eksplisitt brukersamtykke gitt via `PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION`.
 
 ## Claude-integrasjon
 

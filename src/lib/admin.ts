@@ -28,6 +28,10 @@ export async function settSystemSetting(
   })
 }
 
+export async function slettSystemSetting(key: string): Promise<void> {
+  await prisma.systemSetting.deleteMany({ where: { key } })
+}
+
 export function tilgjengeligeModeller(): string[] {
   return (process.env.BEDROCK_MODELS ?? "eu.anthropic.claude-sonnet-4-6")
     .split(",")

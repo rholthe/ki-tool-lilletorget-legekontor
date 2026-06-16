@@ -1,11 +1,12 @@
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/db"
-import { hentSystemSetting, standardModell, standardRegion } from "@/lib/admin"
+import { hentSystemSetting, standardModell, standardRegion, isAdmin } from "@/lib/admin"
 import { InnstillingerKlient } from "@/components/settings/innstillinger-klient"
 import { Suspense } from "react"
 
 export default async function InnstillingerSide() {
   const session = await auth()
+  const erAdmin = isAdmin(session?.user?.email)
   const [bruker, aktivModell, aktivRegion] = await Promise.all([
     session?.user?.id
       ? prisma.user.findUnique({
@@ -24,6 +25,7 @@ export default async function InnstillingerSide() {
         aktivModell={aktivModell}
         aktivRegion={aktivRegion}
         harBedrockNokler={Boolean(process.env.BEDROCK_API_KEY && process.env.BEDROCK_SECRET_KEY)}
+        erAdmin={erAdmin}
       />
     </Suspense>
   )

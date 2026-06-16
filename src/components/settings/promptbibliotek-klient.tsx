@@ -1,19 +1,21 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { Plus, Pencil, Trash2, Share2, Lock, Download, ChevronDown, ChevronUp, Check, X } from "lucide-react"
+import { Plus, Pencil, Trash2, Share2, Lock, Download, ChevronDown, ChevronUp, Check, X, Sparkles, ShieldCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { PromptbyggerKlient } from "@/components/settings/promptbygger-klient"
+import { StagingAdminKlient } from "@/components/settings/staging-admin-klient"
 
 export interface MalData {
   id: string
   tittel: string
   beskrivelse: string | null
   innhold: string
-  kategori: "KONSULTASJON" | "MOTE" | "CHAT" | "DIKTAT"
+  kategori: "KONSULTASJON" | "MOTE" | "CHAT" | "DIKTAT" | "AIHJELP"
   erDelt: boolean
   createdAt: string
   updatedAt: string
@@ -24,18 +26,19 @@ interface DeltMalData {
   tittel: string
   beskrivelse: string | null
   innhold: string
-  kategori: "KONSULTASJON" | "MOTE" | "CHAT" | "DIKTAT"
+  kategori: "KONSULTASJON" | "MOTE" | "CHAT" | "DIKTAT" | "AIHJELP"
   eier: { name: string | null; email: string | null }
   createdAt: string
 }
 
-type Kategori = "KONSULTASJON" | "MOTE" | "CHAT" | "DIKTAT"
+type Kategori = "KONSULTASJON" | "MOTE" | "CHAT" | "DIKTAT" | "AIHJELP"
 
 const KATEGORI_FANER: { id: Kategori; label: string }[] = [
   { id: "KONSULTASJON", label: "Konsultasjon" },
   { id: "MOTE", label: "Møte" },
   { id: "DIKTAT", label: "Diktat" },
   { id: "CHAT", label: "Chat" },
+  { id: "AIHJELP", label: "AI-hjelp" },
 ]
 
 interface MalFormData {
@@ -47,7 +50,7 @@ interface MalFormData {
 
 const TOM_FORM: MalFormData = { tittel: "", beskrivelse: "", innhold: "", erDelt: false }
 
-export function PromptbibliotekKlient() {
+export function PromptbibliotekKlient({ erAdmin = false }: { erAdmin?: boolean }) {
   const [maler, setMaler] = useState<MalData[]>([])
   const [laster, setLaster] = useState(true)
   const [feil, setFeil] = useState<string | null>(null)
@@ -57,6 +60,7 @@ export function PromptbibliotekKlient() {
   const [viserDelte, setViserDelte] = useState(false)
   const [lasterDelte, setLasterDelte] = useState(false)
   const [aktivKategori, setAktivKategori] = useState<Kategori>("KONSULTASJON")
+  const [visning, setVisning] = useState<Kategori | "ai" | "staging">("KONSULTASJON")
 
   // Skjema-state
   const [redigerer, setRedigerer] = useState<string | "ny" | null>(null)
@@ -105,6 +109,25 @@ export function PromptbibliotekKlient() {
     setForm(TOM_FORM)
     setFormFeil(null)
     if (viserDelte) lastDelteMaler(kat)
+  }
+
+  function byttVisning(v: string) {
+    if (v === "ai" || v === "staging") {
+      setVisning(v)
+      return
+    }
+    setVisning(v as Kategori)
+    byttKategori(v as Kategori)
+  }
+
+  // Brukes av promptbyggeren: forhåndsutfyll «Ny mal»-skjemaet i valgt kategori
+  function prefyllNyMal(kategoriId: string, innhold: string) {
+    const kat = kategoriId as Kategori
+    setAktivKategori(kat)
+    setVisning(kat)
+    setRedigerer("ny")
+    setForm({ ...TOM_FORM, innhold })
+    setFormFeil(null)
   }
 
   function startNy() {
@@ -202,7 +225,7 @@ export function PromptbibliotekKlient() {
         <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-4 py-3">{feil}</div>
       )}
 
-      <Tabs value={aktivKategori} onValueChange={(v) => byttKategori(v as Kategori)}>
+      <Tabs value={visning} onValueChange={byttVisning}>
         <TabsList>
           {KATEGORI_FANER.map((f) => (
             <TabsTrigger key={f.id} value={f.id}>
@@ -214,6 +237,16 @@ export function PromptbibliotekKlient() {
               )}
             </TabsTrigger>
           ))}
+          <TabsTrigger value="ai">
+            <Sparkles className="w-3.5 h-3.5 mr-1.5 text-teal-600" />
+            Lag med AI
+          </TabsTrigger>
+          {erAdmin && (
+            <TabsTrigger value="staging">
+              <ShieldCheck className="w-3.5 h-3.5 mr-1.5 text-amber-600" />
+              Staging
+            </TabsTrigger>
+          )}
         </TabsList>
 
         {KATEGORI_FANER.map((f) => (
@@ -224,7 +257,8 @@ export function PromptbibliotekKlient() {
               {f.id === "KONSULTASJON" && "Vises i «Velg notatmal»-menyen for konsultasjonsoppgaver."}
               {f.id === "MOTE" && "Vises i «Velg notatmal»-menyen for møteoppgaver."}
               {f.id === "DIKTAT" && "Vises i «Velg mal»-menyen i Diktat — f.eks. brev til eller om pasienten."}
-              {f.id === "CHAT" && "Vises som snarveisknapper i Chat / AI-hjelp-dialogen."}
+              {f.id === "CHAT" && "Vises som snarveisknapper i Chat / AI-hjelp-dialogen i konsultasjoner."}
+              {f.id === "AIHJELP" && "Vises som snarveisknapper i den frittstående AI-hjelp-oppgaven."}
             </p>
 
             {/* Liste over egne maler */}
@@ -370,6 +404,18 @@ export function PromptbibliotekKlient() {
             )}
           </TabsContent>
         ))}
+
+        {/* ── Lag prompt med AI ── */}
+        <TabsContent value="ai" className="mt-4">
+          <PromptbyggerKlient kategorier={KATEGORI_FANER} onBrukSomMal={prefyllNyMal} />
+        </TabsContent>
+
+        {/* ── Staging (admin) ── */}
+        {erAdmin && (
+          <TabsContent value="staging" className="mt-4">
+            <StagingAdminKlient />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   )

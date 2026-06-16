@@ -1,3 +1,5 @@
+import Link from "next/link"
+import { BookOpen } from "lucide-react"
 import { AppSidebar } from "@/components/app/app-sidebar"
 import { AppHeaderMeny } from "@/components/app/app-header-meny"
 import { KonsultasjonProvider } from "@/hooks/use-konsultasjon"
@@ -24,7 +26,16 @@ export default async function AppLayout({
             </div>
             <span className="font-semibold text-slate-800 text-sm">legeassist</span>
           </div>
-          <AppHeaderMeny visNavn={visNavn} erAdmin={erAdmin} />
+          <div className="flex items-center gap-1">
+            <Link
+              href="/innstillinger?tab=prompts"
+              className="flex items-center gap-1.5 text-xs text-slate-600 hover:text-slate-900 transition-colors px-2 py-1.5 rounded-md hover:bg-slate-100"
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+              <span>Promptbibliotek</span>
+            </Link>
+            <AppHeaderMeny visNavn={visNavn} erAdmin={erAdmin} />
+          </div>
         </header>
 
         {/* Sidebar + innhold */}
