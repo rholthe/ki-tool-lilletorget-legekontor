@@ -10,11 +10,18 @@ import {
   ChevronDown,
   ChevronUp,
   Paperclip,
+  Maximize2,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import {
   Tooltip,
   TooltipContent,
@@ -42,7 +49,14 @@ export function AiHjelpView() {
   const [inputTekst, setInputTekst] = useState("")
   const [maler, setMaler] = useState<AiHjelpMal[]>([])
   const [visKontekst, setVisKontekst] = useState(true)
+  const [utvidetKontekst, setUtvidetKontekst] = useState(false)
   const bunneRef = useRef<HTMLDivElement>(null)
+
+  // Åpne kontekstfeltet automatisk når en ny oppgave opprettes/åpnes
+  const aktivId = aktiv?.id
+  useEffect(() => {
+    setVisKontekst(true)
+  }, [aktivId])
 
   // Last AI-hjelp-snarveier
   useEffect(() => {
@@ -85,6 +99,7 @@ export function AiHjelpView() {
 
   const antallVedlegg = aktiv.vedlegg?.length ?? 0
   const harKontekst = Boolean(aktiv.kontekst?.trim()) || antallVedlegg > 0
+  const tomChat = meldinger.length === 0 && !streamingTekst
 
   return (
     <div className="h-full flex flex-col">
@@ -152,14 +167,24 @@ export function AiHjelpView() {
 
         {visKontekst && (
           <div className="px-6 pb-4 space-y-3 max-h-[42vh] overflow-y-auto">
-            <Textarea
-              placeholder="Lim inn eller skriv all informasjon AI skal bruke — notater, epikriser, prøvesvar, bakgrunn… Det er instruksjonen din nederst som styrer hva AI gjør med dette."
-              value={aktiv.kontekst}
-              onChange={(e) => oppdater({ kontekst: e.target.value })}
-              className="resize-none h-28 text-sm border-slate-200 bg-white"
-            />
+            <div className="relative">
+              <Textarea
+                placeholder="Lim inn eller skriv all informasjon AI skal bruke — notater, epikriser, prøvesvar, bakgrunn… Det er instruksjonen din nederst som styrer hva AI gjør med dette."
+                value={aktiv.kontekst}
+                onChange={(e) => oppdater({ kontekst: e.target.value })}
+                className="resize-none h-28 text-sm border-slate-200 bg-white pr-9"
+              />
+              <button
+                onClick={() => setUtvidetKontekst(true)}
+                className="absolute top-2 right-2 text-slate-400 hover:text-slate-600 transition-colors"
+                aria-label="Utvid kontekst til fullskjerm"
+              >
+                <Maximize2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
             <VedleggPanel
               modus="enkel"
+              kompakt
               vedlegg={aktiv.vedlegg ?? []}
               onChange={(nyeVedlegg: Vedlegg[]) => oppdater({ vedlegg: nyeVedlegg })}
             />
@@ -167,18 +192,25 @@ export function AiHjelpView() {
         )}
       </div>
 
+      {/* Utvidet kontekst-dialog (fullskjerm) */}
+      <Dialog open={utvidetKontekst} onOpenChange={setUtvidetKontekst}>
+        <DialogContent className="!w-[90vw] !max-w-[1400px] h-[85vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Kontekst</DialogTitle>
+          </DialogHeader>
+          <Textarea
+            autoFocus
+            placeholder="Lim inn eller skriv all informasjon AI skal bruke — notater, epikriser, prøvesvar, bakgrunn… Det er instruksjonen din nederst som styrer hva AI gjør med dette."
+            value={aktiv.kontekst}
+            onChange={(e) => oppdater({ kontekst: e.target.value })}
+            className="flex-1 resize-none text-sm border-slate-200 min-h-0"
+          />
+        </DialogContent>
+      </Dialog>
+
       {/* Chat-meldinger */}
-      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3">
-        {meldinger.length === 0 && !streamingTekst ? (
-          <div className="h-full flex items-center justify-center">
-            <div className="text-center space-y-2">
-              <Sparkles className="w-8 h-8 mx-auto text-slate-300" />
-              <p className="text-sm text-slate-400">
-                Still et spørsmål eller gi en instruksjon — bruk gjerne en snarvei
-              </p>
-            </div>
-          </div>
-        ) : (
+      <div className={`${tomChat ? "shrink-0" : "flex-1"} overflow-y-auto px-6 py-4 space-y-3`}>
+        {tomChat ? null : (
           <>
             {meldinger.map((m) => {
               if (m.role === "system") {
@@ -254,14 +286,14 @@ export function AiHjelpView() {
       </div>
 
       {/* Input */}
-      <div className="px-6 py-3 border-t border-slate-200 flex items-end gap-2 shrink-0">
+      <div className={`px-6 py-3 border-t border-slate-200 flex gap-2 ${tomChat ? "flex-1 items-stretch" : "items-end shrink-0"}`}>
         <Textarea
-          placeholder="Skriv spørsmål eller instruksjon… (Enter for å sende, Shift+Enter for ny linje)"
+          placeholder="Still et spørsmål eller gi en instruksjon — bruk gjerne en snarvei… (Enter for å sende, Shift+Enter for ny linje)"
           value={inputTekst}
           onChange={(e) => setInputTekst(e.target.value)}
           onKeyDown={handleKeyDown}
           disabled={isSending}
-          className="resize-none text-sm max-h-32 overflow-y-auto flex-1 border-slate-200"
+          className={`resize-none text-sm overflow-y-auto flex-1 border-slate-200 ${tomChat ? "h-full" : "max-h-32"}`}
         />
         <Button
           size="icon"

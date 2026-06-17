@@ -79,7 +79,7 @@ export function useTranskribering(
       klientRef.current = klient
 
       klient.start({
-        model: "stt-rt-v4",
+        model: "stt-rt-v5",
         languageHints: ["no"],
         enableEndpointDetection: true,
         enableSpeakerDiarization: false,
@@ -197,7 +197,7 @@ export function useTranskribering(
       klientRef.current = klient
 
       klient.start({
-        model: "stt-rt-v4",
+        model: "stt-rt-v5",
         languageHints: ["no"],
         enableEndpointDetection: true,
         enableSpeakerDiarization: false,

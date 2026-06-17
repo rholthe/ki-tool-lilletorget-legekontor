@@ -130,9 +130,12 @@ Nettleser (klinikkens datamaskin)
 - AI-hjelp: frittstående Chat / AI-hjelp uavhengig av pasient/konsultasjon (egen oppgaveknapp, teal Sparkles-ikon)
   - Egen `AiHjelpView` (rutes via `HovedInnhold`): sammenleggbart Kontekst-felt + vedlegg, chat-tråd, snarveier og inputfelt
   - All kontekst legges inn manuelt av bruker (`Konsultasjon.kontekst`); ingen transkript/opptak
-  - Opplasting + OCR «helt tilsvarende konsultasjonsbildet», men uten bilde-/OCR-instruks: `VedleggPanel modus="enkel"`
-    legger filer til som `oppgave: "kontekst"` uten oppgavevalg — det er prompten som styrer hva Claude gjør
+  - Kontekst-feltet åpnes automatisk ved ny oppgave (effekt på `aktiv.id`) og har fullskjerm-utvidelse
+    (`Maximize2` + `Dialog`, som journal-/konsultasjonsbildet)
+  - Opplasting + OCR «helt tilsvarende konsultasjonsbildet», men uten bilde-/OCR-instruks: `VedleggPanel modus="enkel" kompakt`
+    (kompakt = opplastingssone på én rad) legger filer til som `oppgave: "kontekst"` uten oppgavevalg — prompten styrer hva Claude gjør
   - Snarveier fra egen promptkategori `AIHJELP`; klikk legger malteksten i inputfeltet (ikke direkte send)
+  - Tom chat: meldingsområdet kollapser og inputfeltet vokser til full høyde (`tomChat`-flagg); ved send minimeres kontekst/vedlegg og chatfeltet overtar
   - Gjenbruker `useChat` + `/api/chat` med `modus: "aihjelp"` → egen systemprompt `AIHJELP_STAGING` (ikke konsultasjonsbundet)
   - Chat-historikk lagres i IndexedDB (24t TTL); «Tøm» nullstiller tråden
 

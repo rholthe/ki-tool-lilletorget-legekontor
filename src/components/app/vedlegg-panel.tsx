@@ -31,9 +31,11 @@ interface Props {
   onChange: (vedlegg: Vedlegg[]) => void
   /** "ocr" = les tekst-modus, "enkel" = ren kontekst uten oppgave-/OCR-instruks. */
   modus?: "ocr" | "enkel"
+  /** Kompakt opplastingssone (én rad) — sparer plass. */
+  kompakt?: boolean
 }
 
-export function VedleggPanel({ vedlegg, onChange, modus }: Props) {
+export function VedleggPanel({ vedlegg, onChange, modus, kompakt }: Props) {
   const synligeVedlegg = modus === "ocr"
     ? vedlegg.filter((v) => v.oppgave === "ocr")
     : modus === "enkel"
@@ -243,8 +245,43 @@ export function VedleggPanel({ vedlegg, onChange, modus }: Props) {
 
   return (
     <div className="space-y-3">
+      {/* Opplastingssone — kompakt (én rad) */}
+      {kanLeggeTilFler && kompakt && (
+        <div>
+          <div
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={handleDrop}
+            className="flex items-center gap-2 border-2 border-dashed border-slate-200 rounded-lg px-3 py-2"
+          >
+            <button
+              onClick={() => inputRef.current?.click()}
+              className="flex items-center gap-2 flex-1 min-w-0 text-sm text-slate-500 hover:text-slate-700 transition-colors"
+            >
+              <Upload className="w-4 h-4 shrink-0" />
+              <span className="truncate">Dra og slipp, eller klikk for å velge fil</span>
+            </button>
+            <button
+              onClick={() => åpneKamera()}
+              className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-700 transition-colors shrink-0 border-l border-slate-200 pl-2"
+            >
+              <Camera className="w-4 h-4" />
+              Ta bilde
+            </button>
+            <input
+              ref={inputRef}
+              type="file"
+              accept="image/*,application/pdf"
+              multiple
+              className="hidden"
+              onChange={(e) => e.target.files && leggTilFiler(e.target.files)}
+            />
+          </div>
+          {kameraFeil && <p className="text-xs text-red-600 mt-1">{kameraFeil}</p>}
+        </div>
+      )}
+
       {/* Opplastingssone */}
-      {kanLeggeTilFler && (
+      {kanLeggeTilFler && !kompakt && (
         <div
           onDragOver={(e) => e.preventDefault()}
           onDrop={handleDrop}
