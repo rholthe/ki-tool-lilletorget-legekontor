@@ -125,7 +125,7 @@ export function KonsultasjonView() {
   useEffect(() => {
     if (aktiv?.type) lastMaler(aktiv.type, aktiv?.malId ?? null)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [aktiv?.type])
+  }, [aktiv?.id])
 
   const transkribering = useTranskribering(
     aktiv?.type ?? "KONSULTASJON",
