@@ -214,17 +214,28 @@ legeassist/
 ├── tsconfig.json
 ├── prisma.config.ts               # Prisma 7-konfig: schema-sti + datasource-URL (for CLI)
 ├── .env                           # Miljøvariabler (server-side)
+├── .env.example                   # Mal for .env (hemmeligheter tomme; committet)
 ├── .env.local                     # Lokal override
+├── .gitattributes                 # *.sh = LF (så deploy-skript ikke feiler på Linux)
+├── deploy/                        # Produksjonsdeploy (se «Deploy» nederst)
+│   ├── README.md                  # Deploy-runbook
+│   ├── ki.lilletorget.org.conf    # Apache reverse-proxy vhost (port 3001, SSE-vennlig)
+│   ├── deploy.sh                  # Kjøres på server: pull → ci → generate → build → pm2
+│   └── push-and-deploy.sh         # Kjøres lokalt: push + remote deploy i én operasjon
 ├── prisma/
-│   └── schema.prisma              # Brukere, maler, sesjon (generator: prisma-client → src/generated/prisma)
+│   └── schema.prisma              # User (inkl. dpa*), Mal, sesjon, PasswordSetupToken, DpaVersjon
 ├── src/
 │   ├── app/                       # Next.js App Router
-│   │   ├── (auth)/                # Login (selvregistrering deaktivert; admin oppretter brukere)
-│   │   ├── (app)/                 # Hovedapp (beskyttet)
+│   │   ├── (auth)/                # Offentlige: login, tilgang (tilgangsforespørsel), sett-passord
+│   │   ├── databehandleravtale/   # Offentlig: gjeldende DPA + sikkerhet/ROS/teknisk
+│   │   ├── godta-avtale/          # Innlogget signeringsgate (egen rot-rute, ingen app-skall)
+│   │   ├── (app)/                 # Hovedapp (beskyttet; gates av DPA-signatur)
 │   │   │   ├── konsultasjon/      # Konsultasjonsvisning + notatgenerering
-│   │   │   ├── innstillinger/     # Brukerinnstillinger (2FA, Bedrock-info)
+│   │   │   ├── innstillinger/     # Brukerinnstillinger (2FA, DPA-status, Bedrock-info)
 │   │   │   └── admin/
-│   │   │       └── innstillinger/ # Adminside: modell/region/nøkler (kun admin)
+│   │   │       ├── innstillinger/ # Adminside: modell/region/nøkler (kun admin)
+│   │   │       ├── brukere/       # Adminside: opprett/inviter/slett brukere
+│   │   │       └── databehandleravtale/ # Adminside: opprett/se DPA-versjoner
 │   │   ├── api/
 │   │   │   ├── auth/              # NextAuth
 │   │   │   ├── soniox-token/      # Genererer temp-tokens for Soniox
@@ -236,8 +247,17 @@ legeassist/
 │   │   │       └── test-bedrock/  # Tilkoblingstest mot Bedrock
 │   │   ├── global-error.tsx       # Global error boundary
 │   │   └── (app)/error.tsx        # App-level error boundary
+│   ├── actions/                   # Server actions
+│   │   ├── auth.ts                # sjekkInnlogging (credential-presjekk)
+│   │   ├── to-faktor.ts           # 2FA: generer/bekreft/deaktiver
+│   │   ├── admin-brukere.ts       # opprettBruker (m/invitasjon), sendInvitasjonPaaNytt, slettBruker
+│   │   ├── tilgang.ts             # sendTilgangsforesporsel + settPassordMedToken (signerer DPA)
+│   │   ├── dpa.ts                 # signerAvtale (innlogget signering)
+│   │   └── admin-dpa.ts           # opprettDpaVersjon (admin, immutable versjoner)
 │   ├── components/
 │   │   ├── ui/                    # shadcn/ui-komponenter
+│   │   ├── dpa/                   # dpa-sammendrag, godta-avtale-skjema, markdown (renderer)
+│   │   ├── auth/                  # sett-passord-skjema
 │   │   ├── app/
 │   │   │   ├── konsultasjon-view.tsx      # KonsultasjonsUI med Claude-integrasjon
 │   │   │   ├── journalgjennomgang-view.tsx# Journalgjennomgang: PDF-opplasting + oppsummering
@@ -247,15 +267,23 @@ legeassist/
 │   │   │   ├── chat-modal.tsx             # Chat / AI-hjelp modal
 │   │   │   ├── diktering-knapp.tsx        # Gjenbrukbart mikrofonikon: live transkribering inn i et tekstfelt
 │   │   │   ├── vedlegg-panel.tsx          # Vedlegg: opplasting, kamera, oppgavevalg (modus: ocr|standard)
+│   │   │   ├── to-faktor-paaminnelse.tsx  # Diskret 2FA-påminnelse (~1/mnd, localStorage)
+│   │   │   ├── app-header-meny.tsx        # Brukermeny (innstillinger, DPA, admin-lenker)
 │   │   │   └── app-sidebar.tsx            # Sidebar med konsultasjonsliste (stikkord)
 │   │   ├── settings/
 │   │   │   ├── innstillinger-klient.tsx   # Tabulert innstillingsside (Konto / Promptbibliotek)
+│   │   │   ├── to-faktor-seksjon.tsx      # 2FA-oppsett (QR, bekreft, deaktiver)
 │   │   │   └── promptbibliotek-klient.tsx # CRUD-UI for maler (Konsultasjon, Møte, Diktat, Chat, AI-hjelp)
 │   │   └── admin/
-│   │       └── bedrock-innstillinger.tsx  # Client-komponent for admin-konfig
+│   │       ├── bedrock-innstillinger.tsx  # Client-komponent for admin-konfig
+│   │       ├── bruker-administrasjon.tsx  # Opprett/inviter/slett brukere (admin-merke, status)
+│   │       └── opprett-dpa-skjema.tsx     # Skjema for ny DPA-versjon (admin)
 │   ├── lib/
 │   │   ├── auth.ts                # NextAuth konfigurasjon
 │   │   ├── db.ts                  # Prisma-klient (Prisma 7 + mariadb-driveradapter, parser DATABASE_URL)
+│   │   ├── mail.ts               # SMTP (nodemailer): sendEpost, hentBasisUrl (server-only)
+│   │   ├── passord-token.ts      # Engangstoken for passordoppsett (SHA-256-hash)
+│   │   ├── dpa.ts                # DPA: hentGjeldendeDpa, harGyldigSignatur, baseline (server-only)
 │   │   ├── admin.ts               # isAdmin(), hentSystemSetting(), tilgjengeligeModeller/Regioner()
 │   │   ├── idb.ts                 # IndexedDB-operasjoner (konsultasjoner, 24t TTL)
 │   │   ├── staging.ts             # Grunntekster + TYPE_STAGING + CHAT/AIHJELP/PROMPTBYGGER_STAGING + felles seksjoner
@@ -271,6 +299,7 @@ legeassist/
 │       ├── use-konsultasjon.tsx   # KonsultasjonContext + oppdater()
 │       ├── use-transkribering.ts  # Soniox WebSocket-klient
 │       ├── use-diktering.ts       # Enkel Soniox-diktering for tekstfelt (final + partial, ingen AI)
+│       ├── use-hurtigtaster.ts    # Alt-baserte globale hurtigtaster
 │       └── use-mikrofon.ts        # Mikrofontillatelse og enhetsliste
 └── public/
 ```
@@ -310,8 +339,27 @@ SMTP_USER=ragnar@lilletorget.org
 SMTP_PASSWORD=...                 # App-passord (ikke vanlig kontopassord)
 SMTP_FROM="legeassist <ragnar@lilletorget.org>"  # Valgfri; faller tilbake til SMTP_USER
 ACCESS_REQUEST_TO=ragnar@lilletorget.org         # Mottaker for tilgangsforespørsler
-APP_URL=https://din-vps-adresse  # Basis-URL for absolutte lenker i e-post
+APP_URL=https://ki.lilletorget.org  # Basis-URL for absolutte lenker i e-post
+PORT=3001                         # Port appen lytter på i prod (3000 er opptatt)
 ```
+
+Full mal med alle nøkler: se `.env.example` (committet, hemmeligheter tomme).
+
+## Produksjon og deploy
+
+Produksjon kjører på `server.lilletorget.org` (Ubuntu 22.04), domene **https://ki.lilletorget.org**.
+
+- **App:** Next.js via **pm2** (prosess `legeassist`, port **3001**; 3000 er opptatt av en annen app)
+- **Reverse proxy:** **Apache2 + certbot** (ikke nginx). Vhost i `deploy/ki.lilletorget.org.conf`
+  proxer til `127.0.0.1:3001` med `flushpackets=on` for SSE-streaming og `X-Forwarded-Proto https`
+- **Database:** samme **MariaDB** som i dev. I dev nås den via SSH-tunnel (`localhost:3306`),
+  på serveren er den lokal — derfor er `DATABASE_URL` lik begge steder. Skjemaendringer i dev
+  treffer altså prod-DB; vær bevisst på dette.
+- **SSH:** `ssh -i ~/.ssh/legeassist_vps ragnar@lilletorget.org`
+- **Deploy fra utviklingsmaskin:** `bash deploy/push-and-deploy.sh` (push + remote
+  pull/ci/generate/build/pm2-restart, med vent-på-app-retry). Detaljer i `deploy/README.md`.
+- **Førstegangsoppsett (Apache/SSL/.env):** krever sudo og kjøres manuelt — se `deploy/README.md`.
+- ⚠️ Lite minne (~840 MB ledig). `next build` går, men vær obs; swap-oppskrift i README.
 
 ## Database (Prisma 7)
 
