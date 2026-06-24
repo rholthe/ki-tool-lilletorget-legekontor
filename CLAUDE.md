@@ -138,6 +138,14 @@ Nettleser (klinikkens datamaskin)
   - Tom chat: meldingsområdet kollapser og inputfeltet vokser til full høyde (`tomChat`-flagg); ved send minimeres kontekst/vedlegg og chatfeltet overtar
   - Gjenbruker `useChat` + `/api/chat` med `modus: "aihjelp"` → egen systemprompt `AIHJELP_STAGING` (ikke konsultasjonsbundet)
   - Chat-historikk lagres i IndexedDB (24t TTL); «Tøm» nullstiller tråden
+- Diktering i tekstbokser: gjenbrukbart mikrofonikon for live transkribering rett inn i et tekstfelt
+  - Komponent `DikteringKnapp` (`src/components/app/diktering-knapp.tsx`) + hook `useDiktering` (`src/hooks/use-diktering.ts`)
+  - Kun sanntidstranskript via Soniox (`stt-rt-v5`, norsk) — ingen AI-behandling, ingen video/skjermdeling
+  - Markør i feltet → tekst settes inn ved `selectionStart`; ellers legges til på slutten (mellomrom mot eksisterende tekst)
+  - Foreløpige (non-final) tokens vises umiddelbart og erstattes når de blir endelige (lav latency)
+  - Soniox-spesialtokens (`<end>` o.l.) filtreres bort; knappen bruker `onMouseDown` `preventDefault` for å bevare markørfokus
+  - Standard innfelling: wrap `<Textarea>` i `relative`-div, gi feltet `pr-10` + `ref`, plasser knappen `absolute bottom-1.5 right-1.5`
+  - I bruk: AI-hjelp-input, konsultasjons-chat (`chat-modal.tsx`), Fokusspørsmål i Journalgjennomgang
 
 ### Planlagt
 - Frasebibliotek
@@ -198,6 +206,7 @@ legeassist/
 │   │   │   ├── ai-hjelp-view.tsx          # Frittstående AI-hjelp: kontekst + vedlegg + chat (modus: aihjelp)
 │   │   │   ├── hoved-innhold.tsx          # Ruter mellom KonsultasjonView / DiktatView / JournalgjennomgangView
 │   │   │   ├── chat-modal.tsx             # Chat / AI-hjelp modal
+│   │   │   ├── diktering-knapp.tsx        # Gjenbrukbart mikrofonikon: live transkribering inn i et tekstfelt
 │   │   │   ├── vedlegg-panel.tsx          # Vedlegg: opplasting, kamera, oppgavevalg (modus: ocr|standard)
 │   │   │   └── app-sidebar.tsx            # Sidebar med konsultasjonsliste (stikkord)
 │   │   ├── settings/
@@ -222,6 +231,7 @@ legeassist/
 │       ├── use-chat.ts            # SSE-hook for multi-turn chat + IndexedDB-persistering
 │       ├── use-konsultasjon.tsx   # KonsultasjonContext + oppdater()
 │       ├── use-transkribering.ts  # Soniox WebSocket-klient
+│       ├── use-diktering.ts       # Enkel Soniox-diktering for tekstfelt (final + partial, ingen AI)
 │       └── use-mikrofon.ts        # Mikrofontillatelse og enhetsliste
 └── public/
 ```

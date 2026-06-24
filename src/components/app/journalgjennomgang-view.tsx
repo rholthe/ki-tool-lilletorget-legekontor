@@ -5,6 +5,7 @@ import { Upload, FileText, Copy, Check, BookOpen, AlertCircle, X } from "lucide-
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Separator } from "@/components/ui/separator"
+import { DikteringKnapp } from "@/components/app/diktering-knapp"
 import { useKonsultasjon } from "@/hooks/use-konsultasjon"
 import { useClaude } from "@/hooks/use-claude"
 
@@ -38,6 +39,7 @@ export function JournalgjennomgangView() {
   const [kopiert, setKopiert] = useState(false)
 
   const scrollRef = useRef<HTMLDivElement>(null)
+  const fokusRef = useRef<HTMLTextAreaElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   if (!aktiv) return null
@@ -241,12 +243,22 @@ export function JournalgjennomgangView() {
             Fokusspørsmål{" "}
             <span className="text-slate-400 font-normal">(valgfritt)</span>
           </h2>
-          <Textarea
-            value={aktiv.tilleggsinfo}
-            onChange={(e) => oppdater({ tilleggsinfo: e.target.value })}
-            placeholder={"Eks: Kardiovaskulære risikofaktorer\nNyrefunksjon siste 2 år?\nTrekk ut alle anbefalinger fra spesialister"}
-            className="resize-none h-24 text-sm border-slate-200"
-          />
+          <div className="relative">
+            <Textarea
+              ref={fokusRef}
+              value={aktiv.tilleggsinfo}
+              onChange={(e) => oppdater({ tilleggsinfo: e.target.value })}
+              placeholder={"Eks: Kardiovaskulære risikofaktorer\nNyrefunksjon siste 2 år?\nTrekk ut alle anbefalinger fra spesialister"}
+              className="resize-none h-24 text-sm border-slate-200 pr-10"
+            />
+            <div className="absolute bottom-1.5 right-1.5">
+              <DikteringKnapp
+                tekst={aktiv.tilleggsinfo}
+                onTekst={(ny) => oppdater({ tilleggsinfo: ny })}
+                textareaRef={fokusRef}
+              />
+            </div>
+          </div>
         </div>
 
         {/* Generer-knapp */}

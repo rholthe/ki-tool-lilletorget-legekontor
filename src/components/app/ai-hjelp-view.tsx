@@ -28,6 +28,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { VedleggPanel } from "@/components/app/vedlegg-panel"
+import { DikteringKnapp } from "@/components/app/diktering-knapp"
 import { useKonsultasjon } from "@/hooks/use-konsultasjon"
 import { useChat } from "@/hooks/use-chat"
 import type { Vedlegg } from "@/types/konsultasjon"
@@ -51,6 +52,7 @@ export function AiHjelpView() {
   const [visKontekst, setVisKontekst] = useState(true)
   const [utvidetKontekst, setUtvidetKontekst] = useState(false)
   const bunneRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
 
   // Åpne kontekstfeltet automatisk når en ny oppgave opprettes/åpnes
   const aktivId = aktiv?.id
@@ -287,14 +289,25 @@ export function AiHjelpView() {
 
       {/* Input */}
       <div className={`px-6 py-3 border-t border-slate-200 flex gap-2 ${tomChat ? "flex-1 items-stretch" : "items-end shrink-0"}`}>
-        <Textarea
-          placeholder="Still et spørsmål eller gi en instruksjon — bruk gjerne en snarvei… (Enter for å sende, Shift+Enter for ny linje)"
-          value={inputTekst}
-          onChange={(e) => setInputTekst(e.target.value)}
-          onKeyDown={handleKeyDown}
-          disabled={isSending}
-          className={`resize-none text-sm overflow-y-auto flex-1 border-slate-200 ${tomChat ? "h-full" : "max-h-32"}`}
-        />
+        <div className="relative flex-1 flex">
+          <Textarea
+            ref={inputRef}
+            placeholder="Still et spørsmål eller gi en instruksjon — bruk gjerne en snarvei… (Enter for å sende, Shift+Enter for ny linje)"
+            value={inputTekst}
+            onChange={(e) => setInputTekst(e.target.value)}
+            onKeyDown={handleKeyDown}
+            disabled={isSending}
+            className={`resize-none text-sm overflow-y-auto flex-1 border-slate-200 pr-10 ${tomChat ? "h-full" : "max-h-32"}`}
+          />
+          <div className="absolute bottom-1.5 right-1.5">
+            <DikteringKnapp
+              tekst={inputTekst}
+              onTekst={setInputTekst}
+              textareaRef={inputRef}
+              disabled={isSending}
+            />
+          </div>
+        </div>
         <Button
           size="icon"
           className="shrink-0 bg-teal-600 hover:bg-teal-700 text-white self-end"

@@ -14,6 +14,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { DikteringKnapp } from "@/components/app/diktering-knapp"
 import { useKonsultasjon } from "@/hooks/use-konsultasjon"
 import { useChat } from "@/hooks/use-chat"
 
@@ -42,6 +43,7 @@ export function ChatModal({ open, onClose }: Props) {
     new Set(aktiv?.vedlegg?.map((v) => v.id) ?? [])
   )
   const bunneRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
   const forrigeVerdierRef = useRef<{
     transkript: string
     kontekst: string
@@ -356,14 +358,25 @@ export function ChatModal({ open, onClose }: Props) {
 
         {/* ── Input ── */}
         <div className="px-5 py-3 border-t border-slate-200 flex items-end gap-2 shrink-0">
-          <Textarea
-            placeholder="Skriv spørsmål eller instruksjon… (Enter for å sende, Shift+Enter for ny linje)"
-            value={inputTekst}
-            onChange={(e) => setInputTekst(e.target.value)}
-            onKeyDown={handleKeyDown}
-            disabled={isSending}
-            className="resize-none text-sm max-h-32 overflow-y-auto flex-1 border-slate-200"
-          />
+          <div className="relative flex-1 flex">
+            <Textarea
+              ref={inputRef}
+              placeholder="Skriv spørsmål eller instruksjon… (Enter for å sende, Shift+Enter for ny linje)"
+              value={inputTekst}
+              onChange={(e) => setInputTekst(e.target.value)}
+              onKeyDown={handleKeyDown}
+              disabled={isSending}
+              className="resize-none text-sm max-h-32 overflow-y-auto flex-1 border-slate-200 pr-10"
+            />
+            <div className="absolute bottom-1.5 right-1.5">
+              <DikteringKnapp
+                tekst={inputTekst}
+                onTekst={setInputTekst}
+                textareaRef={inputRef}
+                disabled={isSending}
+              />
+            </div>
+          </div>
           <Button
             size="icon"
             className="shrink-0 bg-blue-600 hover:bg-blue-700 text-white self-end"
