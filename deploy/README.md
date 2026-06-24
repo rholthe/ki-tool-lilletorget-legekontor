@@ -80,14 +80,22 @@ Test: https://ki.lilletorget.org
 
 ## Oppdatering ved senere deploy
 
+**Fra utviklingsmaskinen (anbefalt)** – pusher branch + bygger/restarter på server:
+
 ```bash
-cd /var/www/legeassist
-git pull
-npm ci
-npx prisma generate
-npm run build
-pm2 restart legeassist
+bash deploy/push-and-deploy.sh
 ```
+
+**På serveren** (manuelt, hvis du allerede er logget inn):
+
+```bash
+bash /var/www/legeassist/deploy/deploy.sh
+# Ved skjemaendringer som skal pushes til DB:
+PRISMA_DB_PUSH=1 bash /var/www/legeassist/deploy/deploy.sh
+```
+
+Begge stegene gjør: `git pull` → `npm ci` → `prisma generate` → `next build` →
+`pm2 restart` (eller start) → `pm2 save`, og verifiserer med curl mot `/login`.
 
 ## Swap (hvis build ryker pga. minne)
 
