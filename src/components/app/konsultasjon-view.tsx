@@ -54,6 +54,7 @@ import { useKonsultasjon } from "@/hooks/use-konsultasjon"
 import { useMikrofon } from "@/hooks/use-mikrofon"
 import { useTranskribering, type MoteForm } from "@/hooks/use-transkribering"
 import { useClaude } from "@/hooks/use-claude"
+import { useHurtigtaster } from "@/hooks/use-hurtigtaster"
 import { TYPE_STAGING, konsultasjonEtikett, type Vedlegg, type Konsultasjon, type KonsultasjonsForm } from "@/types/konsultasjon"
 import { TYPE_TEMA } from "@/lib/tema"
 import { VedleggPanel } from "@/components/app/vedlegg-panel"
@@ -211,6 +212,28 @@ export function KonsultasjonView() {
     }, 10_000)
     return () => clearInterval(id)
   }, [transkribering.status, oppdater]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Hurtigtaster: Alt+R veksler opptak (kontekstavhengig), Alt+S stopper & sender
+  function hurtigtastOpptak() {
+    if (!aktiv) return
+    const s = transkribering.status
+    if (s === "kobler") return
+    if (s === "opptar") return void handlePause()
+    if (s === "pause") return void handleFortsettInSession()
+    if (aktiv.status === "pause") return void handleFortsettFraPause()
+    if (aktiv.status === "ferdig") return void handleFortsettOpptak()
+    return void handleStart()
+  }
+  function hurtigtastStopp() {
+    if (!aktiv) return
+    const s = transkribering.status
+    if (s === "opptar" || s === "pause") return void handleStopp()
+    if (aktiv.status === "pause") return void handleStoppOgSendFraPause()
+  }
+  useHurtigtaster([
+    { code: "KeyR", handler: hurtigtastOpptak },
+    { code: "KeyS", handler: hurtigtastStopp },
+  ])
 
   if (!aktiv) {
     return (
@@ -599,6 +622,7 @@ export function KonsultasjonView() {
                 className={`gap-2 ${tema.knapp}`}
                 onClick={handleStart}
                 disabled={erKobler}
+                title="Hurtigtast: Alt+R"
               >
                 {moteform === "video" ? (
                   <MonitorPlay className="w-4 h-4" />
@@ -616,6 +640,7 @@ export function KonsultasjonView() {
                 className={`gap-2 ${tema.knapp}`}
                 onClick={handleFortsettOpptak}
                 disabled={erKobler}
+                title="Hurtigtast: Alt+R"
               >
                 <Mic className="w-4 h-4" />
                 {erKobler ? "Kobler til…" : "Fortsett opptak"}
@@ -629,6 +654,7 @@ export function KonsultasjonView() {
                   size="sm"
                   className={`gap-2 ${tema.knapp}`}
                   onClick={handleFortsettFraPause}
+                  title="Hurtigtast: Alt+R"
                 >
                   <Mic className="w-4 h-4" />
                   Fortsett
@@ -638,6 +664,7 @@ export function KonsultasjonView() {
                   size="sm"
                   className="gap-2 border-red-300 text-red-700 hover:bg-red-50"
                   onClick={handleStoppOgSendFraPause}
+                  title="Hurtigtast: Alt+S"
                 >
                   <Square className="w-4 h-4" />
                   Stopp og send
@@ -651,6 +678,7 @@ export function KonsultasjonView() {
                 size="sm"
                 className="gap-2 border-amber-300 text-amber-700 hover:bg-amber-50"
                 onClick={handlePause}
+                title="Hurtigtast: Alt+R"
               >
                 <Pause className="w-4 h-4" />
                 Pause
@@ -663,6 +691,7 @@ export function KonsultasjonView() {
                 size="sm"
                 className={`gap-2 ${tema.utlinje}`}
                 onClick={handleFortsettInSession}
+                title="Hurtigtast: Alt+R"
               >
                 <Mic className="w-4 h-4" />
                 Fortsett
@@ -675,6 +704,7 @@ export function KonsultasjonView() {
                 size="sm"
                 className="gap-2 border-red-300 text-red-700 hover:bg-red-50"
                 onClick={handleStopp}
+                title="Hurtigtast: Alt+S"
               >
                 <Square className="w-4 h-4" />
                 Stopp & Send

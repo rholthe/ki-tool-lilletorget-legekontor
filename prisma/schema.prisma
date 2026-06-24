@@ -25,8 +25,22 @@ model User {
   authenticators Authenticator[]
   maler          Mal[]
 
+  passordOppsett PasswordSetupToken?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// Engangstoken for at en ny bruker selv setter passord (invitasjon).
+// Token sendes som klartekst i e-postlenke; kun SHA-256-hash lagres.
+model PasswordSetupToken {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String   @unique
+  expires   DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Account {

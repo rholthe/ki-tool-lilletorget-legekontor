@@ -83,6 +83,18 @@ Nettleser (klinikkens datamaskin)
 - Transkriptviser (enkeltlinje): fortløpende transkripsjon vises som én linje — kun siste segment
   - Container: `overflow-x-hidden` med `scrollLeft = scrollWidth` via ref/useEffect
 - 2FA (TOTP), admin-side for Bedrock-konfigurasjon (modell/region/tilkoblingstest)
+  - 2FA-påminnelse: diskret kort nederst til høyre for brukere uten 2FA, maks ~1 gang/mnd
+    (`to-faktor-paaminnelse.tsx`, husker i localStorage `legeassist:2fa-paaminnelse-sist`)
+- Brukeradministrasjon (kun admin): selvregistrering er deaktivert
+  - `/admin/brukere`: admin oppretter bruker (navn + e-post, ikke passord). Kontoen er låst
+    (`passwordHash = null`) til brukeren selv setter passord via invitasjonslenke
+  - Invitasjon sendes på e-post med engangslenke → `/sett-passord?token=...` (gyldig 7 dager)
+    - Token i `PasswordSetupToken` (SHA-256-hash lagret, klartekst kun i e-postlenken)
+    - Brukerliste viser status «Venter på passord»/«Aktiv» + «Send invitasjon på nytt»
+  - Tilgangsforespørsel: offentlig skjema `/tilgang` (navn/e-post/arbeidssted) → e-post til
+    `ACCESS_REQUEST_TO`; lenket fra login («Kontakt en administrator»)
+  - E-post via SMTP (`src/lib/mail.ts`, nodemailer + Google Workspace app-passord)
+  - Offentlige ruter i `proxy.ts`: `/login`, `/tilgang`, `/sett-passord`, `/api/auth`
 - Promptbibliotek under Innstillinger: CRUD for maler per kategori (Konsultasjon, Møte, Diktat, Chat, AI-hjelp)
   - Maler kan merkes som delte; andre brukere kan importere delte maler
   - Konsultasjon/Møte-maler: velges i «Velg notatmal»-dropdown i konsultasjonsvisningen
@@ -138,6 +150,18 @@ Nettleser (klinikkens datamaskin)
   - Tom chat: meldingsområdet kollapser og inputfeltet vokser til full høyde (`tomChat`-flagg); ved send minimeres kontekst/vedlegg og chatfeltet overtar
   - Gjenbruker `useChat` + `/api/chat` med `modus: "aihjelp"` → egen systemprompt `AIHJELP_STAGING` (ikke konsultasjonsbundet)
   - Chat-historikk lagres i IndexedDB (24t TTL); «Tøm» nullstiller tråden
+- Hurtigtaster (Alt-baserte, globale): `src/hooks/use-hurtigtaster.ts`
+  - Bruker `KeyboardEvent.code` (layout-uavhengig) og krever Alt (ikke Ctrl/Meta), så de
+    aldri kolliderer med skriving — virker også med markør i tekstfelt; `e.repeat` ignoreres
+  - `preventDefault` kun ved treff (Digit1–5, KeyR, KeyS), så andre Alt-snarveier i nettleser består
+  - Sidebar (`app-sidebar.tsx`): `Alt+1..5` oppretter ny oppgave i samme rekkefølge som
+    `NY_KNAPPER` (1 Konsultasjon, 2 Møte, 3 Diktat, 4 Journalgjennomgang, 5 AI-hjelp);
+    knappene viser et `Alt+N`-merke
+  - Opptak (kontekstavhengig, i `konsultasjon-view.tsx` og `diktat-view.tsx`):
+    - `Alt+R` veksler ut fra tilstand: stoppet/ny → Start, opptar → Pause, pause → Fortsett,
+      lagret pause → Fortsett, ferdig → Fortsett opptak, kobler → ignoreres
+    - `Alt+S` = Stopp & Send (genererer notat); egen tast siden den committer/trigger AI
+    - Hooken er montert per view (kun ett vises via `HovedInnhold`); knapper har `title`-hint
 - Diktering i tekstbokser: gjenbrukbart mikrofonikon for live transkribering rett inn i et tekstfelt
   - Komponent `DikteringKnapp` (`src/components/app/diktering-knapp.tsx`) + hook `useDiktering` (`src/hooks/use-diktering.ts`)
   - Kun sanntidstranskript via Soniox (`stt-rt-v5`, norsk) — ingen AI-behandling, ingen video/skjermdeling
@@ -180,7 +204,7 @@ legeassist/
 │   └── schema.prisma              # Brukere, maler, sesjon (generator: prisma-client → src/generated/prisma)
 ├── src/
 │   ├── app/                       # Next.js App Router
-│   │   ├── (auth)/                # Login, registrering
+│   │   ├── (auth)/                # Login (selvregistrering deaktivert; admin oppretter brukere)
 │   │   ├── (app)/                 # Hovedapp (beskyttet)
 │   │   │   ├── konsultasjon/      # Konsultasjonsvisning + notatgenerering
 │   │   │   ├── innstillinger/     # Brukerinnstillinger (2FA, Bedrock-info)
@@ -263,6 +287,15 @@ BEDROCK_REGIONS=eu-central-1,eu-west-1  # Tilgjengelige regioner (kommaseparert)
 
 # Administrasjon
 ADMIN_EMAILS=admin@klinikk.no     # Kommaseparert liste over admin-e-poster
+
+# E-post (SMTP) — Google Workspace med app-passord
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=465                     # 465 = implisitt TLS, 587 = STARTTLS
+SMTP_USER=ragnar@lilletorget.org
+SMTP_PASSWORD=...                 # App-passord (ikke vanlig kontopassord)
+SMTP_FROM="legeassist <ragnar@lilletorget.org>"  # Valgfri; faller tilbake til SMTP_USER
+ACCESS_REQUEST_TO=ragnar@lilletorget.org         # Mottaker for tilgangsforespørsler
+APP_URL=https://din-vps-adresse  # Basis-URL for absolutte lenker i e-post
 ```
 
 ## Database (Prisma 7)

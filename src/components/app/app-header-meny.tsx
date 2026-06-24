@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { signOut } from "next-auth/react"
-import { Settings, ShieldCheck, LogOut, ChevronDown, User } from "lucide-react"
+import { Settings, ShieldCheck, LogOut, ChevronDown, User, Users } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,12 +34,20 @@ export function AppHeaderMeny({ visNavn, erAdmin }: Props) {
             </Link>
           </DropdownMenuItem>
           {erAdmin && (
-            <DropdownMenuItem>
-              <Link href="/admin/innstillinger" className="flex items-center gap-2 w-full">
-                <ShieldCheck className="w-4 h-4" />
-                Admin
-              </Link>
-            </DropdownMenuItem>
+            <>
+              <DropdownMenuItem>
+                <Link href="/admin/innstillinger" className="flex items-center gap-2 w-full">
+                  <ShieldCheck className="w-4 h-4" />
+                  Admin
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Link href="/admin/brukere" className="flex items-center gap-2 w-full">
+                  <Users className="w-4 h-4" />
+                  Brukere
+                </Link>
+              </DropdownMenuItem>
+            </>
           )}
           <DropdownMenuSeparator />
           <DropdownMenuItem

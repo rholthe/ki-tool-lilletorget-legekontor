@@ -192,12 +192,12 @@ export default function LoginPage() {
 
       {step === "credentials" && (
         <p className="text-center text-sm text-slate-500 pb-4">
-          Ny bruker?{" "}
+          Trenger du tilgang?{" "}
           <Link
-            href="/registrer"
+            href="/tilgang"
             className="text-blue-600 hover:underline font-medium"
           >
-            Opprett konto
+            Kontakt en administrator
           </Link>
         </p>
       )}

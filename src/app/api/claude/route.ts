@@ -111,7 +111,7 @@ export async function POST(req: Request) {
       try {
         const claudeStream = client.messages.stream({
           model,
-          max_tokens: 8192,
+          max_tokens: 32000,
           system: systemPrompt,
           messages: [{ role: "user", content: contentBlocks }],
         })

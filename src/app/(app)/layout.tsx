@@ -2,9 +2,11 @@ import Link from "next/link"
 import { BookOpen } from "lucide-react"
 import { AppSidebar } from "@/components/app/app-sidebar"
 import { AppHeaderMeny } from "@/components/app/app-header-meny"
+import { ToFaktorPaaminnelse } from "@/components/app/to-faktor-paaminnelse"
 import { KonsultasjonProvider } from "@/hooks/use-konsultasjon"
 import { auth } from "@/lib/auth"
 import { isAdmin } from "@/lib/admin"
+import { prisma } from "@/lib/db"
 
 export default async function AppLayout({
   children,
@@ -14,6 +16,13 @@ export default async function AppLayout({
   const session = await auth()
   const erAdmin = isAdmin(session?.user?.email)
   const visNavn = session?.user?.name ?? session?.user?.email?.split("@")[0] ?? "Bruker"
+
+  const bruker = session?.user?.id
+    ? await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { twoFactorEnabled: true },
+      })
+    : null
 
   return (
     <KonsultasjonProvider>
@@ -44,6 +53,7 @@ export default async function AppLayout({
           <main className="flex-1 overflow-y-auto">{children}</main>
         </div>
       </div>
+      <ToFaktorPaaminnelse er2FAaktivert={bruker?.twoFactorEnabled ?? true} />
     </KonsultasjonProvider>
   )
 }

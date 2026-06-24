@@ -43,6 +43,7 @@ import { useKonsultasjon } from "@/hooks/use-konsultasjon"
 import { useMikrofon } from "@/hooks/use-mikrofon"
 import { useTranskribering } from "@/hooks/use-transkribering"
 import { useClaude } from "@/hooks/use-claude"
+import { useHurtigtaster } from "@/hooks/use-hurtigtaster"
 import { TYPE_TEMA } from "@/lib/tema"
 import { lagreKonsultasjon, hentKonsultasjon } from "@/lib/idb"
 
@@ -166,6 +167,28 @@ export function DiktatView() {
     }, 10_000)
     return () => clearInterval(id)
   }, [transkribering.status, oppdater])
+
+  // Hurtigtaster: Alt+R veksler opptak (kontekstavhengig), Alt+S stopper & sender
+  function hurtigtastOpptak() {
+    if (!aktiv) return
+    const s = transkribering.status
+    if (s === "kobler") return
+    if (s === "opptar") return void handlePause()
+    if (s === "pause") return void handleFortsettInSession()
+    if (aktiv.status === "pause") return void handleFortsettFraPause()
+    if (aktiv.status === "ferdig") return void handleFortsettOpptak()
+    return void handleStart()
+  }
+  function hurtigtastStopp() {
+    if (!aktiv) return
+    const s = transkribering.status
+    if (s === "opptar" || s === "pause") return void handleStopp()
+    if (aktiv.status === "pause") return void handleStoppOgSendFraPause()
+  }
+  useHurtigtaster([
+    { code: "KeyR", handler: hurtigtastOpptak },
+    { code: "KeyS", handler: hurtigtastStopp },
+  ])
 
   if (!aktiv) return null
 
@@ -350,6 +373,7 @@ export function DiktatView() {
                 className="gap-2 bg-amber-600 hover:bg-amber-700 text-white"
                 onClick={handleStart}
                 disabled={erKobler}
+                title="Hurtigtast: Alt+R"
               >
                 <Mic className="w-4 h-4" />
                 {erKobler ? "Kobler til…" : "Start diktat"}
@@ -363,6 +387,7 @@ export function DiktatView() {
                 className="gap-2 bg-violet-600 hover:bg-violet-700 text-white"
                 onClick={handleFortsettOpptak}
                 disabled={erKobler}
+                title="Hurtigtast: Alt+R"
               >
                 <Mic className="w-4 h-4" />
                 {erKobler ? "Kobler til…" : "Fortsett diktat"}
@@ -376,6 +401,7 @@ export function DiktatView() {
                   size="sm"
                   className="gap-2 bg-amber-600 hover:bg-amber-700 text-white"
                   onClick={handleFortsettFraPause}
+                  title="Hurtigtast: Alt+R"
                 >
                   <Mic className="w-4 h-4" />
                   Fortsett
@@ -385,6 +411,7 @@ export function DiktatView() {
                   size="sm"
                   className="gap-2 border-red-300 text-red-700 hover:bg-red-50"
                   onClick={handleStoppOgSendFraPause}
+                  title="Hurtigtast: Alt+S"
                 >
                   <Square className="w-4 h-4" />
                   Stopp og send
@@ -398,6 +425,7 @@ export function DiktatView() {
                 size="sm"
                 className="gap-2 border-amber-300 text-amber-700 hover:bg-amber-50"
                 onClick={handlePause}
+                title="Hurtigtast: Alt+R"
               >
                 <Pause className="w-4 h-4" />
                 Pause
@@ -410,6 +438,7 @@ export function DiktatView() {
                 size="sm"
                 className={`gap-2 ${tema.utlinje}`}
                 onClick={handleFortsettInSession}
+                title="Hurtigtast: Alt+R"
               >
                 <Mic className="w-4 h-4" />
                 Fortsett
@@ -422,6 +451,7 @@ export function DiktatView() {
                 size="sm"
                 className="gap-2 border-red-300 text-red-700 hover:bg-red-50"
                 onClick={handleStopp}
+                title="Hurtigtast: Alt+S"
               >
                 <Square className="w-4 h-4" />
                 Stopp & Send

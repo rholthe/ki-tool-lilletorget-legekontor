@@ -6,7 +6,8 @@ export const proxy = auth((req) => {
 
   const isPublicRoute =
     pathname.startsWith("/login") ||
-    pathname.startsWith("/registrer") ||
+    pathname.startsWith("/tilgang") ||
+    pathname.startsWith("/sett-passord") ||
     pathname.startsWith("/api/auth")
 
   if (isPublicRoute) return NextResponse.next()

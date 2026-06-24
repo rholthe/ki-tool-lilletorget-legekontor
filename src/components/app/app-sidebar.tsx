@@ -29,6 +29,7 @@ import {
 } from "@/types/konsultasjon"
 import { TYPE_TEMA, TYPE_IKON_KOMP } from "@/lib/tema"
 import { useKonsultasjon } from "@/hooks/use-konsultasjon"
+import { useHurtigtaster } from "@/hooks/use-hurtigtaster"
 
 const NY_KNAPPER: {
   type: KonsultasjonsType
@@ -135,13 +136,21 @@ export function AppSidebar() {
     )
   }, [aktiv])
 
-  async function opprettNy(type: KonsultasjonsType) {
+  const opprettNy = useCallback(async (type: KonsultasjonsType) => {
     const ny = nyKonsultasjon(type)
     await lagreKonsultasjon(ny)
     await lastKonsultasjoner()
     setAktiv(ny)
     router.push("/")
-  }
+  }, [lastKonsultasjoner, setAktiv, router])
+
+  // Alt+1..5 oppretter ny oppgave (samme rekkefølge som NY_KNAPPER)
+  useHurtigtaster(
+    NY_KNAPPER.map(({ type }, i) => ({
+      code: `Digit${i + 1}`,
+      handler: () => opprettNy(type),
+    }))
+  )
 
   async function slettEn(id: string, e: React.MouseEvent) {
     e.stopPropagation()
@@ -161,14 +170,18 @@ export function AppSidebar() {
     <aside className="w-64 flex flex-col h-full bg-white border-r border-slate-200 shrink-0">
       {/* Ny konsultasjon-knapper */}
       <div className="px-3 py-3 space-y-1.5">
-        {NY_KNAPPER.map(({ type, ikon, farge }) => (
+        {NY_KNAPPER.map(({ type, ikon, farge }, i) => (
           <button
             key={type}
             onClick={() => opprettNy(type)}
+            title={`Hurtigtast: Alt+${i + 1}`}
             className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-white text-sm font-medium transition-colors ${farge}`}
           >
             {ikon}
             <span>+ {TYPE_LABELS[type]}</span>
+            <kbd className="ml-auto text-[10px] font-sans font-medium px-1.5 py-0.5 rounded bg-white/20 text-white/90">
+              Alt+{i + 1}
+            </kbd>
           </button>
         ))}
       </div>

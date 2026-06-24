@@ -109,7 +109,7 @@ export async function POST(req: Request) {
       try {
         const claudeStream = client.messages.stream({
           model,
-          max_tokens: 2048,
+          max_tokens: 16000,
           system: systemPrompt,
           messages: bedrockMessages,
         })
