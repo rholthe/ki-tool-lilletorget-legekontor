@@ -3,12 +3,18 @@
 import { useSearchParams, useRouter } from "next/navigation"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
-import { User, Shield, Key, BookOpen } from "lucide-react"
+import { User, Shield, Key, BookOpen, FileText, ExternalLink } from "lucide-react"
 import { ToFaktorSeksjon } from "@/components/settings/to-faktor-seksjon"
 import { PromptbibliotekKlient } from "@/components/settings/promptbibliotek-klient"
 
 interface Props {
-  bruker: { name: string | null; email: string | null; twoFactorEnabled: boolean } | null
+  bruker: {
+    name: string | null
+    email: string | null
+    twoFactorEnabled: boolean
+    dpaSignedAt: Date | null
+    dpaVersion: string | null
+  } | null
   aktivModell: string
   aktivRegion: string
   harBedrockNokler: boolean
@@ -76,6 +82,44 @@ export function InnstillingerKlient({ bruker, aktivModell, aktivRegion, harBedro
             </div>
             <div className="rounded-xl border border-slate-200 bg-white p-5">
               <ToFaktorSeksjon er2FAaktivert={bruker?.twoFactorEnabled ?? false} />
+            </div>
+          </section>
+
+          <Separator />
+
+          {/* Databehandleravtale */}
+          <section className="space-y-4">
+            <div className="flex items-center gap-2">
+              <FileText className="w-4 h-4 text-slate-500" />
+              <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">Databehandleravtale</h2>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-white p-5 space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-slate-700">Status</p>
+                  {bruker?.dpaSignedAt ? (
+                    <p className="text-xs text-green-700">
+                      Signert{" "}
+                      {new Date(bruker.dpaSignedAt).toLocaleDateString("nb-NO", {
+                        day: "2-digit",
+                        month: "long",
+                        year: "numeric",
+                      })}
+                      {bruker.dpaVersion ? ` · versjon ${bruker.dpaVersion}` : ""}
+                    </p>
+                  ) : (
+                    <p className="text-xs text-amber-700">Ikke signert</p>
+                  )}
+                </div>
+                <a
+                  href="/databehandleravtale"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline font-medium"
+                >
+                  Les avtalen <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+              </div>
             </div>
           </section>
 

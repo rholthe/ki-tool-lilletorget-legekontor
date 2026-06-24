@@ -8,6 +8,7 @@ export const proxy = auth((req) => {
     pathname.startsWith("/login") ||
     pathname.startsWith("/tilgang") ||
     pathname.startsWith("/sett-passord") ||
+    pathname.startsWith("/databehandleravtale") ||
     pathname.startsWith("/api/auth")
 
   if (isPublicRoute) return NextResponse.next()

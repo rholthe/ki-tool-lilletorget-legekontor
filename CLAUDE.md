@@ -94,7 +94,22 @@ Nettleser (klinikkens datamaskin)
   - Tilgangsforespørsel: offentlig skjema `/tilgang` (navn/e-post/arbeidssted) → e-post til
     `ACCESS_REQUEST_TO`; lenket fra login («Kontakt en administrator»)
   - E-post via SMTP (`src/lib/mail.ts`, nodemailer + Google Workspace app-passord)
-  - Offentlige ruter i `proxy.ts`: `/login`, `/tilgang`, `/sett-passord`, `/api/auth`
+  - Offentlige ruter i `proxy.ts`: `/login`, `/tilgang`, `/sett-passord`, `/databehandleravtale`, `/api/auth`
+- Databehandleravtale (DPA): ingen appbruk uten gyldig signatur
+  - Admin-versjonert i DB (`DpaVersjon`: versjon, innhold/markdown, krevNySignering,
+    gjeldende, publisertAt). Publiserte versjoner er uforanderlige (ingen redigering).
+  - `src/lib/dpa.ts` (server-only): `hentGjeldendeDpa()` (DB, faller tilbake til
+    `BASELINE_DPA_*`), `kravSigneringEtter()`, `harGyldigSignatur()` (tidsbasert:
+    signatur gyldig hvis `dpaSignedAt >=` siste «krev ny signering»-publisering)
+  - `User.dpaSignedAt` + `dpaVersion`; signeres samtidig med passordvalg (påkrevd
+    avkrysning i `/sett-passord`) eller på `/godta-avtale`
+  - Innloggede uten gyldig signatur gates av `(app)/layout.tsx` → `/godta-avtale`
+    (egen rot-rute, ingen loop); `signerAvtale`-action setter signatur til gjeldende versjon
+  - Offentlig side `/databehandleravtale`: gjeldende avtaletekst (markdown via
+    `components/dpa/markdown.tsx`) + statisk sikkerhetsinfo, ROS-analyse, GDPR/Norm-samsvar
+    og tekniske detaljer i `<details>` (åpnes i ny fane fra passordoppsett/gate/brukermeny)
+  - Admin: `/admin/databehandleravtale` (opprett ny versjon, se historikk); `opprettDpaVersjon`
+  - Signert-status + lenke vises i Innstillinger; lenker i brukermenyen (bruker + admin)
 - Promptbibliotek under Innstillinger: CRUD for maler per kategori (Konsultasjon, Møte, Diktat, Chat, AI-hjelp)
   - Maler kan merkes som delte; andre brukere kan importere delte maler
   - Konsultasjon/Møte-maler: velges i «Velg notatmal»-dropdown i konsultasjonsvisningen

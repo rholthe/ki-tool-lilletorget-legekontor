@@ -5,6 +5,7 @@ import { z } from "zod"
 import { prisma } from "@/lib/db"
 import { sendEpost, tilgangsforesporselMottaker } from "@/lib/mail"
 import { finnBrukerForToken, forbrukToken } from "@/lib/passord-token"
+import { hentGjeldendeDpa } from "@/lib/dpa"
 
 // ─── Tilgangsforespørsel (offentlig skjema) ──────────────────────────────────
 
@@ -87,6 +88,7 @@ export async function settPassordMedToken(
   const token = String(formData.get("token") ?? "")
   const passord = String(formData.get("passord") ?? "")
   const gjenta = String(formData.get("gjenta") ?? "")
+  const godta = formData.get("godta") === "ja"
 
   const bruker = await finnBrukerForToken(token)
   if (!bruker) {
@@ -102,10 +104,19 @@ export async function settPassordMedToken(
     return { error: "Passordene er ikke like" }
   }
 
+  if (!godta) {
+    return { error: "Du må signere databehandleravtalen for å fullføre." }
+  }
+
+  const gjeldende = await hentGjeldendeDpa()
   const passwordHash = await bcrypt.hash(passord, 12)
   await prisma.user.update({
     where: { id: bruker.id },
-    data: { passwordHash },
+    data: {
+      passwordHash,
+      dpaSignedAt: new Date(),
+      dpaVersion: gjeldende.versjon,
+    },
   })
   await forbrukToken(bruker.id)
 

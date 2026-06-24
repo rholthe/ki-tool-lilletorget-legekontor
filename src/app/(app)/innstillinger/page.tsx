@@ -11,7 +11,7 @@ export default async function InnstillingerSide() {
     session?.user?.id
       ? prisma.user.findUnique({
           where: { id: session.user.id },
-          select: { name: true, email: true, twoFactorEnabled: true },
+          select: { name: true, email: true, twoFactorEnabled: true, dpaSignedAt: true, dpaVersion: true },
         })
       : null,
     hentSystemSetting("bedrock_model", standardModell()),

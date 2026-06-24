@@ -20,6 +20,11 @@ model User {
   twoFactorEnabled Boolean @default(false)
   twoFactorSecret  String? // AES-256-GCM kryptert TOTP-hemmelighet
 
+  // Databehandleravtale: signeres av brukeren (behandlingsansvarlig).
+  // Ingen appbruk uten gyldig signatur på gjeldende versjon.
+  dpaSignedAt DateTime?
+  dpaVersion  String?
+
   accounts       Account[]
   sessions       Session[]
   authenticators Authenticator[]
@@ -129,4 +134,19 @@ model SystemSetting {
   key       String   @id
   value     String
   updatedAt DateTime @updatedAt
+}
+
+// Versjonert databehandleravtale. Opprettes av admin; gamle versjoner er
+// uforanderlige (ingen redigering). `gjeldende` markerer den aktive versjonen.
+// `krevNySignering` = betydelig endring → alle må signere på nytt.
+model DpaVersjon {
+  id              String   @id @default(cuid())
+  versjon         String   @unique // f.eks. "1.0", "2.0"
+  innhold         String   @db.Text // avtaletekst (markdown)
+  krevNySignering Boolean  @default(true)
+  gjeldende       Boolean  @default(false)
+  opprettetAv     String? // e-post til admin som opprettet versjonen
+  publisertAt     DateTime @default(now())
+
+  @@index([gjeldende])
 }

@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { redirect } from "next/navigation"
 import { BookOpen } from "lucide-react"
 import { AppSidebar } from "@/components/app/app-sidebar"
 import { AppHeaderMeny } from "@/components/app/app-header-meny"
@@ -6,6 +7,7 @@ import { ToFaktorPaaminnelse } from "@/components/app/to-faktor-paaminnelse"
 import { KonsultasjonProvider } from "@/hooks/use-konsultasjon"
 import { auth } from "@/lib/auth"
 import { isAdmin } from "@/lib/admin"
+import { harGyldigSignatur } from "@/lib/dpa"
 import { prisma } from "@/lib/db"
 
 export default async function AppLayout({
@@ -20,9 +22,14 @@ export default async function AppLayout({
   const bruker = session?.user?.id
     ? await prisma.user.findUnique({
         where: { id: session.user.id },
-        select: { twoFactorEnabled: true },
+        select: { twoFactorEnabled: true, dpaSignedAt: true, dpaVersion: true },
       })
     : null
+
+  // Ingen appbruk uten gyldig signert databehandleravtale
+  if (session?.user?.id && !(await harGyldigSignatur(bruker))) {
+    redirect("/godta-avtale")
+  }
 
   return (
     <KonsultasjonProvider>

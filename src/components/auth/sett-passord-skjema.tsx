@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { CheckCircle2 } from "lucide-react"
 import { settPassordMedToken, type SettPassordState } from "@/actions/tilgang"
+import { DpaSammendrag } from "@/components/dpa/dpa-sammendrag"
 
 const initialState: SettPassordState = {}
 
@@ -62,6 +63,23 @@ export function SettPassordSkjema({ token }: { token: string }) {
           autoComplete="new-password"
           required
         />
+      </div>
+
+      <div className="space-y-2 pt-1">
+        <DpaSammendrag />
+        <label className="flex items-start gap-2 text-sm text-slate-700">
+          <input
+            type="checkbox"
+            name="godta"
+            value="ja"
+            required
+            className="mt-0.5 accent-blue-600"
+          />
+          <span>
+            Jeg har lest og signerer databehandleravtalen på vegne av meg selv som
+            behandlingsansvarlig.
+          </span>
+        </label>
       </div>
 
       {state.error && (
