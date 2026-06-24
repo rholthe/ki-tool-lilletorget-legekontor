@@ -33,7 +33,18 @@ else
   PORT="$PORT" pm2 start npm --name "$PM2_NAME" -- start
 fi
 pm2 save
-curl -sS -o /dev/null -w "==> HTTP %{http_code} på /login\n" "http://127.0.0.1:${PORT}/login" || true
+echo "==> Venter på at appen svarer på port $PORT..."
+for i in $(seq 1 15); do
+  code="$(curl -sS -o /dev/null -w "%{http_code}" "http://127.0.0.1:${PORT}/login" 2>/dev/null || echo 000)"
+  if [ "$code" = "200" ]; then
+    echo "==> OK: HTTP 200 på /login"
+    break
+  fi
+  if [ "$i" = "15" ]; then
+    echo "==> ADVARSEL: appen svarte ikke 200 innen tidsfristen (siste: $code)"
+  fi
+  sleep 2
+done
 REMOTE_SCRIPT
 
 echo "==> Ferdig. https://ki.lilletorget.org"
