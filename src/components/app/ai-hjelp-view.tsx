@@ -11,6 +11,9 @@ import {
   ChevronUp,
   Paperclip,
   Maximize2,
+  ClipboardPaste,
+  Copy,
+  Check,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -41,6 +44,38 @@ interface AiHjelpMal {
 
 function ordTeller(tekst: string): number {
   return tekst.trim().split(/\s+/).filter(Boolean).length
+}
+
+function KopierKnapp({ tekst }: { tekst: string }) {
+  const [kopiert, setKopiert] = useState(false)
+
+  async function kopier() {
+    try {
+      await navigator.clipboard.writeText(tekst)
+      setKopiert(true)
+      setTimeout(() => setKopiert(false), 1500)
+    } catch {
+      // utklippstavle utilgjengelig (f.eks. ikke-sikker kontekst) — ignorer
+    }
+  }
+
+  return (
+    <button
+      onClick={kopier}
+      className="inline-flex items-center gap-1 text-xs text-slate-400 hover:text-teal-700 transition-colors"
+      aria-label="Kopier svar"
+    >
+      {kopiert ? (
+        <>
+          <Check className="w-3 h-3" /> Kopiert
+        </>
+      ) : (
+        <>
+          <Copy className="w-3 h-3" /> Kopier
+        </>
+      )}
+    </button>
+  )
 }
 
 export function AiHjelpView() {
@@ -89,6 +124,39 @@ export function AiHjelpView() {
 
     await sendMelding(tekst, valgtVedlegg)
   }, [inputTekst, isSending, aktiv, sendMelding])
+
+  // Snarvei i ett klikk: hent tekst fra utklippstavle → kontekst, legg snarveien
+  // i instruksjonsfeltet og send forespørselen.
+  const handleSnarveiMedUtklippstavle = useCallback(
+    async (mal: AiHjelpMal) => {
+      if (isSending || !aktiv) return
+
+      let utklippstekst = ""
+      try {
+        utklippstekst = (await navigator.clipboard.readText()).trim()
+      } catch {
+        // utklippstavle utilgjengelig/nektet — fortsett med eksisterende kontekst
+      }
+
+      if (utklippstekst) {
+        await oppdater({ kontekst: utklippstekst })
+      }
+
+      setInputTekst("")
+      setVisKontekst(false)
+
+      const valgtVedlegg = (aktiv.vedlegg ?? []).map((v) => ({
+        mimeType: v.mimeType,
+        base64: v.base64,
+        oppgave: v.oppgave,
+        spirometriType: v.spirometriType,
+        egendefinertPrompt: v.egendefinertPrompt,
+      }))
+
+      await sendMelding(mal.innhold, valgtVedlegg, utklippstekst || undefined)
+    },
+    [isSending, aktiv, oppdater, sendMelding]
+  )
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -234,9 +302,12 @@ export function AiHjelpView() {
                 )
               }
               return (
-                <div key={m.id} className="flex justify-start">
-                  <div className="bg-white border border-slate-200 rounded-2xl rounded-bl-sm px-4 py-2.5 max-w-[75%] text-sm whitespace-pre-wrap">
-                    {m.content}
+                <div key={m.id} className="flex justify-start group">
+                  <div className="bg-white border border-slate-200 rounded-2xl rounded-bl-sm px-4 py-2.5 max-w-[75%] text-sm">
+                    <div className="whitespace-pre-wrap">{m.content}</div>
+                    <div className="flex justify-end mt-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <KopierKnapp tekst={m.content} />
+                    </div>
                   </div>
                 </div>
               )
@@ -267,15 +338,30 @@ export function AiHjelpView() {
       <div className="px-6 py-2 border-t border-slate-100 flex items-center gap-2 overflow-x-auto shrink-0">
         <span className="text-xs text-slate-400 font-medium shrink-0 uppercase tracking-wide">Snarveier</span>
         {maler.map((mal) => (
-          <Button
-            key={mal.id}
-            variant="outline"
-            size="sm"
-            onClick={() => setInputTekst(mal.innhold)}
-            className="shrink-0 text-xs h-7 px-2.5"
-          >
-            {mal.tittel}
-          </Button>
+          <div key={mal.id} className="relative group shrink-0">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setInputTekst(mal.innhold)}
+              disabled={isSending}
+              className="text-xs h-7 px-2.5 group-hover:pr-7"
+            >
+              {mal.tittel}
+            </Button>
+            <Tooltip>
+              <TooltipTrigger render={<span />}>
+                <button
+                  onClick={() => handleSnarveiMedUtklippstavle(mal)}
+                  disabled={isSending}
+                  className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded text-slate-400 hover:bg-teal-100 hover:text-teal-700 disabled:opacity-40"
+                  aria-label="Lim inn fra utklippstavle og send"
+                >
+                  <ClipboardPaste className="w-3.5 h-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Lim inn utklippstavle som kontekst og send</TooltipContent>
+            </Tooltip>
+          </div>
         ))}
         {maler.length === 0 && (
           <Link

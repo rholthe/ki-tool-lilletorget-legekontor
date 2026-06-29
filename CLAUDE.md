@@ -162,6 +162,12 @@ Nettleser (klinikkens datamaskin)
   - Opplasting + OCR «helt tilsvarende konsultasjonsbildet», men uten bilde-/OCR-instruks: `VedleggPanel modus="enkel" kompakt`
     (kompakt = opplastingssone på én rad) legger filer til som `oppgave: "kontekst"` uten oppgavevalg — prompten styrer hva Claude gjør
   - Snarveier fra egen promptkategori `AIHJELP`; klikk legger malteksten i inputfeltet (ikke direkte send)
+    - Hover over en snarvei viser et utklippstavle-ikon («Lim inn fra utklippstavle og send»): ett klikk
+      leser `navigator.clipboard.readText()` → setter som `kontekst`, legger snarveien som instruksjon og sender
+      forespørselen (`handleSnarveiMedUtklippstavle`). Tom/nektet utklippstavle → kjører videre med eksisterende kontekst
+    - `useChat.sendMelding(tekst, vedlegg, overstyrKontekst?)`: valgfri kontekst-override sendes i API-kallet og
+      `chatKontekstSnapshot`, siden `aktiv.kontekst` i closuren ennå er stale rett etter `oppdater({ kontekst })`
+  - Svar-bobler har hover-synlig «Kopier»-knapp (`KopierKnapp`, `navigator.clipboard.writeText`)
   - Tom chat: meldingsområdet kollapser og inputfeltet vokser til full høyde (`tomChat`-flagg); ved send minimeres kontekst/vedlegg og chatfeltet overtar
   - Gjenbruker `useChat` + `/api/chat` med `modus: "aihjelp"` → egen systemprompt `AIHJELP_STAGING` (ikke konsultasjonsbundet)
   - Chat-historikk lagres i IndexedDB (24t TTL); «Tøm» nullstiller tråden

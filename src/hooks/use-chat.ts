@@ -45,9 +45,14 @@ export function useChat() {
   const sendMelding = useCallback(
     async (
       tekst: string,
-      valgtVedlegg: Pick<Vedlegg, "mimeType" | "base64" | "oppgave" | "spirometriType" | "egendefinertPrompt">[]
+      valgtVedlegg: Pick<Vedlegg, "mimeType" | "base64" | "oppgave" | "spirometriType" | "egendefinertPrompt">[],
+      overstyrKontekst?: string
     ) => {
       if (!aktiv || !tekst.trim() || isSending) return
+
+      // overstyrKontekst brukes når kontekst nettopp er satt (f.eks. lim-inn-fra-utklippstavle)
+      // og React-staten i `aktiv` ennå ikke er oppdatert i denne closuren.
+      const effektivKontekst = overstyrKontekst ?? aktiv.kontekst
 
       setIsSending(true)
       setFeil(null)
@@ -79,7 +84,7 @@ export function useChat() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             transkript: aktiv.transkript,
-            kontekst: aktiv.kontekst,
+            kontekst: effektivKontekst,
             tilleggsinfo: aktiv.tilleggsinfo,
             notat: aktiv.notat,
             vedlegg: valgtVedlegg,
@@ -144,7 +149,7 @@ export function useChat() {
           chatHistorikk: medSvar,
           chatKontekstSnapshot: {
             transkript: aktiv.transkript,
-            kontekst: aktiv.kontekst,
+            kontekst: effektivKontekst,
             tilleggsinfo: aktiv.tilleggsinfo,
             vedleggIds: (aktiv.vedlegg ?? []).map((v) => v.id),
           },
