@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react"
 import Link from "next/link"
-import { MessageSquare, Send, Trash2, X, AlertCircle, Info } from "lucide-react"
+import { MessageSquare, Send, Trash2, X, AlertCircle, Info, Copy, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import {
@@ -31,6 +31,38 @@ interface ChatMal {
 
 function ordTeller(tekst: string): number {
   return tekst.trim().split(/\s+/).filter(Boolean).length
+}
+
+function KopierKnapp({ tekst }: { tekst: string }) {
+  const [kopiert, setKopiert] = useState(false)
+
+  async function kopier() {
+    try {
+      await navigator.clipboard.writeText(tekst)
+      setKopiert(true)
+      setTimeout(() => setKopiert(false), 1500)
+    } catch {
+      // utklippstavle utilgjengelig (f.eks. ikke-sikker kontekst) — ignorer
+    }
+  }
+
+  return (
+    <button
+      onClick={kopier}
+      className="inline-flex items-center gap-1 text-xs text-slate-400 hover:text-blue-700 transition-colors"
+      aria-label="Kopier svar"
+    >
+      {kopiert ? (
+        <>
+          <Check className="w-3 h-3" /> Kopiert
+        </>
+      ) : (
+        <>
+          <Copy className="w-3 h-3" /> Kopier
+        </>
+      )}
+    </button>
+  )
 }
 
 export function ChatModal({ open, onClose }: Props) {
@@ -302,9 +334,12 @@ export function ChatModal({ open, onClose }: Props) {
                   )
                 }
                 return (
-                  <div key={m.id} className="flex justify-start">
-                    <div className="bg-white border border-slate-200 rounded-2xl rounded-bl-sm px-4 py-2.5 max-w-[75%] text-sm whitespace-pre-wrap">
-                      {m.content}
+                  <div key={m.id} className="flex justify-start group">
+                    <div className="bg-white border border-slate-200 rounded-2xl rounded-bl-sm px-4 py-2.5 max-w-[75%] text-sm">
+                      <div className="whitespace-pre-wrap">{m.content}</div>
+                      <div className="flex justify-end mt-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <KopierKnapp tekst={m.content} />
+                      </div>
                     </div>
                   </div>
                 )
