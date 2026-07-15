@@ -318,6 +318,8 @@ DATABASE_URL="mysql://bruker:passord@host:3306/databasenavn"
 
 # NextAuth v5
 AUTH_SECRET=...                    # 32 bytes, hex-encodet
+AUTH_TRUST_HOST=true              # Påkrevd bak reverse proxy
+AUTH_URL=https://ki.lilletorget.org  # Kun prod: kanonisk base-URL, hindrer localhost-redirects (utelates i dev)
 
 # TOTP-kryptering (for 2FA)
 TOTP_ENCRYPTION_KEY=...           # 32 bytes, hex-encodet

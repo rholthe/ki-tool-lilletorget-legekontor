@@ -39,7 +39,9 @@ nano .env        # fyll inn hemmeligheter (DATABASE_URL-passord, AUTH_SECRET,
                  # TOTP_ENCRYPTION_KEY, SONIOX_API_KEY, BEDROCK-nøkler, SMTP_PASSWORD)
 ```
 
-`APP_URL=https://ki.lilletorget.org` og `PORT=3001` er allerede satt i malen.
+`APP_URL=https://ki.lilletorget.org`, `AUTH_URL=https://ki.lilletorget.org` og `PORT=3001`
+er allerede satt i malen. `AUTH_URL` gjør at NextAuth alltid bygger redirects (bl.a. ved
+utlogging) mot riktig domene, uavhengig av hvilke host-headere Apache sender videre.
 
 ## 3. Bygg (Prisma-klient er gitignored → må genereres)
 
