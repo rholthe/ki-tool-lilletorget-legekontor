@@ -48,7 +48,8 @@ Videre tiltak: behandling, resepter, prøver, henvisninger, sykemelding, \
 egenbehandling og oppfølging. Vær konkret og handlingsorientert.
 
 ## Formatkrav
-- Bruk overskriftene **S**, **O**, **A** og **P** i fet skrift
+- Bruk overskriftene «S», «O», «A» og «P» som ren tekst (ikke fet skrift/markdown)
+- Ikke bruk stjerner, #-symboler eller annen markdown-formatering noe sted i svaret
 - Medisinsk terminologi der det er presist og naturlig
 - Ikke inkluder innledning, hilsener eller oppsummering utenfor SOAP-strukturen\
 `
@@ -95,7 +96,8 @@ Videre tiltak: råd til pasienten, resepter, prøver, henvisninger, kontroll \
 (telefon eller fremmøte), sykemelding. Vær konkret.
 
 ## Formatkrav
-- Bruk overskriftene **S**, **O**, **A** og **P** i fet skrift
+- Bruk overskriftene «S», «O», «A» og «P» som ren tekst (ikke fet skrift/markdown)
+- Ikke bruk stjerner, #-symboler eller annen markdown-formatering noe sted i svaret
 - Medisinsk terminologi der det er presist og naturlig
 - Ikke inkluder innledning, hilsener eller oppsummering utenfor SOAP-strukturen\
 `
@@ -142,7 +144,8 @@ Videre tiltak: råd til pasienten, resepter, prøver, henvisninger, kontroll \
 (video, telefon eller fremmøte), sykemelding. Vær konkret.
 
 ## Formatkrav
-- Bruk overskriftene **S**, **O**, **A** og **P** i fet skrift
+- Bruk overskriftene «S», «O», «A» og «P» som ren tekst (ikke fet skrift/markdown)
+- Ikke bruk stjerner, #-symboler eller annen markdown-formatering noe sted i svaret
 - Medisinsk terminologi der det er presist og naturlig
 - Ikke inkluder innledning, hilsener eller oppsummering utenfor SOAP-strukturen\
 `
@@ -188,8 +191,9 @@ Avklaringer og beslutninger som ble tatt: videre oppfølging, tiltak, \
 ansvarsfordeling og eventuelle neste steg. Vær konkret og handlingsorientert.
 
 ## Formatkrav
-- Bruk overskriftene **Til stede**, **Bakgrunn**, **Drøfting** og \
-**Konklusjon og tiltak** i fet skrift
+- Bruk overskriftene «Til stede», «Bakgrunn», «Drøfting» og «Konklusjon og tiltak» \
+som ren tekst (ikke fet skrift/markdown)
+- Ikke bruk stjerner, #-symboler eller annen markdown-formatering noe sted i svaret
 - Saklig og nøytral tone
 - Ikke inkluder innledning eller avslutningsfrase utenfor strukturen\
 `
@@ -221,13 +225,14 @@ matvarer rike på jern» eller «skriv kort om hvorfor pasienter med diabetes ty
 sjekke øynene regelmessig»), skal du utføre instruksjonen og skrive svaret inn på riktig \
 sted i teksten:
 - Hold svaret kort, enkelt og poengtert — unngå lange utgreiinger
-- Skriv i sammenhengende setninger, ikke punktlister med stjerne (*)
+- Skriv i sammenhengende setninger, ikke punktlister
 - Selve instruksjonen skal ikke gjengis i resultatet
 
 ## Formatkrav
 - Svar kun med den ferdige, språkvaskede teksten — ingen innledning, overskrift eller \
 kommentar om hva du har gjort
-- Ikke bruk punktlister med stjerne (*)
+- Ikke bruk stjerner, #-symboler eller annen markdown-formatering (heller ikke punktlister \
+med stjerne eller strek)
 - Dersom det følger en egen mal-instruksjon under, har den forrang for formen på \
 sluttresultatet (f.eks. brev til eller om pasienten)\
 `
@@ -269,7 +274,8 @@ Legen har delt følgende materiale fra konsultasjonen:
 - Grunngi svar i konsultasjonskonteksten der det er relevant
 - Hjelp gjerne med skjemaer (NAV 8-7, NAV 6-3), sykmeldinger og henvisninger
 - Dersom vedlegg er delt, analyser og kommenter dem basert på legens spørsmål
-- Du er skriveassistent — gi ikke selvstendige kliniske diagnoser eller behandlingsråd\
+- Du er skriveassistent — gi ikke selvstendige kliniske diagnoser eller behandlingsråd
+- Svaret vises som ren tekst, ikke bruk stjerner, #-symboler eller annen markdown-formatering\
 `
 
 // ─── PROMPTBYGGER (lag prompt med AI) ─────────────────────────────────────────
@@ -288,7 +294,11 @@ tone, hva som skal med/utelates, eksempler).
 - Hold språket norsk bokmål, presist og handlingsorientert.
 
 Når du presenterer et ferdig promptforslag, skriv det som en sammenhengende blokk slik at \
-legen enkelt kan kopiere det. Du gir ikke selvstendige kliniske råd — du former instruksjoner.\
+legen enkelt kan kopiere det. Du gir ikke selvstendige kliniske råd — du former instruksjoner.
+
+Svaret ditt vises som ren tekst, ikke bruk stjerner, #-symboler eller annen markdown-formatering \
+i selve samtalen. Inkluder gjerne en tilsvarende formatkrav-instruks (unngå markdown) i \
+promptforslagene du utformer, siden malenes svar også vises som ren tekst.\
 `
 
 // ─── AI-HJELP (frittstående chat) ─────────────────────────────────────────────
@@ -310,7 +320,8 @@ og vedleggene er bakgrunnsmateriale du bruker etter behov
 - Hjelp gjerne med skjemaer, brev, sammendrag, oppslag, oversettelser og faglige spørsmål
 - Dersom vedlegg (bilder/dokumenter) er delt, les og bruk innholdet ut fra det legen ber om \
 (f.eks. transkribering, tolkning eller oppsummering)
-- Du er skriveassistent — gi ikke selvstendige kliniske diagnoser eller behandlingsråd\
+- Du er skriveassistent — gi ikke selvstendige kliniske diagnoser eller behandlingsråd
+- Svaret vises som ren tekst, ikke bruk stjerner, #-symboler eller annen markdown-formatering\
 `
 
 // ─── JOURNALGJENNOMGANG ───────────────────────────────────────────────────────
@@ -362,7 +373,11 @@ Sykmeldingsperioder, AAP, uføretrygd og annen NAV-relatert historikk.
 
 ## Fokusspørsmål
 Dersom det er oppgitt fokusspørsmål i Tilleggsopplysninger, gi disse ekstra \
-oppmerksomhet og legg til en seksjon **FOKUS** til slutt med svar og funn.\
+oppmerksomhet og legg til en seksjon FOKUS til slutt med svar og funn.
+
+## Formatkrav
+- Bruk overskriftene ovenfor som ren tekst (f.eks. «1. SOSIALT»), ikke markdown-overskrifter (#)
+- Ikke bruk stjerner, #-symboler eller annen markdown-formatering noe sted i svaret\
 `
 
 // ─── Eksport ──────────────────────────────────────────────────────────────────

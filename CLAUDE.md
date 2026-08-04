@@ -476,6 +476,11 @@ Notatgenerering bruker type-spesifikke **system prompts** definert i `src/lib/st
 - `CHAT_STAGING` — system prompt for chat, med `{KONTEKST}`-plassholder; ingen stikkord-instruksjon
 - `STIKKORD_SEKSJON` — instruksjon om å avslutte notatet med `STIKKORD: ord1, ord2, ord3`
 
+**Formatkrav (ren tekst, ingen markdown):** Notat- og chat-tekst rendres uten markdown-tolkning
+(`whitespace-pre-wrap`/`Textarea` — stjerner og `#` vises bokstavelig), så samtlige grunntekster i
+`staging.ts` (SOAP-typer, MØTE, DIKTAT, JOURNALGJENNOMGANG, CHAT, AI-HJELP, PROMPTBYGGER) instruerer
+Claude om å ikke bruke `**fet skrift**`, `#`-overskrifter eller punktlister med stjerne/strek.
+
 **Stikkord-flyt:**
 1. Claude avslutter notatet med linjen `STIKKORD: ord1, ord2, ord3`
 2. `konsultasjon-view.tsx` skjuler linjen fra streaming-visningen (`indexOf('\nSTIKKORD:')`)
