@@ -1,0 +1,2 @@
+# Shell-skript må ha LF også på Windows, ellers feiler de på Linux-serveren
+*.sh text eol=lf

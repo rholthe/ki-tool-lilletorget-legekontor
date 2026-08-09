@@ -1,0 +1,152 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+// ─── NextAuth v5 required tables ─────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  passwordHash  String?
+
+  twoFactorEnabled Boolean @default(false)
+  twoFactorSecret  String? // AES-256-GCM kryptert TOTP-hemmelighet
+
+  // Databehandleravtale: signeres av brukeren (behandlingsansvarlig).
+  // Ingen appbruk uten gyldig signatur på gjeldende versjon.
+  dpaSignedAt DateTime?
+  dpaVersion  String?
+
+  accounts       Account[]
+  sessions       Session[]
+  authenticators Authenticator[]
+  maler          Mal[]
+
+  passordOppsett PasswordSetupToken?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Engangstoken for at en ny bruker selv setter passord (invitasjon).
+// Token sendes som klartekst i e-postlenke; kun SHA-256-hash lagres.
+model PasswordSetupToken {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String   @unique
+  expires   DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// WebAuthn / YubiKey (FIDO2 passkeys)
+model Authenticator {
+  credentialID         String  @unique
+  userId               String
+  providerAccountId    String
+  credentialPublicKey  String  @db.Text
+  counter              Int
+  credentialDeviceType String
+  credentialBackedUp   Boolean
+  transports           String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, credentialID])
+}
+
+// ─── App-modeller ─────────────────────────────────────────────────────────────
+
+enum MalKategori {
+  KONSULTASJON
+  MOTE
+  CHAT
+  DIKTAT
+  AIHJELP
+}
+
+model Mal {
+  id          String      @id @default(cuid())
+  tittel      String
+  beskrivelse String?
+  innhold     String      @db.Text
+  kategori    MalKategori
+
+  erPrivat Boolean @default(true)
+  erDelt   Boolean @default(false)
+
+  eierBrukerId String
+  eier         User   @relation(fields: [eierBrukerId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([eierBrukerId])
+  @@index([kategori])
+  @@index([erDelt])
+}
+
+model SystemSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+// Versjonert databehandleravtale. Opprettes av admin; gamle versjoner er
+// uforanderlige (ingen redigering). `gjeldende` markerer den aktive versjonen.
+// `krevNySignering` = betydelig endring → alle må signere på nytt.
+model DpaVersjon {
+  id              String   @id @default(cuid())
+  versjon         String   @unique // f.eks. "1.0", "2.0"
+  innhold         String   @db.Text // avtaletekst (markdown)
+  krevNySignering Boolean  @default(true)
+  gjeldende       Boolean  @default(false)
+  opprettetAv     String? // e-post til admin som opprettet versjonen
+  publisertAt     DateTime @default(now())
+
+  @@index([gjeldende])
+}

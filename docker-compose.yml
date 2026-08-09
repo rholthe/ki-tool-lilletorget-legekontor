@@ -1,0 +1,18 @@
+services:
+  legeassist:
+    build: .
+    container_name: legeassist
+    restart: unless-stopped
+    env_file:
+      - .env
+    networks:
+      - proxy-network
+      - app-backend
+
+networks:
+  proxy-network:
+    name: reverse-proxy_default
+    external: true
+  app-backend:
+    name: app-backend
+    external: true
