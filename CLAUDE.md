@@ -223,11 +223,10 @@ legeassist/
 ├── .env.example                   # Mal for .env (hemmeligheter tomme; committet)
 ├── .env.local                     # Lokal override
 ├── .gitattributes                 # *.sh = LF (så deploy-skript ikke feiler på Linux)
-├── deploy/                        # Produksjonsdeploy (se «Deploy» nederst)
-│   ├── README.md                  # Deploy-runbook
-│   ├── ki.lilletorget.org.conf    # Apache reverse-proxy vhost (port 3001, SSE-vennlig)
-│   ├── deploy.sh                  # Kjøres på server: pull → ci → generate → build → pm2
-│   └── push-and-deploy.sh         # Kjøres lokalt: push + remote deploy i én operasjon
+├── Dockerfile                     # Multi-stage build (deps → prisma generate + next build → runner)
+├── docker-compose.yml             # Service «legeassist», env_file .env, eksterne nett: reverse-proxy_default + app-backend
+├── deploy.sh                      # Kjøres på server: git pull → docker compose build/up → prisma db push → restart
+├── push-and-deploy.sh             # Kjøres lokalt: push + SSH kjører deploy.sh på server + helsesjekk
 ├── prisma/
 │   └── schema.prisma              # User (inkl. dpa*), Mal, sesjon, PasswordSetupToken, DpaVersjon
 ├── src/
@@ -355,19 +354,35 @@ Full mal med alle nøkler: se `.env.example` (committet, hemmeligheter tomme).
 
 ## Produksjon og deploy
 
-Produksjon kjører på `server.lilletorget.org` (Ubuntu 22.04), domene **https://ki.lilletorget.org**.
+Produksjon kjører **Docker-basert** på en VPS med IP **159.195.146.240**, domene
+**https://ki.lilletorget.org**. Flere andre apper (finans, pokergutta, mailcow) kjører side om
+side på samme VPS, hver i egne containere.
 
-- **App:** Next.js via **pm2** (prosess `legeassist`, port **3001**; 3000 er opptatt av en annen app)
-- **Reverse proxy:** **Apache2 + certbot** (ikke nginx). Vhost i `deploy/ki.lilletorget.org.conf`
-  proxer til `127.0.0.1:3001` med `flushpackets=on` for SSE-streaming og `X-Forwarded-Proto https`
-- **Database:** samme **MariaDB** som i dev. I dev nås den via SSH-tunnel (`localhost:3306`),
-  på serveren er den lokal — derfor er `DATABASE_URL` lik begge steder. Skjemaendringer i dev
-  treffer altså prod-DB; vær bevisst på dette.
-- **SSH:** `ssh -i ~/.ssh/legeassist_vps ragnar@lilletorget.org`
-- **Deploy fra utviklingsmaskin:** `bash deploy/push-and-deploy.sh` (push + remote
-  pull/ci/generate/build/pm2-restart, med vent-på-app-retry). Detaljer i `deploy/README.md`.
-- **Førstegangsoppsett (Apache/SSL/.env):** krever sudo og kjøres manuelt — se `deploy/README.md`.
-- ⚠️ Lite minne (~840 MB ledig). `next build` går, men vær obs; swap-oppskrift i README.
+- **App:** Docker-container `legeassist` (bygget fra rot-`Dockerfile`: multi-stage
+  node:20-slim → `prisma generate` + `next build` → `npm run start`). Containeren lytter på port
+  **3001** internt, men porten er **ikke publisert til host** — nås kun via Docker-nettverket.
+- **Reverse proxy:** **Caddy** (container `reverse-proxy-caddy`, config i `~/reverse-proxy/Caddyfile`
+  på serveren, automatisk HTTPS). `legeassist` er koblet til Caddy via det eksterne Docker-nettverket
+  `reverse-proxy_default`; Caddy proxer `ki.lilletorget.org` → `http://legeassist:3001`.
+- **Database:** delt **MariaDB**-container (`shared-mariadb`, `mariadb:10.11`) på det eksterne
+  Docker-nettverket `app-backend` — deles med de andre appene på VPS-en (egen database/bruker
+  `legeassist`). Porten er **ikke publisert til host**, kun nåbar fra andre containere på
+  `app-backend`.
+  - **Prod** `DATABASE_URL` peker på Docker-nettverksnavnet `shared-mariadb:3306`.
+  - **Dev** må SSH-tunnles til containerens interne IP (ikke `localhost:3306` *på serveren*, siden
+    porten der ikke er publisert): finn IP på serveren med
+    `docker inspect shared-mariadb --format '{{ (index .NetworkSettings.Networks "app-backend").IPAddress }}'`,
+    tunnle med `ssh -i ~/.ssh/legeassist_vps_new -L 3306:<container-ip>:3306 ragnar@159.195.146.240 -N`,
+    og bruk `localhost:3306` i dev sin `DATABASE_URL` som før. IP-en er stabil så lenge containeren
+    ikke fjernes/opprettes på nytt, men bør verifiseres ved rare tilkoblingsfeil.
+  - Samme database i dev og prod — skjemaendringer i dev treffer altså prod-DB; vær bevisst på dette.
+- **SSH:** `ssh -i ~/.ssh/legeassist_vps_new ragnar@159.195.146.240`
+- **Deploy fra utviklingsmaskin:** `bash push-and-deploy.sh` (push til origin + SSH kjører
+  `./deploy.sh` på serveren: `git pull --ff-only` → `docker compose build` → `docker compose up -d`
+  → `docker exec legeassist npx prisma db push` → `docker compose restart`, deretter
+  vent-på-200-retry mot `https://ki.lilletorget.org/login`).
+- **Deploy direkte på serveren:** `cd ~/apps/legeassist && ./deploy.sh`
+- Rikelig med ressurser på ny VPS (15 GB RAM, 500 GB disk) — ingen swap-forbehold nødvendig.
 
 ## Database (Prisma 7)
 
