@@ -17,6 +17,8 @@ import {
   byggStaging,
   resolverVedleggInstruksjon,
 } from "@/lib/staging-server"
+import { formaterTilNotat } from "@/lib/verktoy/beregn"
+import type { VerktoyResultat } from "@/lib/verktoy/typer"
 
 interface RequestBody {
   type: KonsultasjonsType
@@ -26,6 +28,7 @@ interface RequestBody {
   tilleggsinfo: string
   malInnhold: string | null
   vedlegg?: Pick<Vedlegg, "mimeType" | "base64" | "oppgave" | "spirometriType" | "egendefinertPrompt">[]
+  verktoyResultater?: VerktoyResultat[]
 }
 
 async function lagBedrockKlient() {
@@ -56,7 +59,15 @@ export async function POST(req: Request) {
   const body: RequestBody = await req.json()
 
   const overrides = await hentStagingOverrides()
-  const stagingTekst = byggStaging(body.type, body.konsultasjonsform, overrides)
+  const verktoyTekst = (body.verktoyResultater ?? [])
+    .map(formaterTilNotat)
+    .join("\n\n")
+  const stagingTekst = byggStaging(
+    body.type,
+    body.konsultasjonsform,
+    overrides,
+    verktoyTekst
+  )
   const systemPrompt = body.malInnhold
     ? `${stagingTekst}\n\n${body.malInnhold}`
     : stagingTekst

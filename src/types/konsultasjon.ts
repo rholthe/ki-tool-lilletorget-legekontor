@@ -1,4 +1,5 @@
 import type { KonsultasjonsForm } from "@/lib/staging"
+import type { VerktoyResultat } from "@/lib/verktoy/typer"
 
 export type KonsultasjonsType =
   | "KONSULTASJON"
@@ -73,6 +74,8 @@ export interface Konsultasjon {
   createdAt: number
   expiresAt: number
   stikkord?: string[]
+  /** Utførte kliniske verktøy — lagres strukturert så de overlever regenerering av notatet. */
+  verktoyResultater?: VerktoyResultat[]
   chatHistorikk?: ChatMelding[]
   chatKontekstSnapshot?: {
     transkript: string
@@ -108,5 +111,6 @@ export function konsultasjonEtikett(k: {
 }
 
 export { TYPE_STAGING, KONSULTASJON_FORM_STAGING, type KonsultasjonsForm } from "@/lib/staging"
+export type { VerktoyResultat } from "@/lib/verktoy/typer"
 
 export const TTL_MS = 24 * 60 * 60 * 1000 // 24 timer

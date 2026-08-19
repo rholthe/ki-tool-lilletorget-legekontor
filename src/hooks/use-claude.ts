@@ -40,6 +40,7 @@ export function useClaude() {
             tilleggsinfo: konsultasjon.tilleggsinfo,
             malInnhold: konsultasjon.malInnhold,
             vedlegg: konsultasjon.vedlegg ?? [],
+            verktoyResultater: konsultasjon.verktoyResultater ?? [],
           }),
           signal: controller.signal,
         })

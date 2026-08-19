@@ -24,6 +24,7 @@ import {
   ScanText,
   BookOpen,
   Sparkles,
+  ClipboardList,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -59,6 +60,8 @@ import { TYPE_STAGING, konsultasjonEtikett, type Vedlegg, type Konsultasjon, typ
 import { TYPE_TEMA } from "@/lib/tema"
 import { VedleggPanel } from "@/components/app/vedlegg-panel"
 import { ChatModal } from "@/components/app/chat-modal"
+import { VerktoyModal } from "@/components/app/verktoy-modal"
+import { synkVerktoySeksjon } from "@/lib/verktoy/beregn"
 import { lagreKonsultasjon, hentKonsultasjon } from "@/lib/idb"
 
 function parseStikkord(fullTekst: string): { notat: string; stikkord?: string[] } {
@@ -86,6 +89,7 @@ export function KonsultasjonView() {
 
   const [visTranskript, setVisTranskript] = useState(false)
   const [visChat, setVisChat] = useState(false)
+  const [visVerktoy, setVisVerktoy] = useState(false)
   const [kopiert, setKopiert] = useState(false)
   const [utvidetFelt, setUtvidetFelt] = useState<"kontekst" | "tilleggsinfo" | null>(null)
   const [moteform, setMoteform] = useState<MoteForm>("fysisk")
@@ -152,8 +156,13 @@ export function KonsultasjonView() {
   const handleStreamFerdig = useCallback(async (fullTekst: string) => {
     const { notat, stikkord } = parseStikkord(fullTekst)
     setStreamingNotat("")
-    await oppdater({ notat, ...(stikkord ? { stikkord } : {}) })
-  }, [oppdater])
+    // Verktøyseksjonen bygges av appen, ikke av Claude — legges inn igjen etter
+    // hver generering slik at utførte verktøy overlever «Regenerer».
+    await oppdater({
+      notat: synkVerktoySeksjon(notat, aktiv?.verktoyResultater ?? []),
+      ...(stikkord ? { stikkord } : {}),
+    })
+  }, [oppdater, aktiv?.verktoyResultater])
 
   const livTranskriptRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -233,6 +242,7 @@ export function KonsultasjonView() {
   useHurtigtaster([
     { code: "KeyR", handler: hurtigtastOpptak },
     { code: "KeyS", handler: hurtigtastStopp },
+    { code: "KeyV", handler: () => setVisVerktoy((v) => !v) },
   ])
 
   if (!aktiv) {
@@ -859,6 +869,22 @@ export function KonsultasjonView() {
             <TooltipContent>Spør AI om konsultasjonen</TooltipContent>
           </Tooltip>
 
+          <Tooltip>
+            <TooltipTrigger render={<span />}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 text-sm"
+                onClick={() => setVisVerktoy(true)}
+                title="Kliniske verktøy (Alt+V)"
+              >
+                <ClipboardList className="w-4 h-4" />
+                Kliniske verktøy
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Skåringsverktøy og undersøkelser (Alt+V)</TooltipContent>
+          </Tooltip>
+
           <div className="flex-1" />
 
           {isGenerating && (
@@ -929,6 +955,8 @@ export function KonsultasjonView() {
       </Dialog>
 
       <ChatModal open={visChat} onClose={() => setVisChat(false)} />
+
+      <VerktoyModal open={visVerktoy} onClose={() => setVisVerktoy(false)} />
     </div>
   )
 }

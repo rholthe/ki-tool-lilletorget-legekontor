@@ -1,0 +1,132 @@
+import type { Verktoy } from "../typer"
+
+export const CHADSVASC: Verktoy = {
+  id: "chadsvasc",
+  navn: "CHA₂DS₂-VASc",
+  langtNavn: "Slagrisiko ved atrieflimmer",
+  kategori: "score",
+  sokeord: [
+    "atrieflimmer",
+    "af",
+    "flimmer",
+    "arytmi",
+    "antikoagulasjon",
+    "slag",
+    "hjerneslag",
+    "tromboembolisk",
+    "chadsvasc",
+    "chads",
+  ],
+  notatTittel: "CHA₂DS₂-VASc",
+  beregning: { type: "sum" },
+  seksjoner: [
+    {
+      id: "risikofaktorer",
+      tittel: "Risikofaktorer",
+      maksPoeng: 9,
+      felter: [
+        {
+          type: "ja_nei",
+          id: "hjertesvikt",
+          sporsmal: "Hjertesvikt eller venstre ventrikkeldysfunksjon",
+          kort: "hjertesvikt",
+          poeng: 1,
+        },
+        {
+          type: "ja_nei",
+          id: "hypertensjon",
+          sporsmal: "Hypertensjon",
+          kort: "hypertensjon",
+          poeng: 1,
+          hjelp: "Behandlet eller gjentatte målinger over 140/90 mmHg.",
+        },
+        {
+          type: "valg",
+          id: "alder",
+          sporsmal: "Alder",
+          kort: "alder",
+          alternativer: [
+            { tekst: "Under 65 år", poeng: 0 },
+            { tekst: "65–74 år", poeng: 1 },
+            { tekst: "75 år eller eldre", poeng: 2 },
+          ],
+        },
+        {
+          type: "ja_nei",
+          id: "diabetes",
+          sporsmal: "Diabetes mellitus",
+          kort: "diabetes",
+          poeng: 1,
+        },
+        {
+          type: "ja_nei",
+          id: "slag",
+          sporsmal: "Tidligere hjerneslag, TIA eller tromboembolisk hendelse",
+          kort: "tidligere slag/TIA",
+          poeng: 2,
+        },
+        {
+          type: "ja_nei",
+          id: "vaskulaer",
+          sporsmal: "Vaskulær sykdom",
+          kort: "vaskulær sykdom",
+          poeng: 1,
+          hjelp: "Gjennomgått hjerteinfarkt, perifer arteriesykdom eller aortaplakk.",
+        },
+        {
+          type: "ja_nei",
+          id: "kvinne",
+          sporsmal: "Kvinnelig kjønn",
+          kort: "kvinne",
+          poeng: 1,
+        },
+      ],
+    },
+  ],
+  terskler: [
+    {
+      fra: 0,
+      til: 0,
+      klasse: "Lav risiko",
+      tekst: "Lav årlig risiko for hjerneslag",
+      farge: "gronn",
+    },
+    {
+      fra: 1,
+      til: 1,
+      klasse: "Intermediær risiko",
+      tekst: "Intermediær årlig risiko for hjerneslag",
+      farge: "gul",
+    },
+    {
+      fra: 2,
+      til: 9,
+      klasse: "Høy risiko",
+      tekst: "Høy årlig risiko for hjerneslag",
+      farge: "rod",
+    },
+  ],
+  kilde: {
+    navn: "ESC retningslinjer for atrieflimmer",
+    versjon: "2020",
+    sistRevidert: "2020",
+  },
+  testkasus: [
+    {
+      navn: "Kvinne 70 år med hypertensjon og diabetes",
+      svar: { hypertensjon: true, alder: 1, diabetes: true, kvinne: true },
+      forventetSum: 4,
+    },
+    {
+      navn: "Mann 50 år uten risikofaktorer",
+      svar: { alder: 0 },
+      forventetSum: 0,
+    },
+    {
+      navn: "Mann 80 år med tidligere hjerneslag",
+      svar: { alder: 2, slag: true },
+      forventetSum: 4,
+    },
+  ],
+  opphav: "innebygd",
+}

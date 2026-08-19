@@ -46,16 +46,28 @@ function notattypeOppslag(
 
 /**
  * Bygger full system prompt for notatgenerering: grunntekst (override/standard)
- * + ev. vedleggseksjon + stikkord-instruksjon. Stikkord styres alltid sentralt.
+ * + ev. vedleggseksjon + ev. verktøyseksjon + stikkord-instruksjon. Stikkord
+ * styres alltid sentralt.
+ *
+ * `verktoyTekst` er de ferdig formaterte verktøyresultatene. Seksjonen legges kun
+ * på når legen faktisk har utført et verktøy, og instruerer Claude om ikke å
+ * gjengi eller endre poengsummene — appen skriver resultatseksjonen selv.
  */
 export function byggStaging(
   type: KonsultasjonsType,
   form: KonsultasjonsForm | undefined,
-  overrides: Map<string, string>
+  overrides: Map<string, string>,
+  verktoyTekst?: string
 ): string {
   const { baseKey, medVedlegg } = notattypeOppslag(type, form)
   let prompt = tekst(baseKey, overrides)
   if (medVedlegg) prompt += tekst("felles:vedleggseksjon", overrides)
+  if (verktoyTekst?.trim()) {
+    const base = tekst("felles:verktoy", overrides)
+    prompt += base.includes("{VERKTOY}")
+      ? base.replace("{VERKTOY}", verktoyTekst)
+      : `${base}\n\n${verktoyTekst}`
+  }
   prompt += tekst("felles:stikkord", overrides)
   return prompt
 }

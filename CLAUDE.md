@@ -182,6 +182,7 @@ Nettleser (klinikkens datamaskin)
     - `Alt+R` veksler ut fra tilstand: stoppet/ny → Start, opptar → Pause, pause → Fortsett,
       lagret pause → Fortsett, ferdig → Fortsett opptak, kobler → ignoreres
     - `Alt+S` = Stopp & Send (genererer notat); egen tast siden den committer/trigger AI
+    - `Alt+V` = åpne/lukke Kliniske verktøy (kun `konsultasjon-view.tsx`)
     - Hooken er montert per view (kun ett vises via `HovedInnhold`); knapper har `title`-hint
 - Diktering i tekstbokser: gjenbrukbart mikrofonikon for live transkribering rett inn i et tekstfelt
   - Komponent `DikteringKnapp` (`src/components/app/diktering-knapp.tsx`) + hook `useDiktering` (`src/hooks/use-diktering.ts`)
@@ -191,8 +192,42 @@ Nettleser (klinikkens datamaskin)
   - Soniox-spesialtokens (`<end>` o.l.) filtreres bort; knappen bruker `onMouseDown` `preventDefault` for å bevare markørfokus
   - Standard innfelling: wrap `<Textarea>` i `relative`-div, gi feltet `pr-10` + `ref`, plasser knappen `absolute bottom-1.5 right-1.5`
   - I bruk: AI-hjelp-input, konsultasjons-chat (`chat-modal.tsx`), Fokusspørsmål i Journalgjennomgang
+- Kliniske verktøy: skåringsverktøy og strukturerte undersøkelser i konsultasjonsbildet
+  - Egen knapp ved siden av «Chat / AI-hjelp» (`ClipboardList`-ikon) → `VerktoyModal`, hurtigtast `Alt+V`
+  - **Poeng og terskler beregnes alltid av koden, aldri av Claude** (`src/lib/verktoy/beregn.ts`)
+  - Verktøy er deklarative, JSON-serialiserbare definisjoner (`src/lib/verktoy/definisjoner/*.ts`):
+    felter (`ja_nei`/`valg`/`tall`/`funn`/`fritekst`), `beregning` (`sum`/`sum_per_seksjon`/`ingen`)
+    og en `terskler`-tabell. Formen er bevisst uten funksjoner, slik at admin senere kan opprette
+    verktøy fra frontend med nøyaktig samme datamodell
+  - Implementert: CHA₂DS₂-VASc, qSOFA, Wells DVT, Wells LE, MADRS, klokketest (Shulman 1–6),
+    strukturert kne- og skulderundersøkelse
+  - Undersøkelser (`kategori: "undersokelse"`, `beregning: "ingen"`) har `funn`-felter
+    (normal/patologisk/ikke utført), `lateralitet: true` og ingen sum. Testlistene er bevisst korte
+    — kun tester med god dokumentert treffsikkerhet, hver med én linje `hjelp` om hva funnet betyr.
+    Tester legen ikke krysser av, utelates fra notatet, og «Kilde»-linjen droppes for verktøy uten skår
+  - `detaljStil` styrer notatlinjen: `full` (standard), `poeng` (MADRS — 10 ledd ville ellers gitt
+    en avsnittslang linje), `tekst` (klokketest — ett ledd, poenget står allerede i summen).
+    `sumEtikett` overstyrer «poeng» der summen ikke er poeng (klokketest: «på Shulman-skalaen»)
+  - `ubesvarteValg()` blokkerer lagring til alle `valg`-felter er besvart. Et halvutfylt MADRS gir
+    ellers en sum som ser gyldig ut, men er for lav — og ville landet i feil alvorlighetsgrad.
+    Undersøkelser krever tilsvarende at minst ett funn er registrert
+  - `testkasus` på hver definisjon = referansekasus med kjent fasit; `kjorTestkasus()` verifiserer
+    poengsummeringen (prosjektet har ingen testrunner)
+  - Søkbar liste + nøkkelordbaserte forslag ut fra transkript/kontekst (`src/lib/verktoy/sok.ts`)
+  - Resultatet lagres strukturert som `Konsultasjon.verktoyResultater` (IndexedDB), ikke bare som
+    tekst i notatet — ellers forsvinner det ved «Regenerer»
+  - `synkVerktoySeksjon()` skriver seksjonen `--- KLINISKE VERKTØY ---` inn i notatet. Idempotent
+    (ingen duplikater ved gjentatte kall) og plasseres foran `--- OCR ---`. Kalles fra
+    `handleStreamFerdig` og ved hver endring i modalen
+  - Systemprompt: `felles:verktoy` (staging-registry) legges på kun når verktøy er utført. Gir
+    Claude tallene som kontekst og forbyr modellen å gjengi eller endre dem
+  - `VerktoyModal` remounter innholdet via `key={aktiv.id}` slik at et halvutfylt skjema aldri
+    følger med til neste pasient
 
 ### Planlagt
+- Kliniske verktøy, gjenstående faser: MMS-NR (krever rettighetsavklaring for itemtekst),
+  AI-forslag og AI-forhåndsutfylling med bekreftelseskrav, admin-CRUD for egne verktøy
+  (`/admin/verktoy` + Prisma-modell)
 - Frasebibliotek
 - Klinikk-teamfunksjonalitet
 
@@ -227,6 +262,8 @@ legeassist/
 ├── docker-compose.yml             # Service «legeassist», env_file .env, eksterne nett: reverse-proxy_default + app-backend
 ├── deploy.sh                      # Kjøres på server: git pull → docker compose build/up → prisma db push → restart
 ├── push-and-deploy.sh             # Kjøres lokalt: push + SSH kjører deploy.sh på server + helsesjekk
+├── db-tunnel.sh                   # Kjøres lokalt (Git Bash): SSH-tunnel til shared-mariadb (slår opp container-IP)
+├── db-tunnel.ps1                  # Samme tunnel for PowerShell (bruker Windows sin ssh.exe)
 ├── prisma/
 │   └── schema.prisma              # User (inkl. dpa*), Mal, sesjon, PasswordSetupToken, DpaVersjon
 ├── src/
@@ -270,6 +307,8 @@ legeassist/
 │   │   │   ├── ai-hjelp-view.tsx          # Frittstående AI-hjelp: kontekst + vedlegg + chat (modus: aihjelp)
 │   │   │   ├── hoved-innhold.tsx          # Ruter mellom KonsultasjonView / DiktatView / JournalgjennomgangView
 │   │   │   ├── chat-modal.tsx             # Chat / AI-hjelp modal
+│   │   │   ├── verktoy-modal.tsx          # Kliniske verktøy: søkbar liste + aktivt skjema + utførte
+│   │   │   ├── verktoy-skjema.tsx         # Generisk renderer for alle felttyper i et verktøy
 │   │   │   ├── diktering-knapp.tsx        # Gjenbrukbart mikrofonikon: live transkribering inn i et tekstfelt
 │   │   │   ├── vedlegg-panel.tsx          # Vedlegg: opplasting, kamera, oppgavevalg (modus: ocr|standard)
 │   │   │   ├── to-faktor-paaminnelse.tsx  # Diskret 2FA-påminnelse (~1/mnd, localStorage)
@@ -295,11 +334,19 @@ legeassist/
 │   │   ├── staging-registry.ts    # STAGING_REGISTRY: overstyrbare staging-tekster (fil-standard)
 │   │   ├── staging-server.ts      # Server-resolver: DB-override + fil-fallback, bygger system prompt
 │   │   ├── tema.ts                # TYPE_TEMA (fargetema) + TYPE_IKON_KOMP (ikon per type)
+│   │   ├── verktoy/               # Kliniske verktøy (typer, beregning, søk, definisjoner)
+│   │   │   ├── typer.ts           # Verktoy, Felt, Seksjon, Terskel, VerktoyResultat
+│   │   │   ├── beregn.ts          # beregn/byggResultat/synkVerktoySeksjon/kjorTestkasus
+│   │   │   ├── sok.ts             # sokVerktoy + foreslaaVerktoy (nøkkelord)
+│   │   │   ├── registry.ts        # INNEBYGDE_VERKTOY + finnVerktoy
+│   │   │   └── definisjoner/      # Én fil per verktøy (chadsvasc, qsofa, wells-*, madrs,
+│   │   │                          #   klokketest, kne, skulder)
 │   │   └── vedlegg.ts             # VEDLEGG_OPPGAVE_INFO, VEDLEGG_OCR_BRUK_INFO, lagVedleggInstruksjon()
 │   ├── types/
 │   │   └── konsultasjon.ts        # Konsultasjon (inkl. stikkord, malId), ChatMelding, Vedlegg, VedleggOcrBruk, typer
 │   └── hooks/
 │       ├── use-claude.ts          # SSE-hook for notatgenerering
+│       ├── use-verktoy.ts         # Utførte kliniske verktøy + notat-synk
 │       ├── use-chat.ts            # SSE-hook for multi-turn chat + IndexedDB-persistering
 │       ├── use-konsultasjon.tsx   # KonsultasjonContext + oppdater()
 │       ├── use-transkribering.ts  # Soniox WebSocket-klient
@@ -370,11 +417,11 @@ side på samme VPS, hver i egne containere.
   `app-backend`.
   - **Prod** `DATABASE_URL` peker på Docker-nettverksnavnet `shared-mariadb:3306`.
   - **Dev** må SSH-tunnles til containerens interne IP (ikke `localhost:3306` *på serveren*, siden
-    porten der ikke er publisert): finn IP på serveren med
-    `docker inspect shared-mariadb --format '{{ (index .NetworkSettings.Networks "app-backend").IPAddress }}'`,
-    tunnle med `ssh -i ~/.ssh/legeassist_vps_new -L 3306:<container-ip>:3306 ragnar@159.195.146.240 -N`,
-    og bruk `localhost:3306` i dev sin `DATABASE_URL` som før. IP-en er stabil så lenge containeren
-    ikke fjernes/opprettes på nytt, men bør verifiseres ved rare tilkoblingsfeil.
+    porten der ikke er publisert): kjør `.\db-tunnel.ps1` (PowerShell) eller `bash db-tunnel.sh`
+    (Git Bash) fra prosjektroten — begge slår opp IP-en med `docker inspect` over SSH og åpner
+    `localhost:3306 → <container-ip>:3306`. Dev sin `DATABASE_URL` peker på `localhost:3306` som
+    før. Tunnelen blokkerer terminalen (Ctrl+C for å avslutte); bruk `-LocalPort 3307` /
+    `LOCAL_PORT=3307` hvis 3306 er opptatt lokalt.
   - Samme database i dev og prod — skjemaendringer i dev treffer altså prod-DB; vær bevisst på dette.
 - **SSH:** `ssh -i ~/.ssh/legeassist_vps_new ragnar@159.195.146.240`
 - **Deploy fra utviklingsmaskin:** `bash push-and-deploy.sh` (push til origin + SSH kjører

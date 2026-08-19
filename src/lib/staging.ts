@@ -247,6 +247,20 @@ før hvert vedlegg i meldingen. Følg instruksjonen for hvert vedlegg og integre
 funn i det aktuelle avsnittet i notatet. Vedlegg uten spesifikke instruksjoner \
 skal brukes som bakgrunnskontekst.`
 
+// ─── Kliniske verktøy (felles, kun når verktøy er utført) ────────────────────
+
+export const VERKTOY_SEKSJON = `
+
+## Kliniske verktøy
+Legen har utført følgende skåringsverktøy eller strukturerte undersøkelser:
+
+{VERKTOY}
+
+Du kan referere til funnene i vurderingen der det er klinisk relevant. Du skal \
+IKKE gjengi tallene i et eget avsnitt og IKKE regne om eller endre poengsummer — \
+appen legger inn en egen seksjon med resultatene automatisk etter at notatet er \
+generert.`
+
 // ─── Stikkord (felles for alle notattyper) ────────────────────────────────────
 
 export const STIKKORD_SEKSJON = `

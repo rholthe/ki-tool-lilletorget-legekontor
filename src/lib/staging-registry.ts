@@ -8,6 +8,7 @@ import {
   CHAT_STAGING,
   AIHJELP_STAGING,
   VEDLEGG_SEKSJON,
+  VERKTOY_SEKSJON,
   STIKKORD_SEKSJON,
 } from "@/lib/staging"
 import { VEDLEGG_INSTRUKS_DEFAULT } from "@/lib/vedlegg"
@@ -163,6 +164,14 @@ export const STAGING_REGISTRY: StagingEntry[] = [
     label: "Vedlegg-seksjon",
     beskrivelse: "Legges på konsultasjons- og møtenotater når vedlegg er aktuelle.",
     standard: VEDLEGG_SEKSJON,
+  },
+  {
+    key: "felles:verktoy",
+    gruppe: "Felles",
+    label: "Kliniske verktøy-seksjon",
+    beskrivelse:
+      "Legges på kun når legen har utført et klinisk verktøy. Må beholde plassholderen {VERKTOY}. Appen skriver selve resultatseksjonen i notatet — teksten her skal hindre at Claude gjengir eller endrer poengsummene.",
+    standard: VERKTOY_SEKSJON,
   },
 ]
 

@@ -1,0 +1,127 @@
+import type { Verktoy } from "../typer"
+
+export const WELLS_LE: Verktoy = {
+  id: "wells-le",
+  navn: "Wells LE",
+  langtNavn: "Klinisk sannsynlighet for lungeemboli",
+  kategori: "score",
+  sokeord: [
+    "lungeemboli",
+    "le",
+    "pe",
+    "dyspné",
+    "tungpust",
+    "brystsmerter",
+    "hemoptyse",
+    "blodpropp",
+    "wells",
+    "d-dimer",
+  ],
+  notatTittel: "Wells LE",
+  beregning: { type: "sum" },
+  seksjoner: [
+    {
+      id: "kriterier",
+      tittel: "Kriterier",
+      felter: [
+        {
+          type: "ja_nei",
+          id: "dvt-tegn",
+          sporsmal: "Kliniske tegn på dyp venetrombose",
+          kort: "kliniske DVT-tegn",
+          poeng: 3,
+          hjelp: "Hevelse i benet og smerte ved palpasjon av de dype venene.",
+        },
+        {
+          type: "ja_nei",
+          id: "le-mest-sannsynlig",
+          sporsmal: "Lungeemboli er mer sannsynlig enn alternativ diagnose",
+          kort: "LE mest sannsynlig",
+          poeng: 3,
+        },
+        {
+          type: "ja_nei",
+          id: "puls",
+          sporsmal: "Hjertefrekvens over 100 slag per minutt",
+          kort: "puls >100",
+          poeng: 1.5,
+        },
+        {
+          type: "ja_nei",
+          id: "immobilisering",
+          sporsmal: "Immobilisering i 3 døgn eller mer, eller kirurgi siste 4 uker",
+          kort: "immobilisering/kirurgi",
+          poeng: 1.5,
+        },
+        {
+          type: "ja_nei",
+          id: "tidligere",
+          sporsmal: "Tidligere dyp venetrombose eller lungeemboli",
+          kort: "tidligere DVT/LE",
+          poeng: 1.5,
+        },
+        {
+          type: "ja_nei",
+          id: "hemoptyse",
+          sporsmal: "Hemoptyse",
+          kort: "hemoptyse",
+          poeng: 1,
+        },
+        {
+          type: "ja_nei",
+          id: "malignitet",
+          sporsmal: "Malignitet under behandling siste 6 måneder eller palliativ behandling",
+          kort: "malignitet",
+          poeng: 1,
+        },
+      ],
+    },
+  ],
+  terskler: [
+    {
+      fra: 0,
+      til: 4,
+      klasse: "LE usannsynlig",
+      tekst: "Lungeemboli er usannsynlig etter Wells' to-nivåmodell",
+      farge: "gronn",
+    },
+    {
+      fra: 4.5,
+      til: 12.5,
+      klasse: "LE sannsynlig",
+      tekst: "Lungeemboli er sannsynlig etter Wells' to-nivåmodell",
+      farge: "rod",
+    },
+  ],
+  kilde: {
+    navn: "Wells et al., to-nivåmodell",
+    versjon: "2000",
+    sistRevidert: "2000",
+  },
+  testkasus: [
+    {
+      navn: "Kliniske DVT-tegn og takykardi",
+      svar: { "dvt-tegn": true, puls: true },
+      forventetSum: 4.5,
+    },
+    {
+      navn: "Kun hemoptyse",
+      svar: { hemoptyse: true },
+      forventetSum: 1,
+    },
+    {
+      navn: "Alle kriterier oppfylt",
+      svar: {
+        "dvt-tegn": true,
+        "le-mest-sannsynlig": true,
+        puls: true,
+        immobilisering: true,
+        tidligere: true,
+        hemoptyse: true,
+        malignitet: true,
+      },
+      forventetSum: 12.5,
+    },
+  ],
+  opphav: "innebygd",
+}
