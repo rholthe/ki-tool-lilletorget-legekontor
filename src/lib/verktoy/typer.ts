@@ -207,7 +207,73 @@ export interface VerktoyResultat {
   klasse: string | null
   tolkning: string | null
   kilde: string
+  /**
+   * Tvinger fram kildelinjen i notatet. Undersøkelser uten skår dropper den
+   * bevisst, men for et retningslinjeoppslag er nettopp kilden hele poenget.
+   */
+  visKilde?: boolean
   utfortAt: number
   aiForhandsutfylt: boolean
   bekreftet: boolean
 }
+
+/* ────────────────────────── Retningslinjer (oppslag) ──────────────────────────
+ *
+ * En retningslinje er ikke et verktøy uten poeng — den er en annen datatype. Legen
+ * fyller ikke ut noe; hun slår opp. Derfor egen type i stedet for å strekke
+ * `Verktoy` med felter som er `undefined` for halvparten av innholdet.
+ *
+ * Innholdet gjengis ordrett fra kilden. Doser skrives aldri fra hukommelsen og
+ * omformuleres aldri av en språkmodell — samme prinsipp som for poengsummer.
+ */
+
+/** Én behandlingslinje, gjengitt slik den står i kilden. */
+export interface Anbefaling {
+  id: string
+  /** Kildens egen etikett: «Voksne og barn > 40 kg», «Ved penicillinallergi: barn < 25 kg». */
+  etikett: string
+  legemiddel: string
+  administrasjon: string
+  dose: string
+  /** «mikstur (etylsuksinat)», «kan knuses og blandes i mat». */
+  merknad?: string
+  /** Kombinasjonsbehandling — legemidler som gis i tillegg til hovedpreparatet. */
+  iTillegg?: { legemiddel: string; administrasjon: string; dose: string }[]
+  gruppe: "standard" | "alternativ"
+}
+
+export interface Tilstand {
+  id: string
+  navn: string
+  sokeord: string[]
+  /** Direkte lenke til kapitlet hos kilden — ett klikk til fasit. */
+  url: string
+  /** ISO-dato: når innholdet her sist ble sammenholdt med kilden. */
+  sistVerifisert: string
+  /** Kildens egen «sist oppdatert»-dato, slik den var ved verifiseringen. */
+  kildeOppdatert?: string
+  indikasjon: string[]
+  varighet?: string
+  /** Kan være tom — akutt bronkitt skal som regel ikke ha antibiotika. */
+  anbefalinger: Anbefaling[]
+  merknader?: string[]
+  /**
+   * Settes når kun et utvalg av kildens rader er gjengitt. Legen må se dette i
+   * UI-et, ellers kan hun tro at listen er uttømmende.
+   */
+  utvalg?: boolean
+}
+
+export interface Retningslinje {
+  id: string
+  navn: string
+  langtNavn: string
+  kategori: "retningslinje"
+  sokeord: string[]
+  kilde: Kilde
+  url: string
+  tilstander: Tilstand[]
+}
+
+/** Alt som kan velges i verktøymodalen. */
+export type Oppslag = Verktoy | Retningslinje

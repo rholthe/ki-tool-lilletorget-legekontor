@@ -251,9 +251,10 @@ export function formaterTilNotat(resultat: VerktoyResultat): string {
 
   if (resultat.tolkning) {
     linjer.push(`Tolkning: ${utenPunktum(resultat.tolkning)}. Kilde: ${resultat.kilde}.`)
-  } else if (resultat.sum !== null) {
+  } else if (resultat.sum !== null || resultat.visKilde) {
     // Undersøkelser uten skår har ingen instrumentkilde å vise til — da blir
-    // en «Kilde»-linje bare støy i notatet
+    // en «Kilde»-linje bare støy i notatet. Retningslinjeoppslag setter
+    // `visKilde`, siden det er nettopp kilden som gir anbefalingen tyngde
     linjer.push(`Kilde: ${resultat.kilde}.`)
   }
 

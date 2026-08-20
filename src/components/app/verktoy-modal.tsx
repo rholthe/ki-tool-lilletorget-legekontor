@@ -8,12 +8,23 @@ import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { VerktoySkjema } from "@/components/app/verktoy-skjema"
 import { VeiledningLenke } from "@/components/app/verktoy-veiledning"
+import { RetningslinjeVisning } from "@/components/app/retningslinje-visning"
 import { useKonsultasjon } from "@/hooks/use-konsultasjon"
 import { useVerktoy } from "@/hooks/use-verktoy"
 import { beregn, byggResultat, standardSvar, ubesvarteValg } from "@/lib/verktoy/beregn"
-import { KATEGORI_LABEL, finnVerktoy } from "@/lib/verktoy/registry"
-import { foreslaaVerktoy, sokVerktoy } from "@/lib/verktoy/sok"
-import type { Side, Svarverdi, Verktoy, VerktoyKategori } from "@/lib/verktoy/typer"
+import {
+  INGEN_BEHANDLING,
+  byggRetningslinjeResultat,
+  lesRetningslinjeValg,
+} from "@/lib/verktoy/retningslinje"
+import {
+  KATEGORI_LABEL,
+  erRetningslinje,
+  finnOppslag,
+} from "@/lib/verktoy/registry"
+import { foreslaaOppslag, sokOppslag, treffId } from "@/lib/verktoy/sok"
+import type { Treff } from "@/lib/verktoy/sok"
+import type { Side, Svarverdi, VerktoyKategori } from "@/lib/verktoy/typer"
 import { cuid } from "@/lib/cuid"
 
 interface Props {
@@ -56,47 +67,53 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
   const { resultater, lagreResultat, slettResultat } = useVerktoy()
 
   const [sok, setSok] = useState("")
-  const [valgtId, setValgtId] = useState<string | null>(null)
+  const [valgt, setValgt] = useState<Treff | null>(null)
   const [svar, setSvar] = useState<Record<string, Svarverdi>>({})
   const [side, setSide] = useState<Side | undefined>(undefined)
+  const [valgteLinjer, setValgteLinjer] = useState<string[]>([])
   const [redigererId, setRedigererId] = useState<string | null>(null)
   const [lagret, setLagret] = useState(false)
-
-  const valgt = valgtId ? finnVerktoy(valgtId) : undefined
 
   const forslag = useMemo(() => {
     if (!aktiv) return []
     const tekst = [aktiv.transkript, aktiv.kontekst, aktiv.tilleggsinfo]
       .filter(Boolean)
       .join(" ")
-    return foreslaaVerktoy(tekst)
+    return foreslaaOppslag(tekst)
   }, [aktiv])
 
-  const treff = useMemo(() => sokVerktoy(sok), [sok])
+  const treff = useMemo(() => sokOppslag(sok), [sok])
 
   const gruppert = useMemo(() => {
-    const grupper = new Map<VerktoyKategori, Verktoy[]>()
-    for (const v of treff) {
-      const liste = grupper.get(v.kategori) ?? []
-      liste.push(v)
-      grupper.set(v.kategori, liste)
+    const grupper = new Map<VerktoyKategori, Treff[]>()
+    for (const t of treff) {
+      const kategori: VerktoyKategori =
+        t.slag === "verktoy" ? t.verktoy.kategori : "retningslinje"
+      const liste = grupper.get(kategori) ?? []
+      liste.push(t)
+      grupper.set(kategori, liste)
     }
     return [...grupper.entries()]
   }, [treff])
 
-  const beregning = valgt ? beregn(valgt, svar) : null
-  const manglerSide = Boolean(valgt?.lateralitet) && !side
+  const verktoy = valgt?.slag === "verktoy" ? valgt.verktoy : undefined
+  const beregning = verktoy ? beregn(verktoy, svar) : null
+  const manglerSide = Boolean(verktoy?.lateralitet) && !side
   // En delvis utfylt skala gir en sum som ser gyldig ut, men er for lav
-  const ubesvart = valgt ? ubesvarteValg(valgt, svar) : []
+  const ubesvart = verktoy ? ubesvarteValg(verktoy, svar) : []
   // Undersøkelser har ingen skår — der er kravet i stedet at noe faktisk er registrert
   const tomUndersokelse =
-    valgt?.beregning.type === "ingen" && (beregning?.detaljer.length ?? 0) === 0
-  const kanLagre =
-    Boolean(valgt) && !manglerSide && ubesvart.length === 0 && !tomUndersokelse
+    verktoy?.beregning.type === "ingen" && (beregning?.detaljer.length ?? 0) === 0
 
-  function velgVerktoy(v: Verktoy) {
-    setValgtId(v.id)
-    setSvar(standardSvar(v))
+  const kanLagre =
+    valgt?.slag === "tilstand"
+      ? valgteLinjer.length > 0
+      : Boolean(verktoy) && !manglerSide && ubesvart.length === 0 && !tomUndersokelse
+
+  function velg(t: Treff) {
+    setValgt(t)
+    setSvar(t.slag === "verktoy" ? standardSvar(t.verktoy) : {})
+    setValgteLinjer([])
     setSide(undefined)
     setRedigererId(null)
     setLagret(false)
@@ -105,10 +122,23 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
   function apneResultat(resultatId: string) {
     const resultat = resultater.find((r) => r.id === resultatId)
     if (!resultat) return
-    const verktoy = finnVerktoy(resultat.verktoyId)
-    if (!verktoy) return
-    setValgtId(verktoy.id)
-    setSvar({ ...standardSvar(verktoy), ...resultat.svar })
+
+    const oppslag = finnOppslag(resultat.verktoyId)
+    if (!oppslag) return
+
+    if (erRetningslinje(oppslag)) {
+      const { tilstandId, valgte } = lesRetningslinjeValg(resultat)
+      const tilstand = oppslag.tilstander.find((t) => t.id === tilstandId)
+      if (!tilstand) return
+      setValgt({ slag: "tilstand", retningslinje: oppslag, tilstand })
+      setValgteLinjer(valgte)
+      setSvar({})
+    } else {
+      setValgt({ slag: "verktoy", verktoy: oppslag })
+      setSvar({ ...standardSvar(oppslag), ...resultat.svar })
+      setValgteLinjer([])
+    }
+
     setSide(resultat.side)
     setRedigererId(resultat.id)
     setLagret(false)
@@ -116,10 +146,13 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
 
   async function leggINotat() {
     if (!valgt || !kanLagre) return
-    const resultat = byggResultat(valgt, svar, {
-      id: redigererId ?? cuid(),
-      side,
-    })
+    const id = redigererId ?? cuid()
+
+    const resultat =
+      valgt.slag === "tilstand"
+        ? byggRetningslinjeResultat(valgt.retningslinje, valgt.tilstand, valgteLinjer, { id })
+        : byggResultat(valgt.verktoy, svar, { id, side })
+
     await lagreResultat(resultat)
     setRedigererId(resultat.id)
     setLagret(true)
@@ -130,6 +163,30 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
     setLagret(false)
   }
 
+  /** «Ikke indisert» og et konkret preparat utelukker hverandre. */
+  function veksleLinje(id: string) {
+    setValgteLinjer((prev) => {
+      if (id === INGEN_BEHANDLING) {
+        return prev.includes(INGEN_BEHANDLING) ? [] : [INGEN_BEHANDLING]
+      }
+      const utenIngen = prev.filter((p) => p !== INGEN_BEHANDLING)
+      return utenIngen.includes(id)
+        ? utenIngen.filter((p) => p !== id)
+        : [...utenIngen, id]
+    })
+    setLagret(false)
+  }
+
+  function treffNavn(t: Treff): string {
+    return t.slag === "verktoy" ? t.verktoy.navn : t.tilstand.navn
+  }
+
+  function treffUndertekst(t: Treff): string {
+    return t.slag === "verktoy" ? t.verktoy.langtNavn : t.retningslinje.navn
+  }
+
+  const valgtId = valgt ? treffId(valgt) : null
+
   return (
     <>
       {/* ── Header ── */}
@@ -139,7 +196,8 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
             <div>
               <h2 className="text-base font-semibold leading-none">Kliniske verktøy</h2>
               <p className="text-xs text-slate-400 mt-1">
-                Skåringsverktøy og strukturerte undersøkelser — resultatet legges i notatet
+                Skåringsverktøy, strukturerte undersøkelser og retningslinjer — resultatet
+                legges i notatet
               </p>
             </div>
           </div>
@@ -183,8 +241,8 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
             )}
           </div>
           <p className="text-xs text-slate-400 italic">
-            Poengsummer beregnes av appen, ikke av AI. Tolkningsteksten er gjengitt fra
-            verktøyets egen kilde og erstatter ikke klinisk vurdering.
+            Poengsummer beregnes av appen, ikke av AI. Tolkninger og doser er gjengitt
+            ordrett fra kilden og erstatter ikke klinisk vurdering.
           </p>
         </div>
 
@@ -196,7 +254,7 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
               <div className="relative">
                 <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
                 <Input
-                  placeholder="Søk etter verktøy…"
+                  placeholder="Søk etter verktøy eller tilstand…"
                   value={sok}
                   onChange={(e) => setSok(e.target.value)}
                   className="pl-8 text-sm"
@@ -210,17 +268,17 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
                   <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
                     Foreslått for denne konsultasjonen
                   </h3>
-                  {forslag.map(({ verktoy, treff: ord }) => (
+                  {forslag.map(({ treff: t, ord }) => (
                     <button
-                      key={verktoy.id}
-                      onClick={() => velgVerktoy(verktoy)}
+                      key={treffId(t)}
+                      onClick={() => velg(t)}
                       className={`w-full text-left px-3 py-2 rounded-lg border transition-colors ${
-                        valgtId === verktoy.id
+                        valgtId === treffId(t)
                           ? "border-blue-400 bg-blue-50"
                           : "border-amber-200 bg-amber-50/60 hover:bg-amber-50"
                       }`}
                     >
-                      <div className="text-sm font-medium text-slate-800">{verktoy.navn}</div>
+                      <div className="text-sm font-medium text-slate-800">{treffNavn(t)}</div>
                       <div className="text-xs text-slate-500 mt-0.5">Nevnt: {ord.join(", ")}</div>
                     </button>
                   ))}
@@ -232,18 +290,18 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
                   <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
                     {KATEGORI_LABEL[kategori]}
                   </h3>
-                  {liste.map((v) => (
+                  {liste.map((t) => (
                     <button
-                      key={v.id}
-                      onClick={() => velgVerktoy(v)}
+                      key={treffId(t)}
+                      onClick={() => velg(t)}
                       className={`w-full text-left px-3 py-2 rounded-lg border transition-colors ${
-                        valgtId === v.id
+                        valgtId === treffId(t)
                           ? "border-blue-400 bg-blue-50"
                           : "border-slate-200 hover:bg-slate-50"
                       }`}
                     >
-                      <div className="text-sm font-medium text-slate-800">{v.navn}</div>
-                      <div className="text-xs text-slate-500 mt-0.5">{v.langtNavn}</div>
+                      <div className="text-sm font-medium text-slate-800">{treffNavn(t)}</div>
+                      <div className="text-xs text-slate-500 mt-0.5">{treffUndertekst(t)}</div>
                     </button>
                   ))}
                 </div>
@@ -251,13 +309,13 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
 
               {treff.length === 0 && (
                 <p className="text-xs text-slate-400 italic px-1">
-                  Ingen verktøy matcher «{sok}».
+                  Ingen treff på «{sok}».
                 </p>
               )}
             </div>
           </div>
 
-          {/* Høyre: aktivt verktøy */}
+          {/* Høyre: aktivt oppslag */}
           <div className="flex-1 flex flex-col min-h-0">
             {!valgt ? (
               <div className="flex-1 flex items-center justify-center">
@@ -270,32 +328,56 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
               <>
                 <div className="px-5 py-3 border-b border-slate-100 shrink-0 flex items-start justify-between gap-4">
                   <div className="min-w-0">
-                    <h3 className="text-sm font-semibold text-slate-800">{valgt.navn}</h3>
+                    <h3 className="text-sm font-semibold text-slate-800">{treffNavn(valgt)}</h3>
                     <p className="text-xs text-slate-500 mt-0.5">
-                      {valgt.langtNavn} · Kilde: {valgt.kilde.navn}
-                      {valgt.kilde.versjon ? ` ${valgt.kilde.versjon}` : ""}
+                      {valgt.slag === "verktoy"
+                        ? `${valgt.verktoy.langtNavn} · Kilde: ${valgt.verktoy.kilde.navn}${
+                            valgt.verktoy.kilde.versjon ? ` ${valgt.verktoy.kilde.versjon}` : ""
+                          }`
+                        : valgt.retningslinje.langtNavn}
                     </p>
                   </div>
-                  {valgt.veiledning && (
+                  {valgt.slag === "verktoy" && valgt.verktoy.veiledning && (
                     <div className="shrink-0 pt-0.5">
-                      <VeiledningLenke veiledning={valgt.veiledning} etikett="Full veiledning" />
+                      <VeiledningLenke
+                        veiledning={valgt.verktoy.veiledning}
+                        etikett="Full veiledning"
+                      />
                     </div>
                   )}
                 </div>
 
                 <div className="flex-1 overflow-y-auto px-5 py-4">
-                  <VerktoySkjema
-                    verktoy={valgt}
-                    svar={svar}
-                    onSvar={settSvar}
-                    side={side}
-                    onSide={(s) => { setSide(s); setLagret(false) }}
-                  />
+                  {valgt.slag === "verktoy" ? (
+                    <VerktoySkjema
+                      verktoy={valgt.verktoy}
+                      svar={svar}
+                      onSvar={settSvar}
+                      side={side}
+                      onSide={(s) => { setSide(s); setLagret(false) }}
+                    />
+                  ) : (
+                    <RetningslinjeVisning
+                      retningslinje={valgt.retningslinje}
+                      tilstand={valgt.tilstand}
+                      valgte={valgteLinjer}
+                      onVelg={veksleLinje}
+                    />
+                  )}
                 </div>
 
                 {/* Resultat + handling */}
                 <div className="px-5 py-3 border-t border-slate-200 shrink-0 space-y-2.5">
-                  {ubesvart.length > 0 || tomUndersokelse ? (
+                  {valgt.slag === "tilstand" ? (
+                    valgteLinjer.length === 0 && (
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5">
+                        <p className="text-sm text-slate-600">
+                          Velg behandlingslinjen som gjelder pasienten, eller merk at
+                          antibiotika ikke er indisert.
+                        </p>
+                      </div>
+                    )
+                  ) : ubesvart.length > 0 || tomUndersokelse ? (
                     <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5">
                       <p className="text-sm text-slate-600">
                         {tomUndersokelse
@@ -307,7 +389,8 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
                     </div>
                   ) : (
                     beregning &&
-                    beregning.sum !== null && (
+                    beregning.sum !== null &&
+                    verktoy && (
                       <div
                         className={`rounded-lg border px-3 py-2.5 ${
                           beregning.farge ? FARGE_KLASSE[beregning.farge] : "border-slate-200 bg-slate-50 text-slate-700"
@@ -315,7 +398,7 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
                       >
                         <div className="flex items-baseline gap-2">
                           <span className="text-lg font-semibold tabular-nums">{beregning.sum}</span>
-                          <span className="text-xs">{valgt.sumEtikett ?? "poeng"}</span>
+                          <span className="text-xs">{verktoy.sumEtikett ?? "poeng"}</span>
                           {beregning.klasse && (
                             <span className="text-sm font-medium ml-1">· {beregning.klasse}</span>
                           )}

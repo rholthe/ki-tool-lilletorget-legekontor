@@ -29,6 +29,7 @@ execFileSync(
     path.join(rot, "node_modules", "typescript", "bin", "tsc"),
     "src/lib/verktoy/registry.ts",
     "src/lib/verktoy/beregn.ts",
+    "src/lib/verktoy/retningslinje.ts",
     "--outDir",
     utMappe,
     "--module",
@@ -43,7 +44,14 @@ execFileSync(
 )
 
 const require = createRequire(import.meta.url)
-const { INNEBYGDE_VERKTOY } = require(path.join(utMappe, "registry.js"))
+const { INNEBYGDE_VERKTOY, INNEBYGDE_RETNINGSLINJER } = require(
+  path.join(utMappe, "registry.js")
+)
+const {
+  byggRetningslinjeResultat,
+  dagerSidenVerifisert,
+  VERIFISERING_ADVARSEL_DAGER,
+} = require(path.join(utMappe, "retningslinje.js"))
 const {
   beregn,
   kjorTestkasus,
@@ -147,9 +155,59 @@ for (const verktoy of INNEBYGDE_VERKTOY) {
   if (feil === forFeil) console.log("  ✓ alle sjekker grønne")
 }
 
+/*
+ * Retningslinjer: ferskhet er hovedrisikoen.
+ *
+ * CHA₂DS₂-VASc har ikke endret seg siden 2010, men en behandlingsretningslinje
+ * revideres løpende — og en utdatert dose er en pasientsikkerhetsrisiko, ikke et
+ * kosmetisk etterslep. Denne sjekken gjør vedlikeholdet mekanisk: den feiler i
+ * utviklingsløpet lenge før noen rekker å følge en foreldet anbefaling.
+ */
+for (const retningslinje of INNEBYGDE_RETNINGSLINJER) {
+  console.log(`\n${retningslinje.navn}`)
+  const forFeil = feil
+
+  for (const tilstand of retningslinje.tilstander) {
+    const dager = dagerSidenVerifisert(tilstand)
+    sjekk(Number.isFinite(dager), `${tilstand.navn}: sistVerifisert er ikke en gyldig dato`)
+    sjekk(
+      dager <= VERIFISERING_ADVARSEL_DAGER,
+      `${tilstand.navn}: sist sammenholdt med kilden for ${dager} dager siden ` +
+        `(grense ${VERIFISERING_ADVARSEL_DAGER}) — ${tilstand.url}`
+    )
+    sjekk(tilstand.indikasjon.length > 0, `${tilstand.navn}: mangler indikasjon`)
+    sjekk(/^https:\/\//.test(tilstand.url), `${tilstand.navn}: mangler lenke til kilden`)
+
+    const ider = tilstand.anbefalinger.map((a) => a.id)
+    sjekk(
+      new Set(ider).size === ider.length,
+      `${tilstand.navn}: to anbefalinger deler samme id`
+    )
+
+    // Notatlinjen bygges av koden og skal aldri kunne bli tom eller halv
+    if (ider.length > 0) {
+      const r = byggRetningslinjeResultat(retningslinje, tilstand, [ider[0]], { id: "t" })
+      sjekk(r.detaljer.length > 0, `${tilstand.navn}: gir tom notatlinje`)
+      const en = synkVerktoySeksjon("S: subjektivt", [r])
+      sjekk(
+        en === synkVerktoySeksjon(en, [r]),
+        `${tilstand.navn}: notat-synk er ikke idempotent`
+      )
+      if (tilstand.id === retningslinje.tilstander[0].id) {
+        console.log(`  ${formaterTilNotat(r).split("\n").map((l) => `    ${l}`).join("\n").trim()}`)
+      }
+    }
+  }
+
+  console.log(
+    `  ${retningslinje.tilstander.length} tilstander` +
+      (feil === forFeil ? " · ✓ alle sjekker grønne" : "")
+  )
+}
+
 console.log(
   feil === 0
-    ? `\n✓ ${INNEBYGDE_VERKTOY.length} verktøy — alle sjekker grønne`
+    ? `\n✓ ${INNEBYGDE_VERKTOY.length} verktøy og ${INNEBYGDE_RETNINGSLINJER.length} retningslinje(r) — alle sjekker grønne`
     : `\n✗ ${feil} sjekk(er) feilet`
 )
 process.exit(feil === 0 ? 0 : 1)

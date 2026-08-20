@@ -3,10 +3,14 @@
  *
  * Forslagene er rent tekstlige — ingen AI, ingen nettverkskall, ingen ventetid.
  * AI-baserte forslag kommer som et supplement senere.
+ *
+ * Retningslinjenes **tilstander** er egne treff, ikke bare retningslinjen de
+ * ligger i. Legen søker etter «ørebetennelse», ikke etter «Antibiotika i
+ * allmennpraksis».
  */
 
-import type { Verktoy } from "./typer"
-import { INNEBYGDE_VERKTOY } from "./registry"
+import type { Oppslag, Retningslinje, Tilstand, Verktoy } from "./typer"
+import { INNEBYGDE_OPPSLAG, erRetningslinje } from "./registry"
 
 function normaliser(tekst: string): string {
   return tekst.toLowerCase().trim()
@@ -28,44 +32,79 @@ function inneholderOrd(tekst: string, ord: string): boolean {
   return monster.test(tekst)
 }
 
-/** Fritekstsøk mot navn, langt navn og søkeord. */
-export function sokVerktoy(
-  sok: string,
-  verktoy: Verktoy[] = INNEBYGDE_VERKTOY
-): Verktoy[] {
-  const q = normaliser(sok)
-  if (!q) return verktoy
+/** Én rad i verktøylisten: enten et verktøy, eller én tilstand i en retningslinje. */
+export type Treff =
+  | { slag: "verktoy"; verktoy: Verktoy }
+  | { slag: "tilstand"; retningslinje: Retningslinje; tilstand: Tilstand }
 
-  return verktoy.filter((v) => {
-    const felter = [v.navn, v.langtNavn, ...v.sokeord].map(normaliser)
-    return felter.some((f) => f.includes(q))
+export function treffId(treff: Treff): string {
+  return treff.slag === "verktoy"
+    ? treff.verktoy.id
+    : `${treff.retningslinje.id}:${treff.tilstand.id}`
+}
+
+/** Alle rader, uten filtrering. */
+function alleTreff(oppslag: Oppslag[]): Treff[] {
+  return oppslag.flatMap<Treff>((o) =>
+    erRetningslinje(o)
+      ? o.tilstander.map((tilstand) => ({ slag: "tilstand", retningslinje: o, tilstand }))
+      : [{ slag: "verktoy", verktoy: o }]
+  )
+}
+
+/** Fritekstsøk mot navn, langt navn og søkeord. */
+export function sokOppslag(
+  sok: string,
+  oppslag: Oppslag[] = INNEBYGDE_OPPSLAG
+): Treff[] {
+  const q = normaliser(sok)
+  const alle = alleTreff(oppslag)
+  if (!q) return alle
+
+  return alle.filter((t) => {
+    const felter =
+      t.slag === "verktoy"
+        ? [t.verktoy.navn, t.verktoy.langtNavn, ...t.verktoy.sokeord]
+        : [
+            t.tilstand.navn,
+            t.retningslinje.navn,
+            t.retningslinje.langtNavn,
+            ...t.tilstand.sokeord,
+            ...t.retningslinje.sokeord,
+          ]
+    return felter.map(normaliser).some((f) => f.includes(q))
   })
 }
 
 export interface Forslag {
-  verktoy: Verktoy
+  treff: Treff
   /** Nøkkelordene som traff — vises som begrunnelse i UI-et. */
-  treff: string[]
+  ord: string[]
 }
 
 /**
- * Foreslår verktøy ut fra transkript/kontekst/tilleggsinfo. Rangert etter antall
- * nøkkelordtreff; verktøy uten treff utelates.
+ * Foreslår oppslag ut fra transkript/kontekst/tilleggsinfo. Rangert etter antall
+ * nøkkelordtreff; oppslag uten treff utelates.
+ *
+ * Retningslinjens egne søkeord («antibiotika», «infeksjon») teller ikke med her —
+ * de er for generelle og ville foreslått noe i annenhver konsultasjon. Kun
+ * tilstandens egne nøkkelord utløser et forslag.
  */
-export function foreslaaVerktoy(
+export function foreslaaOppslag(
   tekst: string,
-  verktoy: Verktoy[] = INNEBYGDE_VERKTOY,
+  oppslag: Oppslag[] = INNEBYGDE_OPPSLAG,
   maks = 3
 ): Forslag[] {
   const kilde = normaliser(tekst)
   if (!kilde) return []
 
-  return verktoy
-    .map((v) => ({
-      verktoy: v,
-      treff: v.sokeord.filter((ord) => inneholderOrd(kilde, ord)),
-    }))
-    .filter((f) => f.treff.length > 0)
-    .sort((a, b) => b.treff.length - a.treff.length)
+  return alleTreff(oppslag)
+    .map((treff) => {
+      const sokeord =
+        treff.slag === "verktoy" ? treff.verktoy.sokeord : treff.tilstand.sokeord
+      return { treff, ord: sokeord.filter((o) => inneholderOrd(kilde, o)) }
+    })
+    .filter((f) => f.ord.length > 0)
+    .sort((a, b) => b.ord.length - a.ord.length)
     .slice(0, maks)
 }
