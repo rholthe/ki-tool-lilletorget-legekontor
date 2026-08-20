@@ -90,6 +90,7 @@ export type Felt =
       enhet: string
       min?: number
       max?: number
+      kort?: string
     })
   | (FeltBase & {
       type: "funn"
@@ -117,6 +118,14 @@ export interface Terskel {
   /** Publisert tolkning, sitert fra kilden. Ingen egne handlingsanbefalinger. */
   tekst: string
   farge: Farge
+  /**
+   * Terskelen gjelder bare når et annet felt ligger i dette intervallet.
+   *
+   * NORRISK 2 er eksempelet: samme risikoprosent er «lav» hos en 70-åring og
+   * «høy» hos en 50-åring, så grensene er aldersbåndede. Første terskel som
+   * matcher både sum og betingelse vinner.
+   */
+  betingelse?: { felt: string; min?: number; maks?: number }
 }
 
 /**
@@ -160,8 +169,17 @@ export interface Verktoy {
   /** Verktøy som gjelder én kroppsside — legen velger venstre/høyre. */
   lateralitet?: boolean
   seksjoner: Seksjon[]
-  /** `maks` kapper totalsummen, for skalaer der kilden oppgir et tak. */
-  beregning: { type: "sum" | "sum_per_seksjon" | "ingen"; maks?: number }
+  /**
+   * Hvordan resultatet regnes ut. `maks` kapper totalsummen, for skalaer der
+   * kilden oppgir et tak.
+   *
+   * `formel` slår opp en navngitt funksjon i `formler.ts` — aldri lagret kode
+   * som evalueres. Det holder definisjonen JSON-serialiserbar også for
+   * regresjonsmodeller, slik at admin-opprettede verktøy har samme form.
+   */
+  beregning:
+    | { type: "sum" | "sum_per_seksjon" | "ingen"; maks?: number }
+    | { type: "formel"; formelId: string; desimaler?: number }
   terskler: Terskel[]
   /** Regler som overstyrer terskeltabellen når de utløses. */
   overstyringer?: Overstyring[]

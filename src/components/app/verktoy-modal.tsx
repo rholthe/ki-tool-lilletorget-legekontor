@@ -12,7 +12,13 @@ import { RetningslinjeVisning } from "@/components/app/retningslinje-visning"
 import { useKonsultasjon } from "@/hooks/use-konsultasjon"
 import { useVerktoy } from "@/hooks/use-verktoy"
 import { useVerktoyForslag } from "@/hooks/use-verktoyforslag"
-import { beregn, byggResultat, standardSvar, ubesvarteValg } from "@/lib/verktoy/beregn"
+import {
+  beregn,
+  byggResultat,
+  norskTall,
+  standardSvar,
+  ubesvarteValg,
+} from "@/lib/verktoy/beregn"
 import {
   INGEN_BEHANDLING,
   byggRetningslinjeResultat,
@@ -131,11 +137,19 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
   // Undersøkelser har ingen skår — der er kravet i stedet at noe faktisk er registrert
   const tomUndersokelse =
     verktoy?.beregning.type === "ingen" && (beregning?.detaljer.length ?? 0) === 0
+  // Formelverktøy har tallfelter som `ubesvarteValg` ikke dekker, og formelen
+  // returnerer null både ved manglende og ugyldige verdier
+  const manglerFormelverdier =
+    verktoy?.beregning.type === "formel" && beregning?.sum === null
 
   const kanLagre =
     valgt?.slag === "tilstand"
       ? valgteLinjer.length > 0
-      : Boolean(verktoy) && !manglerSide && ubesvart.length === 0 && !tomUndersokelse
+      : Boolean(verktoy) &&
+        !manglerSide &&
+        ubesvart.length === 0 &&
+        !tomUndersokelse &&
+        !manglerFormelverdier
 
   function velg(t: Treff) {
     setValgt(t)
@@ -448,14 +462,16 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
                         </p>
                       </div>
                     )
-                  ) : ubesvart.length > 0 || tomUndersokelse ? (
+                  ) : ubesvart.length > 0 || tomUndersokelse || manglerFormelverdier ? (
                     <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5">
                       <p className="text-sm text-slate-600">
                         {tomUndersokelse
                           ? "Registrer minst ett funn. Tester du lar stå tomme, tas ikke med i notatet."
-                          : ubesvart.length === 1
-                            ? "Ett punkt gjenstår før skåren er gyldig."
-                            : `${ubesvart.length} punkter gjenstår før skåren er gyldig.`}
+                          : ubesvart.length > 0
+                            ? ubesvart.length === 1
+                              ? "Ett punkt gjenstår før skåren er gyldig."
+                              : `${ubesvart.length} punkter gjenstår før skåren er gyldig.`
+                            : "Fyll ut alle feltene med verdier innenfor det validerte området før risikoen kan beregnes."}
                       </p>
                     </div>
                   ) : (
@@ -468,7 +484,9 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
                         }`}
                       >
                         <div className="flex items-baseline gap-2">
-                          <span className="text-lg font-semibold tabular-nums">{beregning.sum}</span>
+                          <span className="text-lg font-semibold tabular-nums">
+                            {norskTall(beregning.sum)}
+                          </span>
                           <span className="text-xs">{verktoy.sumEtikett ?? "poeng"}</span>
                           {beregning.klasse && (
                             <span className="text-sm font-medium ml-1">· {beregning.klasse}</span>

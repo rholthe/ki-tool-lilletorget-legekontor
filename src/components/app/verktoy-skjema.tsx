@@ -35,11 +35,14 @@ function FeltRad({
   verdi,
   onSvar,
   lenke,
+  visPoeng,
 }: {
   felt: Felt
   verdi: Svarverdi
   onSvar: (v: Svarverdi) => void
   lenke: ReactNode
+  /** Formelverktøy har ingen poeng — da er merket bare støy. */
+  visPoeng: boolean
 }) {
   switch (felt.type) {
     case "ja_nei": {
@@ -65,9 +68,11 @@ function FeltRad({
             <span className="block text-sm text-slate-800">{felt.sporsmal}</span>
             {felt.hjelp && <span className="block text-xs text-slate-500 mt-0.5">{felt.hjelp}</span>}
           </span>
-          <span className="text-xs font-medium text-slate-400 shrink-0 tabular-nums">
-            {formaterPoeng(felt.poeng)}
-          </span>
+          {visPoeng && (
+            <span className="text-xs font-medium text-slate-400 shrink-0 tabular-nums">
+              {formaterPoeng(felt.poeng)}
+            </span>
+          )}
         </button>
         {lenke && <div className="pl-10 pt-1">{lenke}</div>}
         </>
@@ -104,9 +109,11 @@ function FeltRad({
                       <span className="block text-xs text-slate-500 mt-0.5">{alt.kriterium}</span>
                     )}
                   </span>
-                  <span className="text-xs font-medium text-slate-400 shrink-0 tabular-nums">
-                    {formaterPoeng(alt.poeng)}
-                  </span>
+                  {visPoeng && (
+                    <span className="text-xs font-medium text-slate-400 shrink-0 tabular-nums">
+                      {formaterPoeng(alt.poeng)}
+                    </span>
+                  )}
                 </button>
               )
             })}
@@ -229,6 +236,7 @@ export function VerktoySkjema({ verktoy, svar, onSvar, side, onSide }: Props) {
                 lenke={
                   felt.veiledning ? <VeiledningLenke veiledning={felt.veiledning} /> : null
                 }
+                visPoeng={verktoy.beregning.type !== "formel"}
               />
             ))}
           </div>

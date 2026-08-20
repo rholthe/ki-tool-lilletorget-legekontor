@@ -19,6 +19,7 @@ import type {
   Verktoy,
   VerktoyResultat,
 } from "./typer"
+import { finnFormel } from "./formler"
 
 export const VERKTOY_OVERSKRIFT = "--- KLINISKE VERKTØY ---"
 const OCR_OVERSKRIFT_MONSTER = /^--- OCR ---$/m
@@ -33,6 +34,11 @@ const FUNN_LABEL: Record<Funnverdi, string> = {
   normal: "normal",
   patologisk: "patologisk",
   ikke_utfort: "ikke utført",
+}
+
+/** Desimaltall med komma — norsk journaltekst skriver 12,5, ikke 12.5. */
+export function norskTall(verdi: number): string {
+  return Number.isInteger(verdi) ? String(verdi) : String(verdi).replace(".", ",")
 }
 
 /** Alle felter på tvers av seksjoner, i rekkefølge. */
@@ -89,7 +95,9 @@ export function feltDetalj(
       return `${etikett}: ${alt.tekst} ${alt.poeng}`
     }
     case "tall":
-      return typeof verdi === "number" ? `${felt.sporsmal} ${verdi} ${felt.enhet}` : null
+      return typeof verdi === "number"
+        ? `${felt.kort ?? felt.sporsmal} ${norskTall(verdi)} ${felt.enhet}`
+        : null
     case "funn": {
       if (typeof verdi !== "string" || verdi === "ikke_utfort") return null
       return `${felt.kort ?? felt.test} ${FUNN_LABEL[verdi as Funnverdi] ?? verdi}`
@@ -115,9 +123,30 @@ export function ubesvarteValg(
     .map((f) => f.id)
 }
 
-/** Terskelen som dekker summen, eller null om ingen passer. */
-export function finnTerskel(verktoy: Verktoy, sum: number): Terskel | null {
-  return verktoy.terskler.find((t) => sum >= t.fra && sum <= t.til) ?? null
+/**
+ * Terskelen som dekker summen, eller null om ingen passer.
+ *
+ * En terskel kan i tillegg ha en `betingelse` på et annet felt — NORRISK 2 har
+ * aldersbåndede grenser, der 9 % er «lav» hos en 70-åring og «høy» hos en
+ * 50-åring. Første terskel som matcher både sum og betingelse vinner, som i
+ * kildens egen tabell.
+ */
+export function finnTerskel(
+  verktoy: Verktoy,
+  sum: number,
+  svar: Record<string, Svarverdi> = {}
+): Terskel | null {
+  return (
+    verktoy.terskler.find((t) => {
+      if (sum < t.fra || sum > t.til) return false
+      if (!t.betingelse) return true
+      const verdi = svar[t.betingelse.felt]
+      if (typeof verdi !== "number") return false
+      if (t.betingelse.min !== undefined && verdi < t.betingelse.min) return false
+      if (t.betingelse.maks !== undefined && verdi > t.betingelse.maks) return false
+      return true
+    }) ?? null
+  )
 }
 
 /**
@@ -170,12 +199,32 @@ export function beregn(verktoy: Verktoy, svar: Record<string, Svarverdi>): Bereg
     return { sum: null, detaljer, klasse: null, tolkning: null, farge: null }
   }
 
+  // Formelverktøy summerer ikke ledd — resultatet kommer fra en navngitt
+  // funksjon i `formler.ts`, og er null til alle inndata er gyldige
+  if (verktoy.beregning.type === "formel") {
+    const formel = finnFormel(verktoy.beregning.formelId)
+    const rå = formel ? formel(svar) : null
+    if (rå === null) {
+      return { sum: null, detaljer, klasse: null, tolkning: null, farge: null }
+    }
+    const desimaler = verktoy.beregning.desimaler ?? 1
+    const verdi = Number(rå.toFixed(desimaler))
+    const t = finnTerskel(verktoy, verdi, svar)
+    return {
+      sum: verdi,
+      detaljer,
+      klasse: t?.klasse ?? null,
+      tolkning: t?.tekst ?? null,
+      farge: t?.farge ?? null,
+    }
+  }
+
   // Kilden kan oppgi et tak selv om leddene til sammen kan gi mer — PEVS har
   // maks 9 poeng, men tilleggspoengene kan løfte råsummen over det
   const kappet =
     verktoy.beregning.maks !== undefined ? Math.min(sum, verktoy.beregning.maks) : sum
 
-  const terskel = finnTerskel(verktoy, kappet)
+  const terskel = finnTerskel(verktoy, kappet, svar)
   const overstyring = finnOverstyring(verktoy, hoyesteFeltPoeng)
 
   return {
@@ -235,7 +284,7 @@ export function formaterTilNotat(resultat: VerktoyResultat): string {
 
   if (resultat.sum !== null) {
     const detalj = resultat.detaljer.length > 0 ? ` (${resultat.detaljer.join(", ")})` : ""
-    linjer.push(`${tittel}: ${resultat.sum} ${resultat.sumEtikett}${detalj}.`)
+    linjer.push(`${tittel}: ${norskTall(resultat.sum)} ${resultat.sumEtikett}${detalj}.`)
   } else if (resultat.detaljer.length > 0) {
     linjer.push(`${tittel}: ${resultat.detaljer.join(", ")}.`)
   } else {

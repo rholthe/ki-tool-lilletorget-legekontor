@@ -2,6 +2,7 @@ import type { Oppslag, Retningslinje, Verktoy, VerktoyKategori } from "./typer"
 import { CHADSVASC } from "./definisjoner/chadsvasc"
 import { QSOFA } from "./definisjoner/qsofa"
 import { PEVS } from "./definisjoner/pevs"
+import { NORRISK2 } from "./definisjoner/norrisk2"
 import { WELLS_DVT } from "./definisjoner/wells-dvt"
 import { WELLS_LE } from "./definisjoner/wells-le"
 import { MADRS } from "./definisjoner/madrs"
@@ -21,6 +22,7 @@ export const INNEBYGDE_VERKTOY: Verktoy[] = [
   CHADSVASC,
   QSOFA,
   PEVS,
+  NORRISK2,
   WELLS_DVT,
   WELLS_LE,
   MADRS,

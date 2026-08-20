@@ -199,8 +199,24 @@ Nettleser (klinikkens datamaskin)
     felter (`ja_nei`/`valg`/`tall`/`funn`/`fritekst`), `beregning` (`sum`/`sum_per_seksjon`/`ingen`)
     og en `terskler`-tabell. Formen er bevisst uten funksjoner, slik at admin senere kan opprette
     verktøy fra frontend med nøyaktig samme datamodell
-  - Implementert: CHA₂DS₂-VASc, qSOFA, PEVS, Wells DVT, Wells LE, MADRS, klokketest (Shulman 1–6),
-    strukturert kne- og skulderundersøkelse
+  - Implementert: CHA₂DS₂-VASc, qSOFA, PEVS, NORRISK 2, Wells DVT, Wells LE, MADRS,
+    klokketest (Shulman 1–6), strukturert kne- og skulderundersøkelse
+  - **Formelverktøy** (`beregning: { type: "formel", formelId }`): resultatet kommer fra en
+    navngitt funksjon i `src/lib/verktoy/formler.ts`, aldri fra lagret kode som evalueres.
+    Definisjonen forblir dermed JSON-serialiserbar også for regresjonsmodeller
+    - NORRISK 2 er første: Cox-modell som gir 10-årsrisiko i prosent, med egne koeffisientsett
+      per kjønn, kvadratisk aldersledd og aldersinteraksjoner for BT, kolesterol og røyking
+    - **Koeffisientene er utledet, ikke transkribert.** Siden `log(−log(1 − risiko))` er lineær i
+      kovariatene, faller hver koeffisient eksakt ut av å endre ett felt om gangen i
+      Helsedirektoratets egen kalkulator. Rekonstruksjonen er kontrollert mot kalkulatoren i
+      36 000 punkter; største avvik 6·10⁻¹³ prosentpoeng. Metoden kan ikke bomme på hvilken
+      koeffisient som hører til hvilket ledd — det kan transkribering
+    - Utenfor validert område (alder 45–74, BT 120–160, kolesterol 4–8) returnerer formelen null
+      i stedet for å ekstrapolere. En risikoprosent regnet på en 80-åring ville sett like
+      troverdig ut som en gyldig
+  - `Terskel.betingelse` lar en terskel gjelde bare når et annet felt ligger i et intervall.
+    NORRISK 2 har aldersbåndede grenser — 9 % er lav risiko hos en 70-åring og høy hos en
+    50-åring. Første terskel som matcher både sum og betingelse vinner
   - PEVS (Pediatric Early Warning Score, Asker og Bærum legevakt 1.6) drev tre utvidelser av
     datamodellen, alle fortsatt JSON-serialiserbare:
     - `beregning.maks` kapper totalsummen (PEVS: maks 9, men tilleggspoengene kan gi råsum 13)
@@ -406,6 +422,7 @@ legeassist/
 │   │   │   ├── beregn.ts          # beregn/byggResultat/synkVerktoySeksjon/kjorTestkasus
 │   │   │   ├── sok.ts             # sokOppslag + foreslaaOppslag (nøkkelord, tilstander som egne treff)
 │   │   │   ├── retningslinje.ts   # byggRetningslinjeResultat + ferskhetssjekk (dagerSidenVerifisert)
+│   │   │   ├── formler.ts         # Navngitte formler for beregning.type «formel» (norrisk2)
 │   │   │   ├── registry.ts        # INNEBYGDE_VERKTOY + finnVerktoy
 │   │   │   ├── definisjoner/      # Én fil per verktøy (chadsvasc, qsofa, pevs, wells-*, madrs,
 │   │   │   │                      #   klokketest, kne, skulder)
