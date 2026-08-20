@@ -98,6 +98,12 @@ export function feltDetalj(
       return typeof verdi === "number"
         ? `${felt.kort ?? felt.sporsmal} ${norskTall(verdi)} ${felt.enhet}`
         : null
+    case "dato": {
+      if (typeof verdi !== "string") return null
+      const m = /^(d{4})-(d{2})-(d{2})$/.exec(verdi)
+      const vist = m ? `${m[3]}.${m[2]}.${m[1]}` : verdi
+      return `${felt.kort ?? felt.sporsmal} ${vist}`
+    }
     case "funn": {
       if (typeof verdi !== "string" || verdi === "ikke_utfort") return null
       return `${felt.kort ?? felt.test} ${FUNN_LABEL[verdi as Funnverdi] ?? verdi}`

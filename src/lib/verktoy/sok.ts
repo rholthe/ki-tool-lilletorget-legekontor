@@ -9,8 +9,8 @@
  * allmennpraksis».
  */
 
-import type { Oppslag, Retningslinje, Tilstand, Verktoy } from "./typer"
-import { INNEBYGDE_OPPSLAG, erRetningslinje } from "./registry"
+import type { Kalkulator, Oppslag, Retningslinje, Tilstand, Verktoy } from "./typer"
+import { INNEBYGDE_OPPSLAG, erKalkulator, erRetningslinje } from "./registry"
 
 function normaliser(tekst: string): string {
   return tekst.toLowerCase().trim()
@@ -35,21 +35,28 @@ function inneholderOrd(tekst: string, ord: string): boolean {
 /** Én rad i verktøylisten: enten et verktøy, eller én tilstand i en retningslinje. */
 export type Treff =
   | { slag: "verktoy"; verktoy: Verktoy }
+  | { slag: "kalkulator"; kalkulator: Kalkulator }
   | { slag: "tilstand"; retningslinje: Retningslinje; tilstand: Tilstand }
 
 export function treffId(treff: Treff): string {
-  return treff.slag === "verktoy"
-    ? treff.verktoy.id
-    : `${treff.retningslinje.id}:${treff.tilstand.id}`
+  if (treff.slag === "verktoy") return treff.verktoy.id
+  if (treff.slag === "kalkulator") return treff.kalkulator.id
+  return `${treff.retningslinje.id}:${treff.tilstand.id}`
 }
 
 /** Alle rader, uten filtrering. */
 function alleTreff(oppslag: Oppslag[]): Treff[] {
-  return oppslag.flatMap<Treff>((o) =>
-    erRetningslinje(o)
-      ? o.tilstander.map((tilstand) => ({ slag: "tilstand", retningslinje: o, tilstand }))
-      : [{ slag: "verktoy", verktoy: o }]
-  )
+  return oppslag.flatMap<Treff>((o) => {
+    if (erRetningslinje(o)) {
+      return o.tilstander.map((tilstand) => ({
+        slag: "tilstand" as const,
+        retningslinje: o,
+        tilstand,
+      }))
+    }
+    if (erKalkulator(o)) return [{ slag: "kalkulator" as const, kalkulator: o }]
+    return [{ slag: "verktoy" as const, verktoy: o }]
+  })
 }
 
 /** Fritekstsøk mot navn, langt navn og søkeord. */
@@ -65,7 +72,9 @@ export function sokOppslag(
     const felter =
       t.slag === "verktoy"
         ? [t.verktoy.navn, t.verktoy.langtNavn, ...t.verktoy.sokeord]
-        : [
+        : t.slag === "kalkulator"
+          ? [t.kalkulator.navn, t.kalkulator.langtNavn, ...t.kalkulator.sokeord]
+          : [
             t.tilstand.navn,
             t.retningslinje.navn,
             t.retningslinje.langtNavn,
@@ -101,7 +110,11 @@ export function foreslaaOppslag(
   return alleTreff(oppslag)
     .map((treff) => {
       const sokeord =
-        treff.slag === "verktoy" ? treff.verktoy.sokeord : treff.tilstand.sokeord
+        treff.slag === "verktoy"
+          ? treff.verktoy.sokeord
+          : treff.slag === "kalkulator"
+            ? treff.kalkulator.sokeord
+            : treff.tilstand.sokeord
       return { treff, ord: sokeord.filter((o) => inneholderOrd(kilde, o)) }
     })
     .filter((f) => f.ord.length > 0)
@@ -134,7 +147,9 @@ export function forslagKandidater(oppslag: Oppslag[] = INNEBYGDE_OPPSLAG): Kandi
   return alleTreff(oppslag).map((t) =>
     t.slag === "verktoy"
       ? { id: treffId(t), navn: t.verktoy.navn, beskrivelse: t.verktoy.langtNavn }
-      : {
+      : t.slag === "kalkulator"
+        ? { id: treffId(t), navn: t.kalkulator.navn, beskrivelse: t.kalkulator.langtNavn }
+        : {
           id: treffId(t),
           navn: t.tilstand.navn,
           beskrivelse: `Behandlingsanbefaling — ${t.retningslinje.navn}`,

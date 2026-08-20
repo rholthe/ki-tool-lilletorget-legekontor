@@ -9,6 +9,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { VerktoySkjema } from "@/components/app/verktoy-skjema"
 import { VeiledningLenke } from "@/components/app/verktoy-veiledning"
 import { RetningslinjeVisning } from "@/components/app/retningslinje-visning"
+import { KalkulatorVisning } from "@/components/app/kalkulator-visning"
 import { useKonsultasjon } from "@/hooks/use-konsultasjon"
 import { useVerktoy } from "@/hooks/use-verktoy"
 import { useVerktoyForslag } from "@/hooks/use-verktoyforslag"
@@ -25,7 +26,13 @@ import {
   lesRetningslinjeValg,
 } from "@/lib/verktoy/retningslinje"
 import {
+  beregnKalkulator,
+  byggKalkulatorResultat,
+  synligeFelter,
+} from "@/lib/verktoy/kalkulator"
+import {
   KATEGORI_LABEL,
+  erKalkulator,
   erRetningslinje,
   finnOppslag,
 } from "@/lib/verktoy/registry"
@@ -121,13 +128,32 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
     const grupper = new Map<VerktoyKategori, Treff[]>()
     for (const t of treff) {
       const kategori: VerktoyKategori =
-        t.slag === "verktoy" ? t.verktoy.kategori : "retningslinje"
+        t.slag === "verktoy"
+          ? t.verktoy.kategori
+          : t.slag === "kalkulator"
+            ? "kalkulator"
+            : "retningslinje"
       const liste = grupper.get(kategori) ?? []
       liste.push(t)
       grupper.set(kategori, liste)
     }
     return [...grupper.entries()]
   }, [treff])
+
+  const kalkulator = valgt?.slag === "kalkulator" ? valgt.kalkulator : undefined
+  /**
+   * Kalkulatoren regnes ut på hver render, med dagens dato. Gestasjonsalder
+   * endrer seg fra dag til dag, så en memoisert verdi ville blitt stående feil
+   * hvis modalen står åpen over midnatt.
+   */
+  const kalkResultat = kalkulator ? beregnKalkulator(kalkulator, svar) : null
+  // Skjulte felter (feil inngangsvei) skal ikke telle som ubesvarte
+  const kalkMangler =
+    Boolean(kalkulator) &&
+    (kalkResultat === null ||
+      synligeFelter(kalkulator!, svar).some(
+        (f) => f.type === "valg" && typeof svar[f.id] !== "number"
+      ))
 
   const verktoy = valgt?.slag === "verktoy" ? valgt.verktoy : undefined
   const beregning = verktoy ? beregn(verktoy, svar) : null
@@ -145,7 +171,9 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
   const kanLagre =
     valgt?.slag === "tilstand"
       ? valgteLinjer.length > 0
-      : Boolean(verktoy) &&
+      : valgt?.slag === "kalkulator"
+        ? !kalkMangler
+        : Boolean(verktoy) &&
         !manglerSide &&
         ubesvart.length === 0 &&
         !tomUndersokelse &&
@@ -167,7 +195,11 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
     const oppslag = finnOppslag(resultat.verktoyId)
     if (!oppslag) return
 
-    if (erRetningslinje(oppslag)) {
+    if (erKalkulator(oppslag)) {
+      setValgt({ slag: "kalkulator", kalkulator: oppslag })
+      setSvar(resultat.svar)
+      setValgteLinjer([])
+    } else if (erRetningslinje(oppslag)) {
       const { tilstandId, valgte } = lesRetningslinjeValg(resultat)
       const tilstand = oppslag.tilstander.find((t) => t.id === tilstandId)
       if (!tilstand) return
@@ -192,7 +224,12 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
     const resultat =
       valgt.slag === "tilstand"
         ? byggRetningslinjeResultat(valgt.retningslinje, valgt.tilstand, valgteLinjer, { id })
-        : byggResultat(valgt.verktoy, svar, { id, side })
+        : valgt.slag === "kalkulator"
+          ? kalkResultat
+            ? byggKalkulatorResultat(valgt.kalkulator, svar, kalkResultat, { id })
+            : null
+          : byggResultat(valgt.verktoy, svar, { id, side })
+    if (!resultat) return
 
     await lagreResultat(resultat)
     setRedigererId(resultat.id)
@@ -219,11 +256,15 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
   }
 
   function treffNavn(t: Treff): string {
-    return t.slag === "verktoy" ? t.verktoy.navn : t.tilstand.navn
+    if (t.slag === "verktoy") return t.verktoy.navn
+    if (t.slag === "kalkulator") return t.kalkulator.navn
+    return t.tilstand.navn
   }
 
   function treffUndertekst(t: Treff): string {
-    return t.slag === "verktoy" ? t.verktoy.langtNavn : t.retningslinje.navn
+    if (t.slag === "verktoy") return t.verktoy.langtNavn
+    if (t.slag === "kalkulator") return t.kalkulator.langtNavn
+    return t.retningslinje.navn
   }
 
   const valgtId = valgt ? treffId(valgt) : null
@@ -419,7 +460,9 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
                         ? `${valgt.verktoy.langtNavn} · Kilde: ${valgt.verktoy.kilde.navn}${
                             valgt.verktoy.kilde.versjon ? ` ${valgt.verktoy.kilde.versjon}` : ""
                           }`
-                        : valgt.retningslinje.langtNavn}
+                        : valgt.slag === "kalkulator"
+                          ? `${valgt.kalkulator.langtNavn} · ${valgt.kalkulator.kilde.navn}`
+                          : valgt.retningslinje.langtNavn}
                     </p>
                   </div>
                   {valgt.slag === "verktoy" && valgt.verktoy.veiledning && (
@@ -430,12 +473,20 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
                       />
                     </div>
                   )}
+                  {valgt.slag === "kalkulator" && valgt.kalkulator.veiledning && (
+                    <div className="shrink-0 pt-0.5">
+                      <VeiledningLenke
+                        veiledning={valgt.kalkulator.veiledning}
+                        etikett="Metode"
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex-1 overflow-y-auto px-5 py-4">
-                  {valgt.slag === "verktoy" ? (
+                  {valgt.slag === "verktoy" || valgt.slag === "kalkulator" ? (
                     <VerktoySkjema
-                      verktoy={valgt.verktoy}
+                      verktoy={valgt.slag === "verktoy" ? valgt.verktoy : valgt.kalkulator}
                       svar={svar}
                       onSvar={settSvar}
                       side={side}
@@ -453,7 +504,17 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
 
                 {/* Resultat + handling */}
                 <div className="px-5 py-3 border-t border-slate-200 shrink-0 space-y-2.5">
-                  {valgt.slag === "tilstand" ? (
+                  {valgt.slag === "kalkulator" ? (
+                    kalkResultat ? (
+                      <KalkulatorVisning resultat={kalkResultat} />
+                    ) : (
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5">
+                        <p className="text-sm text-slate-600">
+                          Velg beregningsmetode og fyll ut feltene.
+                        </p>
+                      </div>
+                    )
+                  ) : valgt.slag === "tilstand" ? (
                     valgteLinjer.length === 0 && (
                       <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5">
                         <p className="text-sm text-slate-600">

@@ -68,6 +68,14 @@ interface FeltBase {
   veiledning?: Veiledning
   /** Overstyrer verktøyets `detaljStil` for dette ene feltet. */
   detaljStil?: DetaljStil
+  /**
+   * Feltet vises bare når et annet felt har denne verdien.
+   *
+   * Svangerskapskalkulatoren har fire inngangsveier til samme størrelse, og bare
+   * feltene for den valgte veien skal stå framme. Skjulte felter regnes heller
+   * ikke med i utfyllingskravet.
+   */
+  synligNar?: { felt: string; erLik: Svarverdi }
 }
 
 export type Felt =
@@ -90,6 +98,12 @@ export type Felt =
       enhet: string
       min?: number
       max?: number
+      kort?: string
+    })
+  | (FeltBase & {
+      /** ISO-dato («2026-08-20») fra en `<input type="date">`. */
+      type: "dato"
+      sporsmal: string
       kort?: string
     })
   | (FeltBase & {
@@ -294,4 +308,57 @@ export interface Retningslinje {
 }
 
 /** Alt som kan velges i verktøymodalen. */
-export type Oppslag = Verktoy | Retningslinje
+export type Oppslag = Verktoy | Retningslinje | Kalkulator
+
+/* ────────────────────────── Kalkulatorer ──────────────────────────
+ *
+ * En kalkulator er verken en skår eller et oppslag. Den har flere inngangsveier
+ * til samme underliggende størrelse, og gir flere utdata samtidig — ikke ett
+ * tall med et tolkningsbånd. Svangerskapskalkulatoren regner ut termin, siste
+ * menstruasjon og aktuell gestasjonsalder på én gang, og `sum: number | null`
+ * kan ikke bære det.
+ *
+ * Inndataene har derimot nøyaktig samme form som verktøyene, så `Felt`,
+ * `Seksjon` og skjemarendreren gjenbrukes uendret.
+ */
+
+/** Én linje i kalkulatorens resultat. */
+export interface Resultatlinje {
+  etikett: string
+  verdi: string
+  /** Løftes fram visuelt — hovedsvaret, som termindato. */
+  uthevet?: boolean
+  /** Kort presisering under linjen. */
+  merknad?: string
+}
+
+export interface KalkulatorResultat {
+  linjer: Resultatlinje[]
+  /** Bidragene som går inn i journalnotatet, i rekkefølge. */
+  notatDetaljer: string[]
+}
+
+export interface Kalkulator {
+  id: string
+  navn: string
+  langtNavn: string
+  kategori: "kalkulator"
+  sokeord: string[]
+  seksjoner: Seksjon[]
+  /**
+   * Slår opp en navngitt funksjon i `kalkulatorer.ts` — aldri lagret kode som
+   * evalueres, samme prinsipp som `formelId`.
+   */
+  kalkulatorId: string
+  notatTittel: string
+  kilde: Kilde
+  veiledning?: Veiledning
+  /** Referansekasus med kjent fasit, kjørt av selvtesten. */
+  testkasus?: {
+    navn: string
+    svar: Record<string, Svarverdi>
+    /** Forventede linjer som «etikett: verdi». Delmengde — kun det som testes. */
+    forventet: Record<string, string>
+  }[]
+  opphav: "innebygd" | "egendefinert"
+}

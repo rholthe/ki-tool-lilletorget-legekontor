@@ -1,4 +1,10 @@
-import type { Oppslag, Retningslinje, Verktoy, VerktoyKategori } from "./typer"
+import type {
+  Kalkulator,
+  Oppslag,
+  Retningslinje,
+  Verktoy,
+  VerktoyKategori,
+} from "./typer"
 import { CHADSVASC } from "./definisjoner/chadsvasc"
 import { QSOFA } from "./definisjoner/qsofa"
 import { PEVS } from "./definisjoner/pevs"
@@ -10,6 +16,7 @@ import { KLOKKETEST } from "./definisjoner/klokketest"
 import { KNEUNDERSOKELSE } from "./definisjoner/kne"
 import { SKULDERUNDERSOKELSE } from "./definisjoner/skulder"
 import { ANTIBIOTIKA } from "./retningslinjer/antibiotika"
+import { SVANGERSKAP } from "./definisjoner/svangerskap"
 
 /**
  * Innebygde verktøy fra repoet. Definisjonene ligger i git slik at kliniske
@@ -34,9 +41,13 @@ export const INNEBYGDE_VERKTOY: Verktoy[] = [
 /** Retningslinjer legen slår opp i, til forskjell fra skjemaer hun fyller ut. */
 export const INNEBYGDE_RETNINGSLINJER: Retningslinje[] = [ANTIBIOTIKA]
 
+/** Kalkulatorer med flere inngangsveier og flere utdata. */
+export const INNEBYGDE_KALKULATORER: Kalkulator[] = [SVANGERSKAP]
+
 /** Alt som kan velges i verktøymodalen. */
 export const INNEBYGDE_OPPSLAG: Oppslag[] = [
   ...INNEBYGDE_VERKTOY,
+  ...INNEBYGDE_KALKULATORER,
   ...INNEBYGDE_RETNINGSLINJER,
 ]
 
@@ -49,6 +60,15 @@ export const KATEGORI_LABEL: Record<VerktoyKategori, string> = {
 
 export function erRetningslinje(oppslag: Oppslag): oppslag is Retningslinje {
   return oppslag.kategori === "retningslinje"
+}
+
+/**
+ * NORRISK 2 har også `kategori: "kalkulator"`, men er et `Verktoy`. Det er
+ * `kalkulatorId` som skiller typen, ikke kategorien — kategorien styrer bare
+ * hvilken overskrift oppslaget havner under i listen.
+ */
+export function erKalkulator(oppslag: Oppslag): oppslag is Kalkulator {
+  return "kalkulatorId" in oppslag
 }
 
 export function finnOppslag(

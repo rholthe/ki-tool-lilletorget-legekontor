@@ -214,6 +214,25 @@ Nettleser (klinikkens datamaskin)
     - Utenfor validert område (alder 45–74, BT 120–160, kolesterol 4–8) returnerer formelen null
       i stedet for å ekstrapolere. En risikoprosent regnet på en 80-åring ville sett like
       troverdig ut som en gyldig
+  - **Kalkulatorer** (`Kalkulator` i `Oppslag`-unionen) er en tredje datatype ved siden av
+    `Verktoy` og `Retningslinje`: flere inngangsveier til samme størrelse, og flere utdata
+    samtidig i stedet for ett tall med tolkningsbånd. Inndataene har samme form, så `Felt`,
+    `Seksjon` og `VerktoySkjema` gjenbrukes uendret
+    - Implementert: Svangerskapskalkulator (termin, siste menstruasjon, gestasjonsalder)
+    - `kalkulatorId` slår opp en navngitt funksjon i `kalkulatorer.ts`, samme prinsipp som
+      `formelId`. Merk at NORRISK 2 også har `kategori: "kalkulator"` men er et `Verktoy` —
+      `erKalkulator()` skiller på `kalkulatorId`, ikke på kategorien
+    - `Felt.synligNar` skjuler felter som hører til en annen inngangsvei. Skjulte felter teller
+      heller ikke som ubesvarte
+    - Ny felttype `dato` (ISO-streng fra `<input type="date">`)
+    - **All datoregning skjer i UTC-midnatt.** Legger man dager til en lokal `Date`, gir
+      sommertid av og til 23- eller 25-timersdøgn, og en termindato bommer med én dag to ganger
+      i året. Ett av referansekasusene krysser sommertidsskiftet med vilje
+    - Termin = siste mens + 280 dager. Naegele som kalenderregel gir 281–282 dager for enkelte
+      startdatoer fordi månedene er ulikt lange; 280 er den entydige definisjonen av 40 uker
+    - Ved IVF er «siste menstruasjon» en beregnet ekvivalent: overføringsdato − embryoalder − 14.
+      Det gir overføring + 261 for blastocyst dag 5 og + 263 for embryo dag 3, som er de
+      publiserte verdiene — en uavhengig kryssjekk av regnestykket
   - `Terskel.betingelse` lar en terskel gjelde bare når et annet felt ligger i et intervall.
     NORRISK 2 har aldersbåndede grenser — 9 % er lav risiko hos en 70-åring og høy hos en
     50-åring. Første terskel som matcher både sum og betingelse vinner
@@ -423,6 +442,8 @@ legeassist/
 │   │   │   ├── sok.ts             # sokOppslag + foreslaaOppslag (nøkkelord, tilstander som egne treff)
 │   │   │   ├── retningslinje.ts   # byggRetningslinjeResultat + ferskhetssjekk (dagerSidenVerifisert)
 │   │   │   ├── formler.ts         # Navngitte formler for beregning.type «formel» (norrisk2)
+│   │   │   ├── kalkulator.ts      # beregnKalkulator/byggKalkulatorResultat + erSynlig
+│   │   │   ├── kalkulatorer.ts    # Navngitte kalkulatorer (svangerskap), all datoregning i UTC
 │   │   │   ├── registry.ts        # INNEBYGDE_VERKTOY + finnVerktoy
 │   │   │   ├── definisjoner/      # Én fil per verktøy (chadsvasc, qsofa, pevs, wells-*, madrs,
 │   │   │   │                      #   klokketest, kne, skulder)

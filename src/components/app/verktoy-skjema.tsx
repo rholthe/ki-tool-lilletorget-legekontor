@@ -5,10 +5,19 @@ import { Check } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { VeiledningLenke } from "@/components/app/verktoy-veiledning"
-import type { Felt, Funnverdi, Side, Svarverdi, Verktoy } from "@/lib/verktoy/typer"
+import { erSynlig } from "@/lib/verktoy/kalkulator"
+import type {
+  Felt,
+  Funnverdi,
+  Kalkulator,
+  Side,
+  Svarverdi,
+  Verktoy,
+} from "@/lib/verktoy/typer"
 
 interface Props {
-  verktoy: Verktoy
+  /** Kalkulatorer har samme inndataform som verktøy, så skjemaet er felles. */
+  verktoy: Verktoy | Kalkulator
   svar: Record<string, Svarverdi>
   onSvar: (id: string, verdi: Svarverdi) => void
   side?: Side
@@ -142,6 +151,21 @@ function FeltRad({
         </div>
       )
 
+    case "dato":
+      return (
+        <div className="space-y-1.5">
+          <label className="block text-sm text-slate-800">{felt.sporsmal}</label>
+          {felt.hjelp && <div className="text-xs text-slate-500">{felt.hjelp}</div>}
+          {lenke}
+          <Input
+            type="date"
+            value={typeof verdi === "string" ? verdi : ""}
+            onChange={(e) => onSvar(e.target.value === "" ? null : e.target.value)}
+            className="max-w-48"
+          />
+        </div>
+      )
+
     case "funn":
       return (
         <div className="space-y-1">
@@ -193,7 +217,7 @@ function FeltRad({
 export function VerktoySkjema({ verktoy, svar, onSvar, side, onSide }: Props) {
   return (
     <div className="space-y-5">
-      {verktoy.lateralitet && (
+      {"lateralitet" in verktoy && verktoy.lateralitet && (
         <div className="flex items-center gap-2">
           <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Side</span>
           {(["venstre", "hoyre"] as const).map((s) => (
@@ -227,7 +251,7 @@ export function VerktoySkjema({ verktoy, svar, onSvar, side, onSide }: Props) {
             </div>
           )}
           <div className="space-y-2">
-            {seksjon.felter.map((felt) => (
+            {seksjon.felter.filter((felt) => erSynlig(felt, svar)).map((felt) => (
               <FeltRad
                 key={felt.id}
                 felt={felt}
@@ -236,7 +260,7 @@ export function VerktoySkjema({ verktoy, svar, onSvar, side, onSide }: Props) {
                 lenke={
                   felt.veiledning ? <VeiledningLenke veiledning={felt.veiledning} /> : null
                 }
-                visPoeng={verktoy.beregning.type !== "formel"}
+                visPoeng={"beregning" in verktoy && verktoy.beregning.type !== "formel"}
               />
             ))}
           </div>

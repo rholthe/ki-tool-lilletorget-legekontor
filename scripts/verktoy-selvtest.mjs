@@ -30,6 +30,7 @@ execFileSync(
     "src/lib/verktoy/registry.ts",
     "src/lib/verktoy/beregn.ts",
     "src/lib/verktoy/retningslinje.ts",
+    "src/lib/verktoy/kalkulator.ts",
     "--outDir",
     utMappe,
     "--module",
@@ -44,8 +45,11 @@ execFileSync(
 )
 
 const require = createRequire(import.meta.url)
-const { INNEBYGDE_VERKTOY, INNEBYGDE_RETNINGSLINJER } = require(
+const { INNEBYGDE_VERKTOY, INNEBYGDE_RETNINGSLINJER, INNEBYGDE_KALKULATORER } = require(
   path.join(utMappe, "registry.js")
+)
+const { beregnKalkulator, byggKalkulatorResultat } = require(
+  path.join(utMappe, "kalkulator.js")
 )
 const {
   byggRetningslinjeResultat,
@@ -205,9 +209,54 @@ for (const retningslinje of INNEBYGDE_RETNINGSLINJER) {
   )
 }
 
+/*
+ * Kalkulatorer: datoregning er en klassisk feilkilde, og en termindato som
+ * bommer med én dag ser helt riktig ut. Referansekasusene kjøres med fast
+ * «i dag», så testen ikke gir ulikt svar fra dag til dag.
+ */
+const FAST_IDAG = new Date("2026-06-01T12:00:00Z")
+
+for (const kalkulator of INNEBYGDE_KALKULATORER) {
+  console.log(`\n${kalkulator.navn}`)
+  const forFeil = feil
+
+  for (const kasus of kalkulator.testkasus ?? []) {
+    const res = beregnKalkulator(kalkulator, kasus.svar, FAST_IDAG)
+    if (!sjekk(res !== null, `${kasus.navn}: gav ingen beregning`)) continue
+
+    for (const [etikett, forventet] of Object.entries(kasus.forventet)) {
+      const linje = res.linjer.find((l) => l.etikett === etikett)
+      sjekk(Boolean(linje), `${kasus.navn}: fant ingen linje «${etikett}»`)
+      if (linje) {
+        sjekk(
+          linje.verdi === forventet,
+          `${kasus.navn}: ${etikett} ga «${linje.verdi}», forventet «${forventet}»`
+        )
+      }
+    }
+
+    const r = byggKalkulatorResultat(kalkulator, kasus.svar, res, { id: "t" })
+    sjekk(r.detaljer.length > 0, `${kasus.navn}: gir tom notatlinje`)
+    const en = synkVerktoySeksjon("S: subjektivt", [r])
+    sjekk(en === synkVerktoySeksjon(en, [r]), `${kasus.navn}: notat-synk ikke idempotent`)
+  }
+
+  if (feil === forFeil) {
+    const forste = kalkulator.testkasus?.[0]
+    if (forste) {
+      const res = beregnKalkulator(kalkulator, forste.svar, FAST_IDAG)
+      const r = byggKalkulatorResultat(kalkulator, forste.svar, res, { id: "vis" })
+      console.log("  " + formaterTilNotat(r).split("\n").join("\n  "))
+    }
+    console.log(
+      `  ${(kalkulator.testkasus ?? []).length} referansekasus · ✓ alle sjekker grønne`
+    )
+  }
+}
+
 console.log(
   feil === 0
-    ? `\n✓ ${INNEBYGDE_VERKTOY.length} verktøy og ${INNEBYGDE_RETNINGSLINJER.length} retningslinje(r) — alle sjekker grønne`
+    ? `\n✓ ${INNEBYGDE_VERKTOY.length} verktøy, ${INNEBYGDE_KALKULATORER.length} kalkulator(er) og ${INNEBYGDE_RETNINGSLINJER.length} retningslinje(r) — alle sjekker grønne`
     : `\n✗ ${feil} sjekk(er) feilet`
 )
 process.exit(feil === 0 ? 0 : 1)
