@@ -1,7 +1,17 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { Check, Info, RefreshCw, Search, ClipboardList, Sparkles, Trash2, X } from "lucide-react"
+import {
+  Check,
+  ExternalLink,
+  Info,
+  RefreshCw,
+  Search,
+  ClipboardList,
+  Sparkles,
+  Trash2,
+  X,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
@@ -269,6 +279,14 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
 
   const valgtId = valgt ? treffId(valgt) : null
 
+  /** Kildelenken, når oppslaget har en. Tilstander har sin egen i visningen. */
+  const kildeUrl =
+    valgt?.slag === "verktoy"
+      ? valgt.verktoy.kilde.url
+      : valgt?.slag === "kalkulator"
+        ? valgt.kalkulator.kilde.url
+        : undefined
+
   return (
     <>
       {/* ── Header ── */}
@@ -465,6 +483,17 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
                           : valgt.retningslinje.langtNavn}
                     </p>
                   </div>
+                  {kildeUrl && (
+                    <a
+                      href={kildeUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="shrink-0 pt-0.5 inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 hover:underline"
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                      Kilde
+                    </a>
+                  )}
                   {valgt.slag === "verktoy" && valgt.verktoy.veiledning && (
                     <div className="shrink-0 pt-0.5">
                       <VeiledningLenke

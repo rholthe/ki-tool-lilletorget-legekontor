@@ -19,7 +19,9 @@ import { finnKalkulator } from "./kalkulatorer"
 /** Er feltet synlig med de svarene som er gitt? */
 export function erSynlig(felt: Felt, svar: Record<string, Svarverdi>): boolean {
   if (!felt.synligNar) return true
-  return svar[felt.synligNar.felt] === felt.synligNar.erLik
+  const verdi = svar[felt.synligNar.felt]
+  const { erLik } = felt.synligNar
+  return Array.isArray(erLik) ? erLik.includes(verdi) : verdi === erLik
 }
 
 /** Feltene som faktisk vises, gitt gjeldende svar. */

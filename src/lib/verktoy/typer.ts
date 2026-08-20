@@ -43,6 +43,7 @@ export type VeiledningBlokk =
   | { type: "avsnitt"; tekst: string }
   | { type: "punkter"; punkter: string[] }
   | { type: "tabell"; kolonner: string[]; rader: string[][]; fotnote?: string }
+  | { type: "lenke"; tekst: string; url: string }
 
 /**
  * Full veiledning, vist i egen modal. Feltene har kort `hjelp` inline; alt som er
@@ -75,7 +76,7 @@ interface FeltBase {
    * feltene for den valgte veien skal stå framme. Skjulte felter regnes heller
    * ikke med i utfyllingskravet.
    */
-  synligNar?: { felt: string; erLik: Svarverdi }
+  synligNar?: { felt: string; erLik: Svarverdi | Svarverdi[] }
 }
 
 export type Felt =

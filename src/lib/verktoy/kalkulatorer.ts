@@ -20,8 +20,18 @@ export type KalkulatorFn = (
 
 const DOGN = 86_400_000
 
-/** Svangerskapets lengde fra første dag i siste menstruasjon. */
-export const SVANGERSKAP_DAGER = 280
+/**
+ * Svangerskapets lengde fra første dag i siste menstruasjon, norsk konvensjon.
+ *
+ * Internasjonalt regnes 280 dager (40 uker) etter Naegele. Norske kalkulatorer
+ * bruker 283, fordi norske data viser at median svangerskapslengde er tre dager
+ * lengre. Terminen faller dermed på gestasjonsalder 40+3, ikke 40+0 — det er en
+ * konsekvens av konvensjonen, ikke en feil.
+ */
+export const SVANGERSKAP_DAGER = 283
+
+/** Syklusen kalkulatoren er kalibrert for. */
+export const NORMAL_SYKLUS = 28
 
 function tilDato(verdi: Svarverdi): Date | null {
   if (typeof verdi !== "string") return null
@@ -75,26 +85,47 @@ const IVF_EMBRYOALDER = [2, 3, 5, 6]
  * Ved IVF er «siste menstruasjon» en ekvivalent, ikke en observert dato:
  * befruktningen skjer på overføringsdagen minus embryoets alder, og eggløsning
  * regnes 14 dager etter menstruasjonens første dag. Dermed er
- * `LMP = overføring − embryoalder − 14`, som gir termin på overføring + 261 for
- * en blastocyst på dag 5 og + 263 for et embryo på dag 3 — de publiserte
- * verdiene.
+ * `LMP = overføring − embryoalder − 14`.
+ *
+ * Med norsk konvensjon (283 dager) gir det termin på overføring + 264 for en
+ * blastocyst på dag 5, mot + 261 internasjonalt. Samme tre dagers forskjell som
+ * ellers, og valgt bevisst: ville IVF fulgt 280-dagersregelen, ville samme
+ * svangerskap fått to ulike terminer avhengig av hvilken inngangsvei legen
+ * brukte.
  */
 const svangerskap: KalkulatorFn = (svar, naa) => {
   const modus = tallVerdi(svar.modus)
   if (modus === null) return null
 
   const iDag = idag(naa)
+  /**
+   * En lengre syklus betyr senere eggløsning, altså at svangerskapet reelt er
+   * kortere enn kalenderen fra siste menstruasjon tilsier. Justeringen flytter
+   * referansepunktet, og påvirker både termin og gestasjonsalder.
+   */
+  const syklus = tallVerdi(svar.syklus) ?? NORMAL_SYKLUS
+  const justering = modus === 0 || modus === 1 ? syklus - NORMAL_SYKLUS : 0
+
+  /** Referansepunktet all avledning skjer fra, etter syklusjustering. */
+  let effektiv: Date | null = null
   let sisteMens: Date | null = null
   const opphav: string[] = []
 
   if (modus === 0) {
-    sisteMens = tilDato(svar.sisteMens)
-    if (sisteMens) opphav.push(`siste mens ${norskDato(sisteMens)}`)
+    const oppgitt = tilDato(svar.sisteMens)
+    if (oppgitt) {
+      sisteMens = oppgitt
+      effektiv = plussDager(oppgitt, justering)
+      opphav.push(`siste mens ${norskDato(oppgitt)}`)
+      if (justering !== 0) opphav.push(`syklus ${syklus} dager`)
+    }
   } else if (modus === 1) {
     const termin = tilDato(svar.termin)
     if (termin) {
-      sisteMens = plussDager(termin, -SVANGERSKAP_DAGER)
+      effektiv = plussDager(termin, -SVANGERSKAP_DAGER)
+      sisteMens = plussDager(effektiv, -justering)
       opphav.push(`oppgitt termin ${norskDato(termin)}`)
+      if (justering !== 0) opphav.push(`syklus ${syklus} dager`)
     }
   } else if (modus === 2) {
     const uker = tallVerdi(svar.gaUker)
@@ -103,7 +134,8 @@ const svangerskap: KalkulatorFn = (svar, naa) => {
     // Referansedatoen er valgfri: en ultralyd tatt for en uke siden oppgir
     // gestasjonsalder på undersøkelsesdagen, ikke i dag
     const referanse = tilDato(svar.gaDato) ?? iDag
-    sisteMens = plussDager(referanse, -(uker * 7 + dager))
+    effektiv = plussDager(referanse, -(uker * 7 + dager))
+    sisteMens = effektiv
     opphav.push(
       `gestasjonsalder ${formaterGa(uker * 7 + dager)} den ${norskDato(referanse)}`
     )
@@ -112,17 +144,18 @@ const svangerskap: KalkulatorFn = (svar, naa) => {
     const embryoIdx = tallVerdi(svar.ivfEmbryo)
     if (overforing && embryoIdx !== null && IVF_EMBRYOALDER[embryoIdx] !== undefined) {
       const alder = IVF_EMBRYOALDER[embryoIdx]
-      sisteMens = plussDager(overforing, -(alder + 14))
+      effektiv = plussDager(overforing, -(alder + 14))
+      sisteMens = effektiv
       // «IVF med embryo …», ikke «IVF, embryo …»: notatlinjen skiller
       // bidragene med komma, og to kommaer på rad leser tvetydig
       opphav.push(`IVF med embryo dag ${alder} overført ${norskDato(overforing)}`)
     }
   }
 
-  if (!sisteMens) return null
+  if (!effektiv || !sisteMens) return null
 
-  const termin = plussDager(sisteMens, SVANGERSKAP_DAGER)
-  const gaDager = dagerMellom(sisteMens, iDag)
+  const termin = plussDager(effektiv, SVANGERSKAP_DAGER)
+  const gaDager = dagerMellom(effektiv, iDag)
   const tilTermin = dagerMellom(iDag, termin)
 
   const gaTekst =

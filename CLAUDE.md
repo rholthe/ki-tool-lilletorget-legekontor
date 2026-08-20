@@ -228,11 +228,18 @@ Nettleser (klinikkens datamaskin)
     - **All datoregning skjer i UTC-midnatt.** Legger man dager til en lokal `Date`, gir
       sommertid av og til 23- eller 25-timersdøgn, og en termindato bommer med én dag to ganger
       i året. Ett av referansekasusene krysser sommertidsskiftet med vilje
-    - Termin = siste mens + 280 dager. Naegele som kalenderregel gir 281–282 dager for enkelte
-      startdatoer fordi månedene er ulikt lange; 280 er den entydige definisjonen av 40 uker
-    - Ved IVF er «siste menstruasjon» en beregnet ekvivalent: overføringsdato − embryoalder − 14.
-      Det gir overføring + 261 for blastocyst dag 5 og + 263 for embryo dag 3, som er de
-      publiserte verdiene — en uavhengig kryssjekk av regnestykket
+    - **Termin = effektiv siste mens + 283 dager**, der effektiv siste mens er oppgitt dato
+      justert for sykluslengde (`+ syklus − 28`). Internasjonalt regnes 280 dager, men norske
+      kalkulatorer bruker 283 fordi median svangerskapslengde er tre dager lengre her. Terminen
+      faller dermed på gestasjonsalder 40+3, ikke 40+0 — en konsekvens av konvensjonen
+    - Sykluslengde justerer **både** termin og gestasjonsalder like mye. Verifisert mot NHIs
+      terminkalkulator for både 28 og 35 dagers syklus, på alle tre utdataene
+    - Ved IVF er «siste menstruasjon» en beregnet ekvivalent: overføringsdato − embryoalder − 14,
+      deretter samme 283 dager. Det gir overføring + 264 for blastocyst dag 5, mot + 261
+      internasjonalt. Valgt bevisst: med 280-dagersregelen for IVF ville samme svangerskap fått
+      to ulike terminer avhengig av hvilken inngangsvei legen brukte
+    - `Felt.synligNar.erLik` tar også en liste, for felter som hører til flere inngangsveier
+  - `Veiledning` har blokktypen `lenke`, og `kilde.url` vises som «Kilde»-lenke i modalhodet
   - `Terskel.betingelse` lar en terskel gjelde bare når et annet felt ligger i et intervall.
     NORRISK 2 har aldersbåndede grenser — 9 % er lav risiko hos en 70-åring og høy hos en
     50-åring. Første terskel som matcher både sum og betingelse vinner

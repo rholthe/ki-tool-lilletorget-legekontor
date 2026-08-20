@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { BookOpen } from "lucide-react"
+import { BookOpen, ExternalLink } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -50,6 +50,20 @@ function VeiledningInnhold({ veiledning }: { veiledning: Veiledning }) {
                   </li>
                 ))}
               </ul>
+            )
+
+          case "lenke":
+            return (
+              <a
+                key={i}
+                href={blokk.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 hover:underline"
+              >
+                <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                {blokk.tekst}
+              </a>
             )
 
           case "tabell":
