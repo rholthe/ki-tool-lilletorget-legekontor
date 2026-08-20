@@ -3,8 +3,9 @@
  * kalkulatorer, retningslinjer).
  *
  * Definisjonene er bevisst **JSON-serialiserbare**: beregningen er deklarativ
- * (`beregning` + `terskler`), ikke en funksjon. Det gjør at innebygde verktøy fra
- * repoet og admin-opprettede verktøy fra databasen har nøyaktig samme form.
+ * (`beregning` + `terskler` + `overstyringer`), ikke en funksjon. Det gjør at
+ * innebygde verktøy fra repoet og admin-opprettede verktøy fra databasen har
+ * nøyaktig samme form.
  *
  * Poengsummer og terskler beregnes alltid av koden i `beregn.ts` — aldri av Claude.
  */
@@ -19,6 +20,39 @@ export type Funnverdi = "normal" | "patologisk" | "ikke_utfort"
 
 export type Svarverdi = boolean | number | string | null
 
+export type Farge = "gronn" | "gul" | "rod"
+
+/**
+ * Hvordan et bidrag skrives i notatet.
+ *
+ * `full` tar med etikett, valgt alternativtekst og poeng; `poeng` skriver kun
+ * etikett + poeng (det man vil ha på skalaer med mange ledd — MADRS ville ellers
+ * fått en avsnittslang linje); `tekst` skriver kun alternativteksten, for verktøy
+ * med ett enkelt vurderingsledd der poenget allerede står i summen; `uten_poeng`
+ * skriver etikett + tekst uten poeng, for klassifiserende felter som ikke skårer
+ * (PEVS sin aldersgruppe).
+ */
+export type DetaljStil = "full" | "poeng" | "tekst" | "uten_poeng"
+
+/**
+ * Blokk i en lengre veiledning. Formen er bevisst enkel og serialiserbar, slik at
+ * admin senere kan bygge veiledninger fra frontend uten å skrive markup.
+ */
+export type VeiledningBlokk =
+  | { type: "overskrift"; tekst: string }
+  | { type: "avsnitt"; tekst: string }
+  | { type: "punkter"; punkter: string[] }
+  | { type: "tabell"; kolonner: string[]; rader: string[][]; fotnote?: string }
+
+/**
+ * Full veiledning, vist i egen modal. Feltene har kort `hjelp` inline; alt som er
+ * lengre enn én linje hører hjemme her i stedet for å fylle opp skjemaet.
+ */
+export interface Veiledning {
+  tittel: string
+  blokker: VeiledningBlokk[]
+}
+
 /** Ett alternativ i et `valg`-felt. `kriterium` vises som forklarende hjelpetekst. */
 export interface Alternativ {
   tekst: string
@@ -26,46 +60,46 @@ export interface Alternativ {
   kriterium?: string
 }
 
+interface FeltBase {
+  id: string
+  /** Én kort linje under spørsmålet. Lengre tekst hører hjemme i `veiledning`. */
+  hjelp?: string
+  /** Full veiledning for dette punktet, åpnes i egen modal fra en lenke. */
+  veiledning?: Veiledning
+  /** Overstyrer verktøyets `detaljStil` for dette ene feltet. */
+  detaljStil?: DetaljStil
+}
+
 export type Felt =
-  | {
+  | (FeltBase & {
       type: "ja_nei"
-      id: string
       sporsmal: string
       poeng: number
-      hjelp?: string
       /** Kort etikett brukt i journalnotatet i stedet for hele spørsmålsteksten. */
       kort?: string
-    }
-  | {
+    })
+  | (FeltBase & {
       type: "valg"
-      id: string
       sporsmal: string
       alternativer: Alternativ[]
-      hjelp?: string
       kort?: string
-    }
-  | {
+    })
+  | (FeltBase & {
       type: "tall"
-      id: string
       sporsmal: string
       enhet: string
       min?: number
       max?: number
-      hjelp?: string
-    }
-  | {
+    })
+  | (FeltBase & {
       type: "funn"
-      id: string
       test: string
-      hjelp?: string
       kort?: string
-    }
-  | {
+    })
+  | (FeltBase & {
       type: "fritekst"
-      id: string
       sporsmal: string
-      hjelp?: string
-    }
+    })
 
 export interface Seksjon {
   id: string
@@ -82,7 +116,22 @@ export interface Terskel {
   klasse: string
   /** Publisert tolkning, sitert fra kilden. Ingen egne handlingsanbefalinger. */
   tekst: string
-  farge: "gronn" | "gul" | "rod"
+  farge: Farge
+}
+
+/**
+ * Regel som slår ut uavhengig av totalsummen, fordi ett enkeltfelt alene er
+ * alvorlig nok. PEVS er eksempelet: 3 poeng på én parameter krever umiddelbart
+ * legetilsyn selv om totalen er 3. Terskeltabellen kan ikke uttrykke dette, siden
+ * den bare kjenner summen.
+ */
+export interface Overstyring {
+  type: "enkeltfelt_minst"
+  /** Utløses når minst ett felt bidrar med så mange poeng. */
+  poeng: number
+  klasse: string
+  tekst: string
+  farge: Farge
 }
 
 export interface Kilde {
@@ -97,6 +146,8 @@ export interface Testkasus {
   navn: string
   svar: Record<string, Svarverdi>
   forventetSum: number
+  /** Valgfri fasit for tolkningen — verifiserer terskler og overstyringer. */
+  forventetKlasse?: string
 }
 
 export interface Verktoy {
@@ -109,19 +160,18 @@ export interface Verktoy {
   /** Verktøy som gjelder én kroppsside — legen velger venstre/høyre. */
   lateralitet?: boolean
   seksjoner: Seksjon[]
-  beregning: { type: "sum" | "sum_per_seksjon" | "ingen" }
+  /** `maks` kapper totalsummen, for skalaer der kilden oppgir et tak. */
+  beregning: { type: "sum" | "sum_per_seksjon" | "ingen"; maks?: number }
   terskler: Terskel[]
+  /** Regler som overstyrer terskeltabellen når de utløses. */
+  overstyringer?: Overstyring[]
   visDelscorer?: boolean
-  /**
-   * Hvordan bidragene skrives i notatet. `"full"` (standard) tar med etikett,
-   * valgt alternativtekst og poeng; `"poeng"` skriver kun etikett + poeng, som er
-   * det man vil ha på skalaer med mange ledd (MADRS ville ellers fått en
-   * avsnittslang linje); `"tekst"` skriver kun alternativteksten, for verktøy med
-   * ett enkelt vurderingsledd der poenget allerede står i summen.
-   */
-  detaljStil?: "full" | "poeng" | "tekst"
+  /** Standard notatstil for verktøyets felter. Kan overstyres per felt. */
+  detaljStil?: DetaljStil
   /** Enheten summen måles i. Standard «poeng» — skalaer som Shulman bruker nivå. */
   sumEtikett?: string
+  /** Full veiledning for hele verktøyet, åpnes i egen modal fra overskriften. */
+  veiledning?: Veiledning
   /** Overskrift i journalnotatet. */
   notatTittel: string
   kilde: Kilde

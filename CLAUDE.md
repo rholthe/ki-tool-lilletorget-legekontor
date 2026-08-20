@@ -199,20 +199,39 @@ Nettleser (klinikkens datamaskin)
     felter (`ja_nei`/`valg`/`tall`/`funn`/`fritekst`), `beregning` (`sum`/`sum_per_seksjon`/`ingen`)
     og en `terskler`-tabell. Formen er bevisst uten funksjoner, slik at admin senere kan opprette
     verktøy fra frontend med nøyaktig samme datamodell
-  - Implementert: CHA₂DS₂-VASc, qSOFA, Wells DVT, Wells LE, MADRS, klokketest (Shulman 1–6),
+  - Implementert: CHA₂DS₂-VASc, qSOFA, PEVS, Wells DVT, Wells LE, MADRS, klokketest (Shulman 1–6),
     strukturert kne- og skulderundersøkelse
+  - PEVS (Pediatric Early Warning Score, Asker og Bærum legevakt 1.6) drev tre utvidelser av
+    datamodellen, alle fortsatt JSON-serialiserbare:
+    - `beregning.maks` kapper totalsummen (PEVS: maks 9, men tilleggspoengene kan gi råsum 13)
+    - `overstyringer: [{ type: "enkeltfelt_minst", poeng, klasse, tekst, farge }]` slår ut
+      uavhengig av totalen. Terskeltabellen kjenner bare summen, og PEVS krever umiddelbart
+      legetilsyn ved 3 poeng på én parameter selv når totalen er 3
+    - `veiledning` (`Veiledning` med blokker `overskrift`/`avsnitt`/`punkter`/`tabell`) på både
+      verktøy og enkeltfelt, vist via `VeiledningLenke` → egen modal (`verktoy-veiledning.tsx`).
+      Skjemaet viser kun én kort `hjelp`-linje per punkt; normalverdi-tabeller og
+      administreringsinstruks hører hjemme bak lenken
+    - Aldersgruppe er et eget `valg`-felt med 0 poeng, siden PEVS-kriteriene er avvik fra
+      aldersavhengige normalverdier. Normalverdiene står som `kriterium` på hvert alternativ
   - Undersøkelser (`kategori: "undersokelse"`, `beregning: "ingen"`) har `funn`-felter
     (normal/patologisk/ikke utført), `lateralitet: true` og ingen sum. Testlistene er bevisst korte
     — kun tester med god dokumentert treffsikkerhet, hver med én linje `hjelp` om hva funnet betyr.
     Tester legen ikke krysser av, utelates fra notatet, og «Kilde»-linjen droppes for verktøy uten skår
-  - `detaljStil` styrer notatlinjen: `full` (standard), `poeng` (MADRS — 10 ledd ville ellers gitt
-    en avsnittslang linje), `tekst` (klokketest — ett ledd, poenget står allerede i summen).
-    `sumEtikett` overstyrer «poeng» der summen ikke er poeng (klokketest: «på Shulman-skalaen»)
+  - `detaljStil` styrer notatlinjen: `full` (standard), `poeng` (MADRS og PEVS — 10 ledd eller
+    avsnittslange alternativtekster ville ellers gitt en uleselig linje), `tekst` (klokketest —
+    ett ledd, poenget står allerede i summen), `uten_poeng` (etikett + tekst, for klassifiserende
+    felter som ikke skårer, som PEVS sin aldersgruppe). Kan settes per felt og overstyrer da
+    verktøyets. `sumEtikett` overstyrer «poeng» der summen ikke er poeng (klokketest:
+    «på Shulman-skalaen»)
   - `ubesvarteValg()` blokkerer lagring til alle `valg`-felter er besvart. Et halvutfylt MADRS gir
     ellers en sum som ser gyldig ut, men er for lav — og ville landet i feil alvorlighetsgrad.
     Undersøkelser krever tilsvarende at minst ett funn er registrert
-  - `testkasus` på hver definisjon = referansekasus med kjent fasit; `kjorTestkasus()` verifiserer
-    poengsummeringen (prosjektet har ingen testrunner)
+  - `testkasus` på hver definisjon = referansekasus med kjent fasit (`forventetSum`, valgfritt
+    `forventetKlasse` som også dekker terskler og overstyringer); `kjorTestkasus()` verifiserer dem
+  - Selvtest: `npm run verktoy:test` (`scripts/verktoy-selvtest.mjs`) kompilerer `src/lib/verktoy`
+    med tsc og kjører alle referansekasus, sjekker at hver oppnåelige sum treffer en terskel, og at
+    `synkVerktoySeksjon()` er idempotent. Prosjektet har ingen testrunner, og poengsummene er
+    nettopp det som ikke får være feil — kjør dette etter hver endring i et verktøy
   - Søkbar liste + nøkkelordbaserte forslag ut fra transkript/kontekst (`src/lib/verktoy/sok.ts`)
   - Resultatet lagres strukturert som `Konsultasjon.verktoyResultater` (IndexedDB), ikke bare som
     tekst i notatet — ellers forsvinner det ved «Regenerer»
@@ -264,6 +283,8 @@ legeassist/
 ├── push-and-deploy.sh             # Kjøres lokalt: push + SSH kjører deploy.sh på server + helsesjekk
 ├── db-tunnel.sh                   # Kjøres lokalt (Git Bash): SSH-tunnel til shared-mariadb (slår opp container-IP)
 ├── db-tunnel.ps1                  # Samme tunnel for PowerShell (bruker Windows sin ssh.exe)
+├── scripts/
+│   └── verktoy-selvtest.mjs       # npm run verktoy:test — referansekasus, terskler, notat-synk
 ├── prisma/
 │   └── schema.prisma              # User (inkl. dpa*), Mal, sesjon, PasswordSetupToken, DpaVersjon
 ├── src/
@@ -309,6 +330,7 @@ legeassist/
 │   │   │   ├── chat-modal.tsx             # Chat / AI-hjelp modal
 │   │   │   ├── verktoy-modal.tsx          # Kliniske verktøy: søkbar liste + aktivt skjema + utførte
 │   │   │   ├── verktoy-skjema.tsx         # Generisk renderer for alle felttyper i et verktøy
+│   │   │   ├── verktoy-veiledning.tsx     # Full veiledning (blokker/tabeller) i egen modal, via lenke
 │   │   │   ├── diktering-knapp.tsx        # Gjenbrukbart mikrofonikon: live transkribering inn i et tekstfelt
 │   │   │   ├── vedlegg-panel.tsx          # Vedlegg: opplasting, kamera, oppgavevalg (modus: ocr|standard)
 │   │   │   ├── to-faktor-paaminnelse.tsx  # Diskret 2FA-påminnelse (~1/mnd, localStorage)
@@ -339,7 +361,7 @@ legeassist/
 │   │   │   ├── beregn.ts          # beregn/byggResultat/synkVerktoySeksjon/kjorTestkasus
 │   │   │   ├── sok.ts             # sokVerktoy + foreslaaVerktoy (nøkkelord)
 │   │   │   ├── registry.ts        # INNEBYGDE_VERKTOY + finnVerktoy
-│   │   │   └── definisjoner/      # Én fil per verktøy (chadsvasc, qsofa, wells-*, madrs,
+│   │   │   └── definisjoner/      # Én fil per verktøy (chadsvasc, qsofa, pevs, wells-*, madrs,
 │   │   │                          #   klokketest, kne, skulder)
 │   │   └── vedlegg.ts             # VEDLEGG_OPPGAVE_INFO, VEDLEGG_OCR_BRUK_INFO, lagVedleggInstruksjon()
 │   ├── types/

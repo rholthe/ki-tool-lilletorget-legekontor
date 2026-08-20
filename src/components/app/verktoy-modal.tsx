@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { VerktoySkjema } from "@/components/app/verktoy-skjema"
+import { VeiledningLenke } from "@/components/app/verktoy-veiledning"
 import { useKonsultasjon } from "@/hooks/use-konsultasjon"
 import { useVerktoy } from "@/hooks/use-verktoy"
 import { beregn, byggResultat, standardSvar, ubesvarteValg } from "@/lib/verktoy/beregn"
@@ -267,12 +268,19 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
               </div>
             ) : (
               <>
-                <div className="px-5 py-3 border-b border-slate-100 shrink-0">
-                  <h3 className="text-sm font-semibold text-slate-800">{valgt.navn}</h3>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    {valgt.langtNavn} · Kilde: {valgt.kilde.navn}
-                    {valgt.kilde.versjon ? ` ${valgt.kilde.versjon}` : ""}
-                  </p>
+                <div className="px-5 py-3 border-b border-slate-100 shrink-0 flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-semibold text-slate-800">{valgt.navn}</h3>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      {valgt.langtNavn} · Kilde: {valgt.kilde.navn}
+                      {valgt.kilde.versjon ? ` ${valgt.kilde.versjon}` : ""}
+                    </p>
+                  </div>
+                  {valgt.veiledning && (
+                    <div className="shrink-0 pt-0.5">
+                      <VeiledningLenke veiledning={valgt.veiledning} etikett="Full veiledning" />
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex-1 overflow-y-auto px-5 py-4">

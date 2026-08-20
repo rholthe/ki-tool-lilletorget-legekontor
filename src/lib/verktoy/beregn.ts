@@ -8,8 +8,11 @@
 
 import type {
   Delscore,
+  DetaljStil,
+  Farge,
   Felt,
   Funnverdi,
+  Overstyring,
   Side,
   Svarverdi,
   Terskel,
@@ -67,11 +70,14 @@ export function feltPoeng(felt: Felt, verdi: Svarverdi): number {
 export function feltDetalj(
   felt: Felt,
   verdi: Svarverdi,
-  stil: "full" | "poeng" | "tekst" = "full"
+  stil: DetaljStil = "full"
 ): string | null {
   switch (felt.type) {
-    case "ja_nei":
-      return verdi === true ? `${felt.kort ?? felt.sporsmal} ${felt.poeng}` : null
+    case "ja_nei": {
+      if (verdi !== true) return null
+      const etikett = felt.kort ?? felt.sporsmal
+      return stil === "uten_poeng" ? etikett : `${etikett} ${felt.poeng}`
+    }
     case "valg": {
       if (typeof verdi !== "number") return null
       const alt = felt.alternativer[verdi]
@@ -79,6 +85,7 @@ export function feltDetalj(
       const etikett = felt.kort ?? felt.sporsmal
       if (stil === "tekst") return alt.tekst
       if (stil === "poeng") return `${etikett} ${alt.poeng}`
+      if (stil === "uten_poeng") return `${etikett}: ${alt.tekst}`
       return `${etikett}: ${alt.tekst} ${alt.poeng}`
     }
     case "tall":
@@ -113,13 +120,29 @@ export function finnTerskel(verktoy: Verktoy, sum: number): Terskel | null {
   return verktoy.terskler.find((t) => sum >= t.fra && sum <= t.til) ?? null
 }
 
+/**
+ * Regelen som slår ut på ett enkeltfelt uavhengig av totalsummen — den strengeste
+ * av dem som er utløst. PEVS med 3 poeng på én parameter krever umiddelbart
+ * legetilsyn selv når totalen bare er 3.
+ */
+export function finnOverstyring(
+  verktoy: Verktoy,
+  hoyesteFeltPoeng: number
+): Overstyring | null {
+  const utlost = (verktoy.overstyringer ?? []).filter((o) => hoyesteFeltPoeng >= o.poeng)
+  if (utlost.length === 0) return null
+  return utlost.reduce((a, b) => (b.poeng > a.poeng ? b : a))
+}
+
 export interface Beregning {
   sum: number | null
   delscorer?: Delscore[]
   detaljer: string[]
   klasse: string | null
   tolkning: string | null
-  farge: Terskel["farge"] | null
+  farge: Farge | null
+  /** Satt når en `overstyring` bestemte tolkningen i stedet for terskeltabellen. */
+  overstyrt?: boolean
 }
 
 /** Beregner sum, delscorer, tolkning og notatdetaljer for et utfylt skjema. */
@@ -127,13 +150,16 @@ export function beregn(verktoy: Verktoy, svar: Record<string, Svarverdi>): Bereg
   const detaljer: string[] = []
   const delscorer: Delscore[] = []
   let sum = 0
+  let hoyesteFeltPoeng = 0
 
   for (const seksjon of verktoy.seksjoner) {
     let seksjonsSum = 0
     for (const felt of seksjon.felter) {
       const verdi = svar[felt.id] ?? null
-      seksjonsSum += feltPoeng(felt, verdi)
-      const detalj = feltDetalj(felt, verdi, verktoy.detaljStil)
+      const poeng = feltPoeng(felt, verdi)
+      seksjonsSum += poeng
+      if (poeng > hoyesteFeltPoeng) hoyesteFeltPoeng = poeng
+      const detalj = feltDetalj(felt, verdi, felt.detaljStil ?? verktoy.detaljStil)
       if (detalj) detaljer.push(detalj)
     }
     sum += seksjonsSum
@@ -144,14 +170,22 @@ export function beregn(verktoy: Verktoy, svar: Record<string, Svarverdi>): Bereg
     return { sum: null, detaljer, klasse: null, tolkning: null, farge: null }
   }
 
-  const terskel = finnTerskel(verktoy, sum)
+  // Kilden kan oppgi et tak selv om leddene til sammen kan gi mer — PEVS har
+  // maks 9 poeng, men tilleggspoengene kan løfte råsummen over det
+  const kappet =
+    verktoy.beregning.maks !== undefined ? Math.min(sum, verktoy.beregning.maks) : sum
+
+  const terskel = finnTerskel(verktoy, kappet)
+  const overstyring = finnOverstyring(verktoy, hoyesteFeltPoeng)
+
   return {
-    sum,
+    sum: kappet,
     ...(verktoy.beregning.type === "sum_per_seksjon" ? { delscorer } : {}),
     detaljer,
-    klasse: terskel?.klasse ?? null,
-    tolkning: terskel?.tekst ?? null,
-    farge: terskel?.farge ?? null,
+    klasse: overstyring?.klasse ?? terskel?.klasse ?? null,
+    tolkning: overstyring?.tekst ?? terskel?.tekst ?? null,
+    farge: overstyring?.farge ?? terskel?.farge ?? null,
+    ...(overstyring ? { overstyrt: true } : {}),
   }
 }
 
@@ -279,6 +313,8 @@ export interface Testresultat {
   ok: boolean
   forventet: number
   faktisk: number | null
+  forventetKlasse?: string
+  faktiskKlasse?: string | null
 }
 
 /**
@@ -288,12 +324,16 @@ export interface Testresultat {
 export function kjorTestkasus(verktoy: Verktoy): Testresultat[] {
   return (verktoy.testkasus ?? []).map((kasus) => {
     const svar = { ...standardSvar(verktoy), ...kasus.svar }
-    const faktisk = beregn(verktoy, svar).sum
+    const b = beregn(verktoy, svar)
+    const klasseOk = kasus.forventetKlasse === undefined || b.klasse === kasus.forventetKlasse
     return {
       navn: kasus.navn,
-      ok: faktisk === kasus.forventetSum,
+      ok: b.sum === kasus.forventetSum && klasseOk,
       forventet: kasus.forventetSum,
-      faktisk,
+      faktisk: b.sum,
+      ...(kasus.forventetKlasse !== undefined
+        ? { forventetKlasse: kasus.forventetKlasse, faktiskKlasse: b.klasse }
+        : {}),
     }
   })
 }

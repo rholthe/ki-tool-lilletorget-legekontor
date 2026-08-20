@@ -1,6 +1,7 @@
 import type { Verktoy, VerktoyKategori } from "./typer"
 import { CHADSVASC } from "./definisjoner/chadsvasc"
 import { QSOFA } from "./definisjoner/qsofa"
+import { PEVS } from "./definisjoner/pevs"
 import { WELLS_DVT } from "./definisjoner/wells-dvt"
 import { WELLS_LE } from "./definisjoner/wells-le"
 import { MADRS } from "./definisjoner/madrs"
@@ -18,6 +19,7 @@ import { SKULDERUNDERSOKELSE } from "./definisjoner/skulder"
 export const INNEBYGDE_VERKTOY: Verktoy[] = [
   CHADSVASC,
   QSOFA,
+  PEVS,
   WELLS_DVT,
   WELLS_LE,
   MADRS,

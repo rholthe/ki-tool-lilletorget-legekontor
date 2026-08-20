@@ -1,8 +1,10 @@
 "use client"
 
+import type { ReactNode } from "react"
 import { Check } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { VeiledningLenke } from "@/components/app/verktoy-veiledning"
 import type { Felt, Funnverdi, Side, Svarverdi, Verktoy } from "@/lib/verktoy/typer"
 
 interface Props {
@@ -23,11 +25,27 @@ function formaterPoeng(poeng: number): string {
   return poeng > 0 ? `+${poeng}` : `${poeng}`
 }
 
-function FeltRad({ felt, verdi, onSvar }: { felt: Felt; verdi: Svarverdi; onSvar: (v: Svarverdi) => void }) {
+/**
+ * Ett felt. Den korte `hjelp`-linjen står i skjemaet; lenken til full veiledning
+ * plasseres der den er nærmest spørsmålet — men aldri inni knappen for `ja_nei`
+ * og `funn`, siden en knapp ikke kan inneholde en annen knapp.
+ */
+function FeltRad({
+  felt,
+  verdi,
+  onSvar,
+  lenke,
+}: {
+  felt: Felt
+  verdi: Svarverdi
+  onSvar: (v: Svarverdi) => void
+  lenke: ReactNode
+}) {
   switch (felt.type) {
     case "ja_nei": {
       const av = verdi === true
       return (
+        <>
         <button
           type="button"
           onClick={() => onSvar(!av)}
@@ -51,6 +69,8 @@ function FeltRad({ felt, verdi, onSvar }: { felt: Felt; verdi: Svarverdi; onSvar
             {formaterPoeng(felt.poeng)}
           </span>
         </button>
+        {lenke && <div className="pl-10 pt-1">{lenke}</div>}
+        </>
       )
     }
 
@@ -59,6 +79,7 @@ function FeltRad({ felt, verdi, onSvar }: { felt: Felt; verdi: Svarverdi; onSvar
         <div className="space-y-1.5">
           <div className="text-sm text-slate-800">{felt.sporsmal}</div>
           {felt.hjelp && <div className="text-xs text-slate-500">{felt.hjelp}</div>}
+          {lenke}
           <div className="space-y-1">
             {felt.alternativer.map((alt, i) => {
               const av = verdi === i
@@ -98,6 +119,7 @@ function FeltRad({ felt, verdi, onSvar }: { felt: Felt; verdi: Svarverdi; onSvar
         <div className="space-y-1.5">
           <label className="block text-sm text-slate-800">{felt.sporsmal}</label>
           {felt.hjelp && <div className="text-xs text-slate-500">{felt.hjelp}</div>}
+          {lenke}
           <div className="flex items-center gap-2">
             <Input
               type="number"
@@ -115,6 +137,7 @@ function FeltRad({ felt, verdi, onSvar }: { felt: Felt; verdi: Svarverdi; onSvar
 
     case "funn":
       return (
+        <div className="space-y-1">
         <div className="flex items-center gap-3">
           <span className="flex-1 min-w-0">
             <span className="block text-sm text-slate-800">{felt.test}</span>
@@ -139,6 +162,8 @@ function FeltRad({ felt, verdi, onSvar }: { felt: Felt; verdi: Svarverdi; onSvar
             })}
           </div>
         </div>
+        {lenke}
+        </div>
       )
 
     case "fritekst":
@@ -146,6 +171,7 @@ function FeltRad({ felt, verdi, onSvar }: { felt: Felt; verdi: Svarverdi; onSvar
         <div className="space-y-1.5">
           <label className="block text-sm text-slate-800">{felt.sporsmal}</label>
           {felt.hjelp && <div className="text-xs text-slate-500">{felt.hjelp}</div>}
+          {lenke}
           <Textarea
             value={typeof verdi === "string" ? verdi : ""}
             onChange={(e) => onSvar(e.target.value)}
@@ -200,6 +226,9 @@ export function VerktoySkjema({ verktoy, svar, onSvar, side, onSide }: Props) {
                 felt={felt}
                 verdi={svar[felt.id] ?? null}
                 onSvar={(v) => onSvar(felt.id, v)}
+                lenke={
+                  felt.veiledning ? <VeiledningLenke veiledning={felt.veiledning} /> : null
+                }
               />
             ))}
           </div>
