@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { Check, Info, Search, ClipboardList, Trash2, X } from "lucide-react"
+import { Check, Info, RefreshCw, Search, ClipboardList, Sparkles, Trash2, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
@@ -11,6 +11,7 @@ import { VeiledningLenke } from "@/components/app/verktoy-veiledning"
 import { RetningslinjeVisning } from "@/components/app/retningslinje-visning"
 import { useKonsultasjon } from "@/hooks/use-konsultasjon"
 import { useVerktoy } from "@/hooks/use-verktoy"
+import { useVerktoyForslag } from "@/hooks/use-verktoyforslag"
 import { beregn, byggResultat, standardSvar, ubesvarteValg } from "@/lib/verktoy/beregn"
 import {
   INGEN_BEHANDLING,
@@ -22,7 +23,7 @@ import {
   erRetningslinje,
   finnOppslag,
 } from "@/lib/verktoy/registry"
-import { foreslaaOppslag, sokOppslag, treffId } from "@/lib/verktoy/sok"
+import { finnTreff, foreslaaOppslag, sokOppslag, treffId } from "@/lib/verktoy/sok"
 import type { Treff } from "@/lib/verktoy/sok"
 import type { Side, Svarverdi, VerktoyKategori } from "@/lib/verktoy/typer"
 import { cuid } from "@/lib/cuid"
@@ -65,6 +66,12 @@ export function VerktoyModal({ open, onClose }: Props) {
 function VerktoyInnhold({ onClose }: { onClose: () => void }) {
   const { aktiv } = useKonsultasjon()
   const { resultater, lagreResultat, slettResultat } = useVerktoy()
+  const {
+    forslag: aiForslag,
+    laster: aiLaster,
+    tilgjengelig: aiTilgjengelig,
+    oppdaterForslag,
+  } = useVerktoyForslag()
 
   const [sok, setSok] = useState("")
   const [valgt, setValgt] = useState<Treff | null>(null)
@@ -83,6 +90,26 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
   }, [aktiv])
 
   const treff = useMemo(() => sokOppslag(sok), [sok])
+
+  /**
+   * AI-forslagene løses opp mot registeret her. Serveren har allerede validert
+   * id-ene mot hvitlisten, men en id kan bli ugyldig hvis et verktøy fjernes
+   * mellom to økter — da skal raden bare falle ut, ikke krasje listen.
+   */
+  const aiRader = useMemo(
+    () =>
+      aiForslag
+        .map((f) => ({ treff: finnTreff(f.id), begrunnelse: f.begrunnelse }))
+        .filter((r): r is { treff: Treff; begrunnelse: string } => Boolean(r.treff)),
+    [aiForslag]
+  )
+
+  // Nøkkelordtreff som AI allerede har foreslått, vises ikke to ganger
+  const aiIder = useMemo(() => new Set(aiRader.map((r) => treffId(r.treff))), [aiRader])
+  const ordForslag = useMemo(
+    () => forslag.filter((f) => !aiIder.has(treffId(f.treff))),
+    [forslag, aiIder]
+  )
 
   const gruppert = useMemo(() => {
     const grupper = new Map<VerktoyKategori, Treff[]>()
@@ -263,12 +290,50 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
             </div>
 
             <div className="flex-1 overflow-y-auto p-3 space-y-4">
-              {forslag.length > 0 && !sok && (
+              {!sok && (aiTilgjengelig || ordForslag.length > 0) && (
                 <div className="space-y-1.5">
-                  <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                    Foreslått for denne konsultasjonen
-                  </h3>
-                  {forslag.map(({ treff: t, ord }) => (
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                      Foreslått for denne konsultasjonen
+                    </h3>
+                    {aiTilgjengelig && (
+                      <button
+                        type="button"
+                        onClick={() => void oppdaterForslag()}
+                        disabled={aiLaster}
+                        title="Hent AI-forslag på nytt"
+                        className="text-slate-400 hover:text-blue-600 disabled:opacity-50 transition-colors"
+                      >
+                        <RefreshCw className={`w-3 h-3 ${aiLaster ? "animate-spin" : ""}`} />
+                      </button>
+                    )}
+                  </div>
+
+                  {aiLaster && aiRader.length === 0 && (
+                    <p className="text-xs text-slate-400 italic px-1">Ser gjennom konsultasjonen…</p>
+                  )}
+
+                  {aiRader.map(({ treff: t, begrunnelse }) => (
+                    <button
+                      key={treffId(t)}
+                      onClick={() => velg(t)}
+                      className={`w-full text-left px-3 py-2 rounded-lg border transition-colors ${
+                        valgtId === treffId(t)
+                          ? "border-blue-400 bg-blue-50"
+                          : "border-violet-200 bg-violet-50/60 hover:bg-violet-50"
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <Sparkles className="w-3 h-3 text-violet-500 shrink-0" />
+                        <span className="text-sm font-medium text-slate-800">{treffNavn(t)}</span>
+                      </div>
+                      {begrunnelse && (
+                        <div className="text-xs text-slate-500 mt-0.5">{begrunnelse}</div>
+                      )}
+                    </button>
+                  ))}
+
+                  {ordForslag.map(({ treff: t, ord }) => (
                     <button
                       key={treffId(t)}
                       onClick={() => velg(t)}
@@ -282,6 +347,12 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
                       <div className="text-xs text-slate-500 mt-0.5">Nevnt: {ord.join(", ")}</div>
                     </button>
                   ))}
+
+                  {!aiLaster && aiRader.length === 0 && ordForslag.length === 0 && (
+                    <p className="text-xs text-slate-400 italic px-1">
+                      Ingen åpenbare treff — søk eller bla i listen under.
+                    </p>
+                  )}
                 </div>
               )}
 

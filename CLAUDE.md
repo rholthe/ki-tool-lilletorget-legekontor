@@ -232,7 +232,22 @@ Nettleser (klinikkens datamaskin)
     med tsc og kjører alle referansekasus, sjekker at hver oppnåelige sum treffer en terskel, og at
     `synkVerktoySeksjon()` er idempotent. Prosjektet har ingen testrunner, og poengsummene er
     nettopp det som ikke får være feil — kjør dette etter hver endring i et verktøy
-  - Søkbar liste + nøkkelordbaserte forslag ut fra transkript/kontekst (`src/lib/verktoy/sok.ts`)
+  - Søkbar liste + nøkkelordbaserte forslag ut fra transkript/kontekst (`src/lib/verktoy/sok.ts`).
+    Retningslinjenes tilstander er egne rader, så legen kan søke på «ørebetennelse»
+  - **AI-forslag** (`/api/verktoyforslag`, `use-verktoyforslag.ts`): supplerer nøkkelordene der de
+    ikke strekker til — «slapp, blek, puster fort» nevner verken PEVS eller qSOFA ved navn
+    - **Hvitlisten bygges på serveren** fra registeret, ikke av klienten, og samme liste validerer
+      svaret. Id-er som ikke står der forkastes, så verken modellen eller en manipulert klient kan
+      introdusere et verktøy som ikke finnes
+    - Modellen foreslår, den regner ikke: den peker på hvilket verktøy legen bør åpne, all
+      poengsummering skjer fortsatt i `beregn.ts`
+    - Vanlig JSON, ikke SSE — ett kort strukturert svar, ikke en samtale. Ingen assistant-prefill:
+      Bedrock svarer «This model does not support assistant message prefill», så `lesForslag`
+      plukker JSON ut av svaret i stedet
+    - Forslagene lagres på `Konsultasjon.verktoyForslag` med et avtrykk av kildeteksten. Modalen
+      kan åpnes og lukkes fritt uten nytt Bedrock-kall; kallet gjentas først når teksten endres.
+      800 ms debounce, siden kontekst/tilleggsinfo er tekstfelt legen skriver i
+    - Prompt i staging-registeret som `felles:verktoyforslag` (admin kan justere den)
   - Resultatet lagres strukturert som `Konsultasjon.verktoyResultater` (IndexedDB), ikke bare som
     tekst i notatet — ellers forsvinner det ved «Regenerer»
   - `synkVerktoySeksjon()` skriver seksjonen `--- KLINISKE VERKTØY ---` inn i notatet. Idempotent
@@ -273,7 +288,7 @@ Nettleser (klinikkens datamaskin)
   (utgiver oppgir ingen eksplisitt lisens); flere tilstander og kapitler; vektbasert
   barnedosering som egen `kalkulator`
 - Kliniske verktøy, gjenstående faser: MMS-NR (krever rettighetsavklaring for itemtekst),
-  AI-forslag og AI-forhåndsutfylling med bekreftelseskrav, admin-CRUD for egne verktøy
+  AI-forhåndsutfylling med bekreftelseskrav, admin-CRUD for egne verktøy
   (`/admin/verktoy` + Prisma-modell)
 - Frasebibliotek
 - Klinikk-teamfunksjonalitet
@@ -332,6 +347,7 @@ legeassist/
 │   │   │   ├── soniox-token/      # Genererer temp-tokens for Soniox
 │   │   │   ├── claude/            # SSE-endpoint for notatgenerering via Bedrock
 │   │   │   ├── chat/              # SSE-endpoint for multi-turn chat via Bedrock
+│   │   │   ├── verktoyforslag/    # AI-forslag om kliniske verktøy (JSON, hvitlistet på server)
 │   │   │   ├── maler/             # CRUD for Mal (GET/POST, PUT/DELETE per ID, delte maler, importer)
 │   │   │   └── admin/
 │   │   │       ├── settings/      # GET/POST for SystemSetting (modell, region)

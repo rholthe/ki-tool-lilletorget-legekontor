@@ -95,3 +95,23 @@ export function resolverVedleggInstruksjon(
   if (!nokkel) return lagVedleggInstruksjon(vedlegg) // egendefinert
   return tekst(`vedlegg:${nokkel}`, overrides) || lagVedleggInstruksjon(vedlegg)
 }
+
+/**
+ * Bygger system prompt for AI-verktøyforslag. Kandidatlisten og konteksten
+ * settes inn i plassholderne; mangler de (admin har fjernet dem), appendes
+ * innholdet trygt så prompten fortsatt er brukbar.
+ */
+export function byggVerktoyforslagStaging(
+  kandidatTekst: string,
+  kontekstTekst: string,
+  overrides: Map<string, string>
+): string {
+  const base = tekst("felles:verktoyforslag", overrides)
+  let prompt = base.includes("{KANDIDATER}")
+    ? base.replace("{KANDIDATER}", kandidatTekst)
+    : `${base}\n\n## Verktøy du kan foreslå\n\n${kandidatTekst}`
+  prompt = prompt.includes("{KONTEKST}")
+    ? prompt.replace("{KONTEKST}", kontekstTekst)
+    : `${prompt}\n\n## Konsultasjonens innhold\n\n${kontekstTekst}`
+  return prompt
+}

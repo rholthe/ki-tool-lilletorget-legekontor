@@ -108,3 +108,36 @@ export function foreslaaOppslag(
     .sort((a, b) => b.ord.length - a.ord.length)
     .slice(0, maks)
 }
+
+/** Slår opp én rad fra id-en `treffId` produserer. */
+export function finnTreff(
+  id: string,
+  oppslag: Oppslag[] = INNEBYGDE_OPPSLAG
+): Treff | undefined {
+  return alleTreff(oppslag).find((t) => treffId(t) === id)
+}
+
+export interface Kandidat {
+  id: string
+  navn: string
+  beskrivelse: string
+}
+
+/**
+ * Kandidatlisten som sendes til språkmodellen ved AI-forslag.
+ *
+ * Bygges på serveren, aldri av klienten: modellen får kun lov til å returnere
+ * id-er herfra, og samme liste brukes til å validere svaret. Da kan verken
+ * modellen eller en manipulert klient introdusere et verktøy som ikke finnes.
+ */
+export function forslagKandidater(oppslag: Oppslag[] = INNEBYGDE_OPPSLAG): Kandidat[] {
+  return alleTreff(oppslag).map((t) =>
+    t.slag === "verktoy"
+      ? { id: treffId(t), navn: t.verktoy.navn, beskrivelse: t.verktoy.langtNavn }
+      : {
+          id: treffId(t),
+          navn: t.tilstand.navn,
+          beskrivelse: `Behandlingsanbefaling — ${t.retningslinje.navn}`,
+        }
+  )
+}
