@@ -882,7 +882,9 @@ export function KonsultasjonView() {
                 Kliniske verktøy
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Skåringsverktøy og undersøkelser (Alt+V)</TooltipContent>
+            <TooltipContent>
+              Skåringsverktøy, undersøkelser og retningslinjer (Alt+V)
+            </TooltipContent>
           </Tooltip>
 
           <div className="flex-1" />

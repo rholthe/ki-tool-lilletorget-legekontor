@@ -247,7 +247,9 @@ Nettleser (klinikkens datamaskin)
     (`src/lib/verktoy/typer.ts`), og `Oppslag = Verktoy | Retningslinje` deler modal, søk og
     notat-innsetting
     - Implementert: Antibiotika i allmennpraksis (nasjonal faglig retningslinje, Helsedirektoratet),
-      kuratert utvalg på 12 tilstander i `src/lib/verktoy/retningslinjer/antibiotika.ts`
+      kuratert utvalg på 18 tilstander i `src/lib/verktoy/retningslinjer/antibiotika.ts`
+      (øvre/nedre luftveier, urinveier, hud, genitalt, samt sepsis og bakteriell meningitt der
+      anbefalingen er prehospital engangsdose før innleggelse)
     - **Alt innhold er hentet ordrett fra kilden**, aldri skrevet fra hukommelsen og aldri
       omformulert av en språkmodell. Doser settes inn i notatet av koden, ikke via prompten —
       en omskrevet «660 mg x 4» ville vært like usynlig som en feilsummert skår
