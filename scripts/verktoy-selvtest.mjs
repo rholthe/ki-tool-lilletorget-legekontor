@@ -116,8 +116,22 @@ for (const verktoy of INNEBYGDE_VERKTOY) {
   }
 
   // 2. Terskeldekning
+  //
+  // For formelverktøy sier feltenes ytterpunkter ingenting om hvilke verdier
+  // resultatet kan ta — MDI teller kun det høyeste av 8a/8b og 10a/10b, så
+  // råsummen 60 er uoppnåelig, og NORRISK 2 gir en prosent, ikke en sum. Da
+  // sveipes terskeltabellens eget spenn i stedet, som fortsatt fanger hull
+  // mellom båndene. Referansekasusene dekker selve grenseverdiene.
   if (verktoy.beregning.type !== "ingen") {
-    for (let sum = sumGrense(verktoy, "min"); sum <= sumGrense(verktoy, "maks"); sum++) {
+    const [fra, til] =
+      verktoy.beregning.type === "formel"
+        ? [
+            Math.min(...verktoy.terskler.map((t) => t.fra)),
+            Math.max(...verktoy.terskler.map((t) => t.til)),
+          ]
+        : [sumGrense(verktoy, "min"), sumGrense(verktoy, "maks")]
+
+    for (let sum = fra; sum <= til; sum++) {
       sjekk(
         verktoy.terskler.some((t) => sum >= t.fra && sum <= t.til),
         `sum ${sum} treffer ingen terskel`

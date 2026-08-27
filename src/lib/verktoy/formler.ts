@@ -139,8 +139,62 @@ const norrisk2: Formel = (svar) => {
   return (1 - Math.exp(-Math.exp(lp))) * 100
 }
 
+/**
+ * MDI — Major Depression Inventory, totalskår 0–50.
+ *
+ * Skjemaet har tolv spørsmål, men bare ti ledd. Kilden (Bech et al., BMC
+ * Psychiatry 2015, figur 1b) sier: «For items 8a versus 8b and for items 10a
+ * versus 10b, it is the highest score on a or b that is used». Derfor formel og
+ * ikke `sum`: en rett summering av alle tolv gir inntil 60 på en skala som går
+ * til 50, og den ville systematisk overvurdert alvorlighetsgraden.
+ *
+ * Svarverdiene er alternativindekser. Alternativene i `definisjoner/mdi.ts` er
+ * bevisst listet stigende, slik at **indeks === poeng** — formelen får bare
+ * svarene, ikke definisjonen, og kan ikke slå opp poengene selv.
+ * Referansekasusene i definisjonen fanger opp hvis den rekkefølgen endres.
+ *
+ * Returnerer null til alle tolv er besvart. Et halvutfylt skjema gir en for lav
+ * sum som ser helt gyldig ut, og ville landet i feil alvorlighetsbånd.
+ */
+const MDI_ENKELTLEDD = [
+  "nedstemt",
+  "interesse",
+  "energi",
+  "selvtillit",
+  "skyldfolelse",
+  "livslyst",
+  "konsentrasjon",
+  "sovn",
+]
+
+/** Parene der kun det høyeste svaret teller. */
+const MDI_PAR: [string, string][] = [
+  ["rastlos", "dempet"],
+  ["nedsatt-appetitt", "okt-appetitt"],
+]
+
+const mdi: Formel = (svar) => {
+  let sum = 0
+
+  for (const id of MDI_ENKELTLEDD) {
+    const poeng = tall(svar[id])
+    if (poeng === null) return null
+    sum += poeng
+  }
+
+  for (const [a, b] of MDI_PAR) {
+    const forste = tall(svar[a])
+    const andre = tall(svar[b])
+    if (forste === null || andre === null) return null
+    sum += Math.max(forste, andre)
+  }
+
+  return sum
+}
+
 export const FORMLER: Record<string, Formel> = {
   norrisk2,
+  mdi,
 }
 
 export function finnFormel(id: string): Formel | undefined {

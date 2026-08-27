@@ -199,7 +199,7 @@ Nettleser (klinikkens datamaskin)
     felter (`ja_nei`/`valg`/`tall`/`funn`/`fritekst`), `beregning` (`sum`/`sum_per_seksjon`/`ingen`)
     og en `terskler`-tabell. Formen er bevisst uten funksjoner, slik at admin senere kan opprette
     verktøy fra frontend med nøyaktig samme datamodell
-  - Implementert: CHA₂DS₂-VASc, qSOFA, PEVS, NORRISK 2, Wells DVT, Wells LE, MADRS,
+  - Implementert: CHA₂DS₂-VASc, qSOFA, PEVS, NORRISK 2, Wells DVT, Wells LE, MADRS, MDI,
     klokketest (Shulman 1–6), strukturert kne- og skulderundersøkelse
   - **Formelverktøy** (`beregning: { type: "formel", formelId }`): resultatet kommer fra en
     navngitt funksjon i `src/lib/verktoy/formler.ts`, aldri fra lagret kode som evalueres.
@@ -214,6 +214,21 @@ Nettleser (klinikkens datamaskin)
     - Utenfor validert område (alder 45–74, BT 120–160, kolesterol 4–8) returnerer formelen null
       i stedet for å ekstrapolere. En risikoprosent regnet på en 80-åring ville sett like
       troverdig ut som en gyldig
+    - MDI er det andre: tolv spørsmål, men ti ledd. For parene 8a/8b og 10a/10b teller kun
+      det høyeste svaret, så en rett `sum` ville gitt inntil 60 på en skala som går til 50 —
+      og systematisk overvurdert alvorlighetsgraden. Alternativene er listet stigende slik at
+      **indeks === poeng**; formelen får bare svarene, ikke definisjonen
+    - **Kilden er den åpne originalpublikasjonen, ikke NHI.** Ledd, svaralternativer,
+      maksregelen og alvorlighetsbåndene er hentet fra figur 1a/1b i Bech et al., BMC
+      Psychiatry 2015 (CC BY 4.0). NHIs norske versjon er opphavsrettslig beskyttet med
+      uttrykkelig forbehold mot tekst- og datautvinning, og er ikke brukt. Den norske
+      ordlyden er vår egen oversettelse av originalen — ikke validert på norsk, hvilket
+      står i `veiledning` slik at legen ser det. NHI opplyser det samme om sin versjon
+    - MDI er pasientutfylt, MADRS legeskåret. Begge kommer opp på søk etter «depresjon»,
+      og det er riktig — de svarer på hvert sitt spørsmål
+    - Formelverktøy viser ikke poeng per alternativ i skjemaet (`visPoeng` i
+      `verktoy-skjema.tsx`). For et selvutfyllingsskjema er det en fordel: pasienten ser
+      svaralternativene, ikke hva de er verdt
   - **Kalkulatorer** (`Kalkulator` i `Oppslag`-unionen) er en tredje datatype ved siden av
     `Verktoy` og `Retningslinje`: flere inngangsveier til samme størrelse, og flere utdata
     samtidig i stedet for ett tall med tolkningsbånd. Inndataene har samme form, så `Felt`,
@@ -272,8 +287,11 @@ Nettleser (klinikkens datamaskin)
     `forventetKlasse` som også dekker terskler og overstyringer); `kjorTestkasus()` verifiserer dem
   - Selvtest: `npm run verktoy:test` (`scripts/verktoy-selvtest.mjs`) kompilerer `src/lib/verktoy`
     med tsc og kjører alle referansekasus, sjekker at hver oppnåelige sum treffer en terskel, og at
-    `synkVerktoySeksjon()` er idempotent. Prosjektet har ingen testrunner, og poengsummene er
-    nettopp det som ikke får være feil — kjør dette etter hver endring i et verktøy
+    `synkVerktoySeksjon()` er idempotent. For formelverktøy sveipes terskeltabellens eget spenn —
+    feltenes ytterpunkter sier ingenting om hva formelen kan gi (MDI når aldri 60, NORRISK 2 gir
+    en prosent), så der dekker referansekasusene grenseverdiene i stedet. Prosjektet har ingen
+    testrunner, og poengsummene er nettopp det som ikke får være feil — kjør dette etter hver
+    endring i et verktøy
   - Søkbar liste + nøkkelordbaserte forslag ut fra transkript/kontekst (`src/lib/verktoy/sok.ts`).
     Retningslinjenes tilstander er egne rader, så legen kan søke på «ørebetennelse»
   - **AI-forslag** (`/api/verktoyforslag`, `use-verktoyforslag.ts`): supplerer nøkkelordene der de
@@ -448,12 +466,12 @@ legeassist/
 │   │   │   ├── beregn.ts          # beregn/byggResultat/synkVerktoySeksjon/kjorTestkasus
 │   │   │   ├── sok.ts             # sokOppslag + foreslaaOppslag (nøkkelord, tilstander som egne treff)
 │   │   │   ├── retningslinje.ts   # byggRetningslinjeResultat + ferskhetssjekk (dagerSidenVerifisert)
-│   │   │   ├── formler.ts         # Navngitte formler for beregning.type «formel» (norrisk2)
+│   │   │   ├── formler.ts         # Navngitte formler for beregning.type «formel» (norrisk2, mdi)
 │   │   │   ├── kalkulator.ts      # beregnKalkulator/byggKalkulatorResultat + erSynlig
 │   │   │   ├── kalkulatorer.ts    # Navngitte kalkulatorer (svangerskap), all datoregning i UTC
 │   │   │   ├── registry.ts        # INNEBYGDE_VERKTOY + finnVerktoy
 │   │   │   ├── definisjoner/      # Én fil per verktøy (chadsvasc, qsofa, pevs, wells-*, madrs,
-│   │   │   │                      #   klokketest, kne, skulder)
+│   │   │   │                      #   mdi, klokketest, kne, skulder)
 │   │   │   └── retningslinjer/    # Én fil per retningslinje (antibiotika)
 │   │   └── vedlegg.ts             # VEDLEGG_OPPGAVE_INFO, VEDLEGG_OCR_BRUK_INFO, lagVedleggInstruksjon()
 │   ├── types/

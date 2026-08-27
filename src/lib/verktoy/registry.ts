@@ -12,6 +12,7 @@ import { NORRISK2 } from "./definisjoner/norrisk2"
 import { WELLS_DVT } from "./definisjoner/wells-dvt"
 import { WELLS_LE } from "./definisjoner/wells-le"
 import { MADRS } from "./definisjoner/madrs"
+import { MDI } from "./definisjoner/mdi"
 import { KLOKKETEST } from "./definisjoner/klokketest"
 import { KNEUNDERSOKELSE } from "./definisjoner/kne"
 import { SKULDERUNDERSOKELSE } from "./definisjoner/skulder"
@@ -33,6 +34,7 @@ export const INNEBYGDE_VERKTOY: Verktoy[] = [
   WELLS_DVT,
   WELLS_LE,
   MADRS,
+  MDI,
   KLOKKETEST,
   KNEUNDERSOKELSE,
   SKULDERUNDERSOKELSE,
