@@ -75,7 +75,7 @@ export default function TilgangPage() {
                 id="arbeidssted"
                 name="arbeidssted"
                 type="text"
-                placeholder="Lilletorget legesenter"
+                placeholder="Lilletorget legekontor"
                 required
               />
               {state.errors?.arbeidssted && (
