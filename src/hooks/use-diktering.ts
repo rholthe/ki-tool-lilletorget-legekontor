@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react"
 import { registrerAktivitet } from "@/lib/aktivitet"
+import { lagSonioxMaaler, type SonioxMaaler } from "@/lib/soniox-maaler"
 
 // Dynamisk import — unngår "window is not defined" ved server-side rendering
 async function lastSonioxClient() {
@@ -28,6 +29,7 @@ export function useDiktering(opts: {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const klientRef = useRef<any>(null)
+  const maalerRef = useRef<SonioxMaaler | null>(null)
   const onOppdateringRef = useRef(opts.onOppdatering)
   useEffect(() => {
     onOppdateringRef.current = opts.onOppdatering
@@ -37,12 +39,14 @@ export function useDiktering(opts: {
   useEffect(() => {
     return () => {
       klientRef.current?.cancel()
+      maalerRef.current?.avslutt()
       klientRef.current = null
     }
   }, [])
 
   const stopp = useCallback(() => {
     klientRef.current?.stop()
+    maalerRef.current?.avsluttSnart()
     klientRef.current = null
     setPartial("")
     setStatus("av")
@@ -70,6 +74,8 @@ export function useDiktering(opts: {
         keepAliveInterval: 10_000,
       })
       klientRef.current = klient
+      maalerRef.current?.avslutt()
+      maalerRef.current = lagSonioxMaaler("diktering")
 
       klient.start({
         model: "stt-rt-v5",
@@ -95,18 +101,21 @@ export function useDiktering(opts: {
         onStarted: () => setStatus("lytter"),
         onError: (_s: string, message: string) => {
           setFeil(`Soniox: ${message}`)
+          maalerRef.current?.avslutt()
           setStatus("feil")
           klientRef.current = null
         },
         onStateChange: ({ newState }: { newState: string }) => {
           if (newState === "Finished") {
+            maalerRef.current?.avslutt()
             setPartial("")
             setStatus("av")
             klientRef.current = null
           }
         },
-        onPartialResult: (result: { tokens: Array<{ text: string; is_final: boolean }> }) => {
+        onPartialResult: (result: { total_audio_proc_ms?: number; tokens: Array<{ text: string; is_final: boolean }> }) => {
           registrerAktivitet() // et pågående opptak er aktivitet, også uten tastetrykk
+          maalerRef.current?.oppdater(result)
           let finalDelta = ""
           const nonFinalTekst: string[] = []
           for (const tok of result.tokens) {
@@ -125,6 +134,7 @@ export function useDiktering(opts: {
       setFeil(e instanceof Error ? e.message : "Kunne ikke starte diktering")
       setStatus("feil")
       klientRef.current?.cancel()
+      maalerRef.current?.avslutt()
       klientRef.current = null
     }
   }, [mikofonId])

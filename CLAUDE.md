@@ -10,30 +10,22 @@ Under aktiv utvikling. Kjerneflyt (opptak → transkript → notat) er implement
 
 ### Overordnet prinsipp: Privacy-by-design
 
-Pasientdata (lydopptak, transkripsjon, notater) **lagres aldri** på applikasjonsserveren. Lyd går direkte fra nettleseren til Soniox og er aldri innom serveren. Transkript, kontekst og vedlegg passerer serveren **i minnet** på vei til Bedrock (`/api/claude`, `/api/chat`, `/api/verktoyforslag`) og logges ikke. Serveren lagrer kun brukerkontoer, maler, meldinger og hver brukers krypterte datanøkkel. Skal kravet skjerpes til «aldri innom», må Bedrock-kallene flyttes til nettleseren med kortlivede AWS-nøkler.
+Pasientdata (lydopptak, transkripsjon, notater, vedlegg) er **aldri innom** applikasjonsserveren. Lyd går fra nettleseren til Soniox, og transkript, kontekst og vedlegg går fra nettleseren direkte til AWS Bedrock i EU. Serveren deler bare ut kortlivede nøkler (Soniox-token, STS-nøkler for Bedrock), prompt-overrides og modellvalg, og tar imot forbrukstall uten innhold (`/api/bruk`). Den lagrer brukerkontoer, maler, meldinger, bruksstatistikk og hver brukers krypterte datanøkkel.
 
 ### Dataflyt
 
 ```
-VPS (legeassist-server)
-  │
-  ├── Autentisering (login/session)
-  ├── Promptmaler og notatmaler
-  ├── Brukerpreferanser
-  ├── Genererer kortlivede temp-tokens for Soniox (ingen pasientinnhold)
-  │
-  └──→ AWS Bedrock (eu-central-1)
-          Claude API-forespørsler med transkript + prompt
-          Returnerer SSE-stream av generert notat
+VPS (legeassist-server) — aldri pasientinnhold
+  ├── Autentisering, maler, meldinger, bruksstatistikk
+  ├── /api/soniox-token   → kortlivet Soniox-nøkkel (merket med bruker-id)
+  ├── /api/ai/oppsett     → kortlivede AWS-nøkler (STS GetFederationToken, 1 t, kun Claude i EU)
+  │                          + modell/region + prompt-overrides (staging)
+  └── /api/bruk           ← forbrukstall fra nettleseren (tokens, lydtid, tegn)
 
 Nettleser (klinikkens datamaskin)
-  │
-  ├──→ Soniox EU-endpoint (direkte, med temp-token)
-  │       Lydstream → sanntidstranskript → tilbake til browser
-  │
-  └──→ VPS /api/claude (SSE)
-          Browser sender transkript + kontekst
-          Server streamer notatgenerering i sanntid (text deltas)
+  ├──→ Soniox EU-endepunkt (direkte): lyd → sanntidstranskript
+  └──→ AWS Bedrock eu-central-1 (direkte, SigV4 med STS-nøkler):
+          systemprompt + transkript/kontekst/vedlegg → strømmet svar
 ```
 
 ### Stack
@@ -47,18 +39,20 @@ Nettleser (klinikkens datamaskin)
 | ORM | Prisma 7 (Rust-fri, mariadb-driveradapter) | Typesikker DB-tilgang |
 | Autentisering | NextAuth v5 | Fleksibel, støtter credentials + 2FA |
 | Transkripsjon | Soniox (EU-endpoint) | Sanntid, norsk språkstøtte, GDPR-compliant |
-| AI-tekstgenerering | Anthropic Claude via AWS Bedrock | Server-side SSE streaming (eu-west-1), EU-databehandling |
+| AI-tekstgenerering | Anthropic Claude via AWS Bedrock | Kalles direkte fra nettleseren (`src/lib/bedrock-nettleser.ts`), eu.-profil, EU-databehandling |
 | Hosting | Selvhosted VPS (EU) | Full kontroll, ingen tredjepart for pasientdata |
 
 ### Nøkkelhåndtering
 
 - Soniox API-nøkkel lagres på serveren; brukes kun til å generere kortlivede temp-tokens
 - Temp-tokens er gyldige i ~60 sekunder og er sesjonsspesifikke
-- Claude via AWS Bedrock: IAM-nøkler (ikke root) lagres på serveren i `.env`
-  - `BEDROCK_API_KEY` = AWS Access Key ID (starter typisk med `AKIA...`)
-  - `BEDROCK_SECRET_KEY` = AWS Secret Access Key
-  - Region: eu-central-1 (Frankfurt) er anbefalt for EU-dataresidens med `eu.`-prefiks modeller
-  - Autentisering: `AnthropicBedrock` klient fra `@anthropic-ai/bedrock-sdk`
+- Claude via AWS Bedrock: IAM-brukeren **`legeassist`** (egen bruker, ikke personlig) har policyen
+  `bedrock-claude-eu` + `sts:GetFederationToken` på `arn:aws:sts::171433610132:federated-user/la-*`.
+  Nøklene ligger i `.env` som `BEDROCK_API_KEY`/`BEDROCK_SECRET_KEY` og forlater aldri serveren.
+  - `/api/ai/oppsett` lager kortlivede nøkler per bruker (`la-<userId>`, 1 t) med sesjonspolicy som bare
+    tillater `InvokeModel(WithResponseStream)` på `eu.anthropic.*`/`anthropic.*` i `eu-*`. CloudTrail viser
+    hvem som kalte. Verifisert 2026-10-09: EU virker, us-east-1 avvises
+  - Region: eu-central-1 (Frankfurt) med `eu.`-prefiks modeller
 
 ## Funksjonalitet
 
@@ -139,8 +133,20 @@ Nettleser (klinikkens datamaskin)
   - Settes/fjernes av admin på `/admin/brukere` (viser også «X av Y har aktivert»)
   - Før datoen: daglig påminnelse med datoen (`ToFaktorPaaminnelse fristTekst`)
   - Fra datoen: `(app)/layout.tsx` sender brukere uten 2FA til `/sikre-kontoen` (egen rot-rute som
-    `/godta-avtale`), og `/api/claude`, `/api/chat`, `/api/verktoyforslag` og `/api/soniox-token` svarer 403
+    `/godta-avtale`), og `/api/ai/oppsett` og `/api/soniox-token` svarer 403
     (`maaAktivere2fa`). `deaktiver2FA` nektes mens kravet gjelder
+- Bruksstatistikk (`Bruk`-tabellen, `/admin/bruk`, «Bruk og kostnader» i adminmenyen)
+  - Én rad per Claude-kall (`funksjon`: notat, chat, aihjelp, promptbygger, verktoyforslag) og per
+    Soniox-økt (transkribering, diktering). Kun tall: tokens fra Bedrocks egne invocation-metrics,
+    `total_audio_proc_ms` fra Soniox, antall tegn. Rapporteres av nettleseren (`rapporterForbruk`,
+    `soniox-maaler.ts`, `keepalive`) til `/api/bruk`, som validerer (zod, øvre grenser) og regner kostnad
+  - Priser i SystemSetting `bruk_priser` (`src/lib/bruk-priser.ts`), redigeres på admin-siden; kostnad
+    lagres per rad, så prisendringer ikke endrer historikk. Standard: Sonnet 4.6 EU $3,30/$16,50 per MTok,
+    Soniox $0,12/t, kurs 10,5 NOK
+  - Månedsvisning per bruker + per funksjon + CSV (`/api/admin/bruk/csv?mnd=YYYY-MM`, semikolon, norsk komma)
+  - Ingen fremmednøkkel: statistikken består etter at en bruker slettes
+  - Tallene kommer fra klienten og kan i teorien manipuleres; kryssjekk mot CloudTrail (`la-<userId>`),
+    Soniox (`client_reference_id`) og fakturaene
 - Promptbibliotek under Innstillinger: CRUD for maler per kategori (Konsultasjon, Møte, Diktat, Chat, AI-hjelp)
   - Maler kan merkes som delte; andre brukere kan importere delte maler
   - Konsultasjon/Møte-maler: velges i «Velg notatmal»-dropdown i konsultasjonsvisningen
@@ -387,12 +393,11 @@ Nettleser (klinikkens datamaskin)
 ## GDPR og personvern
 
 - Pasientdata behandles i nettleseren og hos Soniox/AWS Bedrock
-- VPS håndterer autentisering og proxier notatgenerering (ikke databehandler av pasientinnhold selv)
+- VPS håndterer autentisering og deler ut kortlivede nøkler; pasientinnhold er aldri innom serveren
 - Soniox: EU-databehandling, DPA tilgjengelig
 - AWS Bedrock (eu-west-1 Irland): EU-databehandling for Claude-modeller
-  - Bedrock API key (langtidstoken) lagres på server som miljøvariabel
-  - Pasienttranskript sendes fra browser → server → Bedrock
-  - Generert notat returneres som SSE-stream tilbake til browser
+  - IAM-nøklene til `legeassist` ligger kun på serveren; nettleseren får 1-times STS-nøkler
+  - Pasienttranskript sendes fra nettleseren direkte til Bedrock (STS-nøkler, kun EU)
 - Ingen lydopptak lagres — streames direkte gjennom Soniox
 - Transkript og notater beholdes kun i nettlesersesjon (eller IndexedDB med TTL)
 - Logging på serveren skal ikke inneholde pasientrelatert innhold
@@ -440,9 +445,8 @@ legeassist/
 │   │   ├── api/
 │   │   │   ├── auth/              # NextAuth
 │   │   │   ├── soniox-token/      # Genererer temp-tokens for Soniox
-│   │   │   ├── claude/            # SSE-endpoint for notatgenerering via Bedrock
-│   │   │   ├── chat/              # SSE-endpoint for multi-turn chat via Bedrock
-│   │   │   ├── verktoyforslag/    # AI-forslag om kliniske verktøy (JSON, hvitlistet på server)
+│   │   │   ├── ai/oppsett/        # Kortlivede AWS-nøkler + modell/region/prompt-overrides til nettleseren
+│   │   │   ├── bruk/              # Tar imot forbrukstall (POST), regner kostnad
 │   │   │   ├── maler/             # CRUD for Mal (GET/POST, PUT/DELETE per ID, delte maler, importer)
 │   │   │   ├── datanokkel/        # Brukerens nøkkel for kryptering i nettleseren (opprettes ved behov)
 │   │   │   ├── okt/puls/          # Livstegn fra aktiv klient (holder serverøkten i live)
@@ -498,6 +502,12 @@ legeassist/
 │   │   ├── dpa.ts                # DPA: hentGjeldendeDpa, harGyldigSignatur, baseline (server-only)
 │   │   ├── admin.ts               # isAdmin(), hentSystemSetting(), tilgjengeligeModeller/Regioner()
 │   │   ├── idb.ts                 # IndexedDB-operasjoner (konsultasjoner kryptert per bruker, 24t TTL)
+│   │   ├── bedrock-nettleser.ts   # Claude fra nettleseren: SigV4, event-strøm, forbruksrapport
+│   │   ├── ai-foresporsler.ts     # Bygger notat-/chat-/verktøyforslag-forespørsler (flyttet fra API-rutene)
+│   │   ├── staging-bygg.ts        # Rene funksjoner for systemprompter (brukes i nettleseren)
+│   │   ├── soniox-maaler.ts       # Måler lydtid/tegn per Soniox-økt og rapporterer
+│   │   ├── bruk-priser.ts         # Priser + kostnadsberegning (server-only)
+│   │   ├── bruk-statistikk.ts     # Månedsaggregering per bruker/funksjon (server-only)
 │   │   ├── datakrypto.ts          # Nøkkel fra /api/datanokkel (kun i minnet) + AES-GCM krypter/dekrypter
 │   │   ├── okt.ts                 # Øktregler: 1 t inaktivitet, 12 t maks, øktcookie, fornyOktToken
 │   │   ├── to-faktor-krav.ts      # Obligatorisk 2FA fra dato: hentKrav2faFra, maaAktivere2fa (server-only)
@@ -621,90 +631,33 @@ Prosjektet bruker Prisma 7 med den Rust-frie query-compileren og **mariadb-drive
 
 ## Claude-integrasjon
 
-### Arkitektur
-
-Notatgenerering bruker **server-side SSE-streaming** for å strømme Claude-utdata i sanntid til nettleseren.
+### Arkitektur (nettleseren kaller Bedrock direkte)
 
 ```
-1. Browser (konsultasjon-view.tsx)
-   ├─ Bruker har opptak og transkript
-   ├─ Klikker "Regenerer" → useClaude.genererNotat()
-   │
-   ↓
-2. Server (/api/claude/route.ts)
-   ├─ Mottaker: {transkript, kontekst, tilleggsinfo, malInnhold, type}
-   ├─ Bygger system prompt fra TYPE_STAGING + template
-   ├─ Instansier AnthropicBedrock klient
-   ├─ Caller client.messages.stream()
-   │
-   ↓
-3. AWS Bedrock (eu-west-1)
-   ├─ Behandler med Claude-modell (opus-4-8)
-   ├─ Returnerer streaming response
-   │
-   ↓
-4. Server (SSE-formatering)
-   ├─ Konverterer text deltas til "data: {text: ...}\n"
-   ├─ Streamer [DONE] til slutt
-   │
-   ↓
-5. Browser (useClaude hook)
-   ├─ Lytter på SSE event stream
-   ├─ Parser "data: " linjer, JSON.parse() payload
-   ├─ Akkumulerer tekst + kaller onDelta() per chunk
-   ├─ Kaller onFerdig() når ferdig
-   │
-   ↓
-6. Browser UI (konsultasjon-view.tsx)
-   ├─ onDelta() oppdaterer textarea i sanntid
-   ├─ onFerdig() lagrer notat i konsultasjon + IndexedDB
-   └─ Bruker kan avbryte med abortRef.current?.abort()
+1. Browser: useClaude / useChat / useVerktoyForslag / promptbygger
+   ├─ hentAiOppsett()  → GET /api/ai/oppsett (bufret til 5 min før nøklene utløper)
+   │    { modell, region, overrides (staging), legitimasjon: STS-nøkler 1 t }
+   ├─ ai-foresporsler.ts bygger { system, messages, maxTokens } — samme logikk som de gamle API-rutene
+   ├─ bedrock-nettleser.ts signerer med SigV4 (@smithy/signature-v4 + @aws-crypto/sha256-js)
+   │    POST https://bedrock-runtime.<region>.amazonaws.com/model/<modell>/invoke-with-response-stream
+   │    (CORS er åpent hos Bedrock; Host-headeren fjernes etter signering)
+   ├─ event-strømmen dekodes med @smithy/eventstream-codec → Anthropic-hendelser
+   │    content_block_delta → onDelta(tekst); message_stop → amazon-bedrock-invocationMetrics
+   └─ rapporterForbruk() → POST /api/bruk (kun tall)
 ```
 
-### Bedrock-autentisering
+- `@anthropic-ai/bedrock-sdk` brukes ikke i nettleseren: strømdekodingen er Node-spesifikk
+  (`eventstream-serde-node`). Den brukes fortsatt på serveren av `/api/admin/test-bedrock`
+- `strommFraClaude()` (notat, chat, AI-hjelp, promptbygger) og `sendTilClaude()` (verktøyforslag)
+- Konsekvens: systempromptene (staging-overrides) sendes til innloggede brukere og kan ses i
+  utviklerverktøy. Ikke legg hemmeligheter i staging-tekster
+- `/api/claude`, `/api/chat` og `/api/verktoyforslag` er fjernet (2026-10-09)
 
-**Nøkkelformat:** To separate nøkler — `BEDROCK_API_KEY` (Access Key ID) og `BEDROCK_SECRET_KEY` (Secret Access Key).
+### Bedrock-tilgang
 
-```typescript
-// src/app/api/claude/route.ts
-async function lagBedrockKlient() {
-  const region = await hentSystemSetting("bedrock_region", standardRegion())
-  return new AnthropicBedrock({
-    awsAccessKey: process.env.BEDROCK_API_KEY ?? "",
-    awsSecretKey: process.env.BEDROCK_SECRET_KEY ?? "",
-    awsRegion: region,
-  })
-}
-```
-
-Region og modell leses fra `SystemSetting` i databasen (satt av admin), med fallback til `ANTHROPIC_MODEL`/`AWS_REGION` i `.env`.
-
-**Generering av nøkler:**
-1. AWS Console → IAM → Users → (din IAM bruker, IKKE root)
-2. Security Credentials → Create access key
-3. Velg "Application running outside AWS"
-4. Kopier begge nøklene (vises kun én gang)
-5. Legg inn i `.env` som `BEDROCK_API_KEY=AKIA...` og `BEDROCK_SECRET_KEY=...`
-
-### useClaude hook
-
-Client-side hook i `src/hooks/use-claude.ts` håndterer SSE-parsing og streaming state:
-
-```typescript
-const { genererNotat, isGenerating, feil, avbryt } = useClaude()
-
-await genererNotat(
-  konsultasjon,
-  (tekst) => { /* per-chunk callback */ },
-  async (fullTekst) => { /* når ferdig, lagre */ }
-)
-```
-
-**Streaming lifecycle:**
-- `isGenerating=true` mens streaming pågår
-- `onDelta` kalles for hvert tekstfragment fra server
-- `onFerdig` kalles med akkumulert tekst når `[DONE]` mottas
-- `avbryt()` sender AbortController.abort()
+Se «Nøkkelhåndtering» over. Modell og region leses fra `SystemSetting` (`bedrock_model`/`bedrock_region`,
+satt av admin) med fallback til `ANTHROPIC_MODEL`/`AWS_REGION`. Obligatorisk 2FA håndheves i
+`/api/ai/oppsett` (403) og `/api/soniox-token`.
 
 ### Notatmaler og stikkord
 
@@ -733,18 +686,10 @@ Claude om å ikke bruke `**fet skrift**`, `#`-overskrifter eller punktlister med
 Multi-turn chat tilgjengelig fra konsultasjonsvisningen via `ChatModal`.
 
 ```
-Browser (chat-modal.tsx)
-  ├─ Bruker skriver melding
-  ├─ useChat.sendMelding() → POST /api/chat
-  │
-  ↓
-Server (/api/chat/route.ts)
-  ├─ Bygger system prompt: CHAT_STAGING + kontekstfelt
-  ├─ Vedlegg inkluderes kun i første melding (uten oppgave-instruksjon)
-  ├─ Sender historikk (maks 20 meldinger, system-meldinger filtrert)
-  │
-  ↓
-AWS Bedrock → SSE-stream tilbake til browser
+Browser (chat-modal.tsx / ai-hjelp-view.tsx)
+  ├─ useChat.sendMelding() → byggChatForesporsel(): CHAT_STAGING/AIHJELP_STAGING + kontekstfelt
+  ├─ Vedlegg kun i første melding (uten oppgave-instruksjon), maks 20 meldinger historikk
+  └─ strommFraClaude() direkte til Bedrock → tekst strømmes inn i chatten
 ```
 
 **Historikk:** Lagres i `konsultasjon.chatHistorikk` (IndexedDB, 24t TTL). Overlever lukking av modal og sideoppdatering. `chatKontekstSnapshot` brukes til å detektere endringer og vise markørlinjer i chatvinduet.
@@ -768,5 +713,7 @@ AWS Bedrock → SSE-stream tilbake til browser
 - TypeScript overalt
 - Server Components der mulig, Client Components kun ved behov (opptak, real-time, streaming)
 - Ingen pasientdata i serverlogs — bruk strukturert logging med allowlist for felter
+- **Pasientinnhold skal aldri sendes til vår server.** Nye AI-funksjoner bygges i nettleseren med
+  `ai-foresporsler.ts` + `bedrock-nettleser.ts`, ikke som API-ruter
 - Bedrock API-nøkkel og Soniox API-nøkkel behandles som hemmelighet (aldri logg, aldri git)
 - SSE-streaming for optimale ytelse og brukeropplevelse (real-time notatgenerering)

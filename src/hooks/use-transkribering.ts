@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from "react"
 import type { KonsultasjonsType } from "@/types/konsultasjon"
 import { registrerAktivitet } from "@/lib/aktivitet"
+import { lagSonioxMaaler, type SonioxMaaler } from "@/lib/soniox-maaler"
 
 // Dynamisk import — unngår "window is not defined" ved server-side rendering
 async function lastSonioxClient() {
@@ -31,12 +32,14 @@ export function useTranskribering(
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const klientRef = useRef<any>(null)
+  const maalerRef = useRef<SonioxMaaler | null>(null)
   const transkriptRef = useRef("")
   // Lagrer config for gjenoppretting etter pause
   const pauseConfigRef = useRef<{ type: KonsultasjonsType; mikofonId: string | null } | null>(null)
 
   const ryddOpp = useCallback(() => {
     klientRef.current?.cancel()
+    maalerRef.current?.avslutt()
     klientRef.current = null
   }, [])
 
@@ -47,6 +50,7 @@ export function useTranskribering(
 
   const stopp = useCallback(async (): Promise<string> => {
     klientRef.current?.stop()
+    maalerRef.current?.avsluttSnart()
     klientRef.current = null
     pauseConfigRef.current = null
     setPartial("")
@@ -57,6 +61,7 @@ export function useTranskribering(
   // Pause: lukker tilkoblingen men beholder transkriptet
   const pause = useCallback(() => {
     klientRef.current?.cancel()
+    maalerRef.current?.avslutt()
     klientRef.current = null
     setPartial("")
     setStatus("pause")
@@ -78,6 +83,8 @@ export function useTranskribering(
         keepAliveInterval: 10_000,
       })
       klientRef.current = klient
+      maalerRef.current?.avslutt()
+      maalerRef.current = lagSonioxMaaler("transkribering")
 
       klient.start({
         model: "stt-rt-v5",
@@ -103,18 +110,21 @@ export function useTranskribering(
         onStarted: () => setStatus("opptar"),
         onError: (_s: string, message: string) => {
           setFeil(`Soniox: ${message}`)
+          maalerRef.current?.avslutt()
           setStatus("feil")
           klientRef.current = null
         },
         onStateChange: ({ newState }: { newState: string }) => {
           if (newState === "Finished") {
+            maalerRef.current?.avslutt()
             setPartial("")
             setStatus("klar")
             klientRef.current = null
           }
         },
-        onPartialResult: (result: { tokens: Array<{ text: string; is_final: boolean }> }) => {
+        onPartialResult: (result: { total_audio_proc_ms?: number; tokens: Array<{ text: string; is_final: boolean }> }) => {
           registrerAktivitet() // et pågående opptak er aktivitet, også uten tastetrykk
+          maalerRef.current?.oppdater(result)
           let harNyeFinal = false
           const nonFinalTekst: string[] = []
           for (const tok of result.tokens) {
@@ -197,6 +207,8 @@ export function useTranskribering(
         keepAliveInterval: 10_000, // ved kortere pauser (toalett, ta telefon etc.)
       })
       klientRef.current = klient
+      maalerRef.current?.avslutt()
+      maalerRef.current = lagSonioxMaaler("transkribering")
 
       klient.start({
         model: "stt-rt-v5",
@@ -226,20 +238,23 @@ export function useTranskribering(
 
         onError: (_errStatus, message) => {
           setFeil(`Soniox: ${message}`)
+          maalerRef.current?.avslutt()
           setStatus("feil")
           klientRef.current = null
         },
 
         onStateChange: ({ newState }: { newState: string }) => {
           if (newState === "Finished") {
+            maalerRef.current?.avslutt()
             setPartial("")
             setStatus("klar")
             klientRef.current = null
           }
         },
 
-        onPartialResult: (result: { tokens: Array<{ text: string; is_final: boolean }> }) => {
+        onPartialResult: (result: { total_audio_proc_ms?: number; tokens: Array<{ text: string; is_final: boolean }> }) => {
           registrerAktivitet() // et pågående opptak er aktivitet, også uten tastetrykk
+          maalerRef.current?.oppdater(result)
           let harNyeFinal = false
           const nonFinalTekst: string[] = []
 

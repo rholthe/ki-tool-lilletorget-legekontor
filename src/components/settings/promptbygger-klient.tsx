@@ -5,6 +5,8 @@ import { Sparkles, Send, Trash2, Copy, Check, FilePlus2, AlertCircle } from "luc
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { cuid } from "@/lib/cuid"
+import { hentAiOppsett, strommFraClaude } from "@/lib/bedrock-nettleser"
+import { byggChatForesporsel } from "@/lib/ai-foresporsler"
 
 interface Melding {
   id: string
@@ -56,49 +58,16 @@ export function PromptbyggerKlient({ kategorier, onBrukSomMal }: Props) {
 
       let akkumulert = ""
       try {
-        const res = await fetch("/api/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            transkript: "",
-            kontekst: "",
-            tilleggsinfo: "",
-            notat: "",
-            messages: historikk,
-            nyMelding: ren,
-            modus: "promptbygger",
-          }),
+        // Direkte til Bedrock fra nettleseren
+        const { overrides } = await hentAiOppsett()
+        const foresporsel = byggChatForesporsel(
+          { transkript: "", kontekst: "", tilleggsinfo: "", notat: "", messages: historikk, nyMelding: ren, modus: "promptbygger" },
+          overrides
+        )
+        akkumulert = await strommFraClaude(foresporsel, "promptbygger", (del) => {
+          akkumulert += del
+          setStreamingTekst(akkumulert)
         })
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}))
-          throw new Error(data.feil ?? `Serverfeil ${res.status}`)
-        }
-        const reader = res.body?.getReader()
-        if (!reader) throw new Error("Ingen datastrøm fra server")
-        const decoder = new TextDecoder()
-        let buffer = ""
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) break
-          buffer += decoder.decode(value, { stream: true })
-          const linjer = buffer.split("\n")
-          buffer = linjer.pop() ?? ""
-          for (const linje of linjer) {
-            if (!linje.startsWith("data: ")) continue
-            const payload = linje.slice(6).trim()
-            if (payload === "[DONE]") break
-            try {
-              const parsed = JSON.parse(payload)
-              if (parsed.feil) throw new Error(parsed.feil)
-              if (parsed.text) {
-                akkumulert += parsed.text
-                setStreamingTekst(akkumulert)
-              }
-            } catch (e) {
-              if (e instanceof Error && e.message !== payload) throw e
-            }
-          }
-        }
         setMeldinger((prev) => [...prev, { id: cuid(), role: "assistant", content: akkumulert }])
         setStreamingTekst("")
       } catch (e) {

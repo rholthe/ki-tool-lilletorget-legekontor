@@ -2,6 +2,8 @@
 
 import { useState, useCallback, useRef } from "react"
 import type { Konsultasjon, KonsultasjonsForm } from "@/types/konsultasjon"
+import { hentAiOppsett, strommFraClaude } from "@/lib/bedrock-nettleser"
+import { byggNotatForesporsel } from "@/lib/ai-foresporsler"
 
 export function useClaude() {
   const [isGenerating, setIsGenerating] = useState(false)
@@ -29,10 +31,10 @@ export function useClaude() {
       let akkumulert = ""
 
       try {
-        const res = await fetch("/api/claude", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
+        // Direkte til Bedrock fra nettleseren — transkriptet er aldri innom serveren
+        const { overrides } = await hentAiOppsett()
+        const foresporsel = byggNotatForesporsel(
+          {
             type: konsultasjon.type,
             konsultasjonsform: konsultasjon.type === "KONSULTASJON" ? konsultasjonsform : undefined,
             transkript: konsultasjon.transkript,
@@ -41,48 +43,10 @@ export function useClaude() {
             malInnhold: konsultasjon.malInnhold,
             vedlegg: konsultasjon.vedlegg ?? [],
             verktoyResultater: konsultasjon.verktoyResultater ?? [],
-          }),
-          signal: controller.signal,
-        })
-
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}))
-          throw new Error(data.feil ?? `Serverfeil ${res.status}`)
-        }
-
-        const reader = res.body?.getReader()
-        if (!reader) throw new Error("Ingen datastrøm fra server")
-
-        const decoder = new TextDecoder()
-        let buffer = ""
-
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) break
-
-          buffer += decoder.decode(value, { stream: true })
-          const lines = buffer.split("\n")
-          buffer = lines.pop() ?? "" // behold ufullstendig linje
-
-          for (const line of lines) {
-            if (!line.startsWith("data: ")) continue
-            const payload = line.slice(6).trim()
-            if (payload === "[DONE]") break
-
-            try {
-              const parsed = JSON.parse(payload)
-              if (parsed.feil) throw new Error(parsed.feil)
-              if (parsed.text) {
-                akkumulert += parsed.text
-                onDelta(parsed.text)
-              }
-            } catch (parseErr) {
-              if (parseErr instanceof Error && parseErr.message !== payload) {
-                throw parseErr
-              }
-            }
-          }
-        }
+          },
+          overrides
+        )
+        akkumulert = await strommFraClaude(foresporsel, "notat", onDelta, controller.signal)
 
         await onFerdig(akkumulert)
       } catch (e) {

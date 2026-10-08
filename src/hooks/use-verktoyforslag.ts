@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useKonsultasjon } from "@/hooks/use-konsultasjon"
 import type { VerktoyForslag } from "@/types/konsultasjon"
+import { hentAiOppsett, sendTilClaude } from "@/lib/bedrock-nettleser"
+import { byggVerktoyforslagForesporsel, lesVerktoyforslag } from "@/lib/ai-foresporsler"
 
 /**
  * AI-forslag om hvilke kliniske verktøy legen bør åpne.
@@ -62,25 +64,23 @@ export function useVerktoyForslag() {
     setFeil(null)
 
     try {
-      const res = await fetch("/api/verktoyforslag", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      // Direkte til Bedrock fra nettleseren; kandidatlisten validerer svaret
+      const { overrides } = await hentAiOppsett()
+      const foresporsel = byggVerktoyforslagForesporsel(
+        {
           transkript: aktiv.transkript ?? "",
           kontekst: aktiv.kontekst ?? "",
           tilleggsinfo: aktiv.tilleggsinfo ?? "",
-        }),
-      })
-      const data = await res.json()
-
-      if (!res.ok) {
-        setFeil(data?.feil ?? "Kunne ikke hente forslag")
-        return
-      }
+        },
+        overrides
+      )
+      const forslag: VerktoyForslag[] = foresporsel
+        ? lesVerktoyforslag(await sendTilClaude(foresporsel, "verktoyforslag"), foresporsel.gyldige)
+        : []
 
       await oppdater({
         verktoyForslag: {
-          forslag: (data.forslag ?? []) as VerktoyForslag[],
+          forslag,
           avtrykk: nåværendeAvtrykk,
           hentetAt: Date.now(),
         },

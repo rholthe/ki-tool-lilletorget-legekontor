@@ -4,6 +4,8 @@ import { useState, useRef, useCallback, useEffect } from "react"
 import type { Vedlegg, ChatMelding } from "@/types/konsultasjon"
 import { useKonsultasjon } from "@/hooks/use-konsultasjon"
 import { cuid } from "@/lib/cuid"
+import { hentAiOppsett, strommFraClaude } from "@/lib/bedrock-nettleser"
+import { byggChatForesporsel } from "@/lib/ai-foresporsler"
 
 const MAKS_HISTORIKK = 20 // 10 utvekslinger
 
@@ -79,10 +81,11 @@ export function useChat() {
       let akkumulert = ""
 
       try {
-        const res = await fetch("/api/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
+        // Direkte til Bedrock fra nettleseren — pasientinnhold er aldri innom serveren
+        const { overrides } = await hentAiOppsett()
+        const erAiHjelp = aktiv.type === "AIHJELP"
+        const foresporsel = byggChatForesporsel(
+          {
             transkript: aktiv.transkript,
             kontekst: effektivKontekst,
             tilleggsinfo: aktiv.tilleggsinfo,
@@ -90,49 +93,19 @@ export function useChat() {
             vedlegg: valgtVedlegg,
             messages: historikkTilSend,
             nyMelding: tekst.trim(),
-            ...(aktiv.type === "AIHJELP" ? { modus: "aihjelp" as const } : {}),
-          }),
-          signal: controller.signal,
-        })
-
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}))
-          throw new Error(data.feil ?? `Serverfeil ${res.status}`)
-        }
-
-        const reader = res.body?.getReader()
-        if (!reader) throw new Error("Ingen datastrøm fra server")
-
-        const decoder = new TextDecoder()
-        let buffer = ""
-
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) break
-
-          buffer += decoder.decode(value, { stream: true })
-          const lines = buffer.split("\n")
-          buffer = lines.pop() ?? ""
-
-          for (const line of lines) {
-            if (!line.startsWith("data: ")) continue
-            const payload = line.slice(6).trim()
-            if (payload === "[DONE]") break
-
-            try {
-              const parsed = JSON.parse(payload)
-              if (parsed.feil) throw new Error(parsed.feil)
-              if (parsed.text) {
-                akkumulert += parsed.text
-                setStreamingTekst(akkumulert)
-              }
-            } catch (parseErr) {
-              if (parseErr instanceof Error && parseErr.message !== payload) {
-                throw parseErr
-              }
-            }
-          }
-        }
+            ...(erAiHjelp ? { modus: "aihjelp" as const } : {}),
+          },
+          overrides
+        )
+        akkumulert = await strommFraClaude(
+          foresporsel,
+          erAiHjelp ? "aihjelp" : "chat",
+          (del) => {
+            akkumulert += del
+            setStreamingTekst(akkumulert)
+          },
+          controller.signal
+        )
 
         const assistentMelding: ChatMelding = {
           id: cuid(),

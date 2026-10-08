@@ -45,6 +45,9 @@ export async function GET() {
       body: JSON.stringify({
         usage_type: "transcribe_websocket",
         expires_in_seconds: 120,
+        // Merker økten med bruker-id hos Soniox — uavhengig kryssjekk av
+        // bruksstatistikken (ikke personopplysninger utover en intern id)
+        client_reference_id: session.user.id,
       }),
     })
   } catch (e) {

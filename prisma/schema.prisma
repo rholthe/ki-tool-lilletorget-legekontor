@@ -183,3 +183,27 @@ model MeldingLest {
   @@id([meldingId, userId])
   @@index([userId])
 }
+
+// Bruksstatistikk: én rad per AI-kall eller opptaksøkt. Kun tall — aldri
+// innhold. Rapporteres av nettleseren etter hvert kall (Bedrock og Soniox
+// kalles direkte derfra). Kostnaden regnes ut på serveren med prisene som
+// gjaldt da raden ble skrevet. Ingen fremmednøkkel: statistikken skal bestå
+// også etter at en bruker er slettet.
+model Bruk {
+  id               String   @id @default(cuid())
+  userId           String
+  tjeneste         String   @db.VarChar(20) // BEDROCK | SONIOX
+  funksjon         String   @db.VarChar(40) // notat, chat, aihjelp, promptbygger, verktoyforslag, transkribering, diktering
+  modell           String?  @db.VarChar(120)
+  inputTokens      Int      @default(0)
+  outputTokens     Int      @default(0)
+  cacheLesTokens   Int      @default(0)
+  cacheSkrivTokens Int      @default(0)
+  lydMs            Int      @default(0)
+  antallTegn       Int      @default(0)
+  kostnadUsd       Decimal  @default(0) @db.Decimal(12, 6)
+  opprettet        DateTime @default(now())
+
+  @@index([userId, opprettet])
+  @@index([opprettet])
+}
