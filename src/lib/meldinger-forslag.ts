@@ -18,9 +18,9 @@ export const SIKKERHETSMELDING_FORSLAG = {
 - Trykker du selv på **Logg ut**, blir du bedt om å bekrefte. Da **slettes** alle konsultasjonene dine på maskinen.
 - Som før slettes konsultasjoner automatisk etter 24 timer.
 
-### To-faktor blir snart obligatorisk
+### To-faktor blir obligatorisk fra fredag 16. oktober
 
-Snart må alle logge inn med en engangskode fra mobilen i tillegg til passordet. Du får beskjed om datoen.
+Fra **fredag 16. oktober** må alle logge inn med en engangskode fra mobilen i tillegg til passordet. Har du ikke slått det på innen da, blir du bedt om å gjøre det før du kommer videre i legeassist.
 
 Gjør dette allerede nå:
 
