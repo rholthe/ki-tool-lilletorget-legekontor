@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react"
 import type { KonsultasjonsType } from "@/types/konsultasjon"
+import { registrerAktivitet } from "@/lib/aktivitet"
 
 // Dynamisk import — unngår "window is not defined" ved server-side rendering
 async function lastSonioxClient() {
@@ -113,6 +114,7 @@ export function useTranskribering(
           }
         },
         onPartialResult: (result: { tokens: Array<{ text: string; is_final: boolean }> }) => {
+          registrerAktivitet() // et pågående opptak er aktivitet, også uten tastetrykk
           let harNyeFinal = false
           const nonFinalTekst: string[] = []
           for (const tok of result.tokens) {
@@ -237,6 +239,7 @@ export function useTranskribering(
         },
 
         onPartialResult: (result: { tokens: Array<{ text: string; is_final: boolean }> }) => {
+          registrerAktivitet() // et pågående opptak er aktivitet, også uten tastetrykk
           let harNyeFinal = false
           const nonFinalTekst: string[] = []
 

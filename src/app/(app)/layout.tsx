@@ -5,6 +5,7 @@ import { AppSidebar } from "@/components/app/app-sidebar"
 import { AppHeaderMeny } from "@/components/app/app-header-meny"
 import { ToFaktorPaaminnelse } from "@/components/app/to-faktor-paaminnelse"
 import { MeldingVisning } from "@/components/app/melding-visning"
+import { OktVakt } from "@/components/app/okt-vakt"
 import { KonsultasjonProvider } from "@/hooks/use-konsultasjon"
 import { auth } from "@/lib/auth"
 import { isAdmin } from "@/lib/admin"
@@ -70,6 +71,7 @@ export default async function AppLayout({
           <main className="flex-1 overflow-y-auto">{children}</main>
         </div>
       </div>
+      <OktVakt />
       <ToFaktorPaaminnelse er2FAaktivert={bruker?.twoFactorEnabled ?? true} />
       <MeldingVisning
         meldinger={ulesteMeldinger.map((m) => ({ ...m, publisertAt: m.publisertAt.toISOString() }))}

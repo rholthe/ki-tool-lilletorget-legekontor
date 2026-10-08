@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useRef, useCallback, useEffect } from "react"
+import { registrerAktivitet } from "@/lib/aktivitet"
 
 // Dynamisk import — unngår "window is not defined" ved server-side rendering
 async function lastSonioxClient() {
@@ -105,6 +106,7 @@ export function useDiktering(opts: {
           }
         },
         onPartialResult: (result: { tokens: Array<{ text: string; is_final: boolean }> }) => {
+          registrerAktivitet() // et pågående opptak er aktivitet, også uten tastetrykk
           let finalDelta = ""
           const nonFinalTekst: string[] = []
           for (const tok of result.tokens) {

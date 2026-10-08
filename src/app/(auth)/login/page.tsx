@@ -17,10 +17,20 @@ import {
 } from "@/components/ui/card"
 import { sjekkInnlogging } from "@/actions/auth"
 
+const LAAST = "Konsultasjonene dine er låst og kommer tilbake når du logger inn."
+const UTLOGGING_TEKST: Record<string, string> = {
+  inaktiv: `Du ble logget ut etter en time uten aktivitet. ${LAAST}`,
+  lukket: `Du ble logget ut fordi nettleseren ble lukket. ${LAAST}`,
+  utlopt: `Økten din er utløpt. ${LAAST}`,
+  utlogget: "Du er logget ut, og konsultasjonene dine på denne maskinen er slettet.",
+}
+
 export default function LoginPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get("callbackUrl") ?? "/"
+  const grunn = searchParams.get("grunn")
+  const utloggingInfo = grunn ? UTLOGGING_TEKST[grunn] : undefined
 
   const [step, setStep] = useState<"credentials" | "totp">("credentials")
   const [email, setEmail] = useState("")
@@ -105,6 +115,11 @@ export default function LoginPage() {
 
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
+          {utloggingInfo && step === "credentials" && (
+            <p className="text-sm text-blue-800 bg-blue-50 border border-blue-200 rounded-md px-3 py-2">
+              {utloggingInfo}
+            </p>
+          )}
           {step === "credentials" && (
             <>
               <div className="space-y-1.5">

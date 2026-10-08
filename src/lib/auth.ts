@@ -6,6 +6,7 @@ import speakeasy from "speakeasy"
 import { z } from "zod"
 import { prisma } from "@/lib/db"
 import { decrypt } from "@/lib/crypto"
+import { fornyOktToken } from "@/lib/okt"
 
 // Eget feilsignal for 2FA-krav — fanges av login-siden
 export class TwoFactorRequired extends CredentialsSignin {
@@ -62,12 +63,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
+    // Kjøres ved hver forespørsel gjennom proxyen, så sistAktiv følger brukerens
+    // faktiske bruk. Returnerer null (= utlogget) ved inaktivitet eller når
+    // dagens økt er brukt opp. Se src/lib/okt.ts.
     async jwt({ token, user }) {
-      if (user) token.id = user.id
-      return token
+      return fornyOktToken(token, user?.id, Date.now(), () => crypto.randomUUID())
     },
     async session({ session, token }) {
       session.user.id = token.id as string
+      session.oktId = token.oktId
+      session.innlogget = token.innlogget
       return session
     },
   },

@@ -25,6 +25,11 @@ model User {
   dpaSignedAt DateTime?
   dpaVersion  String?
 
+  // Nøkkel som krypterer brukerens konsultasjoner i nettleseren (IndexedDB).
+  // Lagres kryptert med serverens hovednøkkel; utleveres kun til innlogget bruker
+  // og holdes bare i minnet i nettleseren. Utlogget = dataene er låst.
+  datanokkel String? @db.Text
+
   accounts       Account[]
   sessions       Session[]
   authenticators Authenticator[]

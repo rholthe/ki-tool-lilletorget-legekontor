@@ -10,7 +10,7 @@ Under aktiv utvikling. Kjerneflyt (opptak → transkript → notat) er implement
 
 ### Overordnet prinsipp: Privacy-by-design
 
-Pasientdata (lydopptak, transkripsjon, notater) berører **aldri** applikasjonsserveren. All behandling av pasientrelatert innhold skjer direkte mellom nettleseren og tredjeparts-API-er (Soniox, Claude). Serveren håndterer kun brukerkontoer og innholdsmaler.
+Pasientdata (lydopptak, transkripsjon, notater) **lagres aldri** på applikasjonsserveren. Lyd går direkte fra nettleseren til Soniox og er aldri innom serveren. Transkript, kontekst og vedlegg passerer serveren **i minnet** på vei til Bedrock (`/api/claude`, `/api/chat`, `/api/verktoyforslag`) og logges ikke. Serveren lagrer kun brukerkontoer, maler, meldinger og hver brukers krypterte datanøkkel. Skal kravet skjerpes til «aldri innom», må Bedrock-kallene flyttes til nettleseren med kortlivede AWS-nøkler.
 
 ### Dataflyt
 
@@ -110,6 +110,31 @@ Nettleser (klinikkens datamaskin)
     og tekniske detaljer i `<details>` (åpnes i ny fane fra passordoppsett/gate/brukermeny)
   - Admin: `/admin/databehandleravtale` (opprett ny versjon, se historikk); `opprettDpaVersjon`
   - Signert-status + lenke vises i Innstillinger; lenker i brukermenyen (bruker + admin)
+- Meldinger fra admin (`/admin/meldinger`, `Melding` + `MeldingLest`)
+  - Admin publiserer en melding (markdown). Uleste aktive meldinger vises én om gangen som stor modal
+    øverst i appen (`melding-visning.tsx`), som ikke kan lukkes med Esc/klikk utenfor — brukeren må
+    trykke «Jeg har lest» (`markerMeldingLest`)
+  - Admin ser «Lest av X av Y» og navn på hvem som har/ikke har lest; «Trekk tilbake» skjuler meldingen
+  - Er ingen meldinger publisert, er skjemaet forhåndsutfylt med `SIKKERHETSMELDING_FORSLAG`
+- Øktsikkerhet og kryptering i nettleseren (regler i `src/lib/okt.ts`)
+  - **Daglig innlogging:** økten varer maks 12 t fra innlogging (`MAKS_OKT_MS`)
+  - **Inaktivitet:** 1 t uten aktivitet → utlogget, data **låst, ikke slettet**. Serveren håndhever det i
+    JWT-callbacken (`fornyOktToken`, kjøres via proxyen på hver forespørsel). Klienten (`OktVakt`) varsler
+    5 min før, logger ut, og sender `/api/okt/puls` hvert 5. min mens brukeren er aktiv. Pågående opptak
+    teller som aktivitet (`registrerAktivitet()` i Soniox-hookene). Aktivitet deles mellom faner via localStorage
+  - **Lukket nettleser:** øktcookien `la_okt` (uten utløpsdato, httpOnly) må matche `session.oktId`.
+    Proxyen setter den de første 30 s etter innlogging; mangler den senere, sendes brukeren til
+    `/utlogget?grunn=lukket` som logger ut via Auth.js. Auth.js' egen cookie har alltid utløpsdato og
+    kan ikke brukes til dette. Begrensning: Chrome/Edge med «fortsett der du slapp» gjenoppretter øktcookies
+  - **Kryptering:** konsultasjoner i IndexedDB er AES-256-GCM-kryptert per bruker (`src/lib/datakrypto.ts`,
+    `src/lib/idb.ts`). Nøkkelen (`User.datanokkel`, kryptert med `TOTP_ENCRYPTION_KEY`) hentes fra
+    `/api/datanokkel` etter innlogging og holdes bare i minnet som ikke-eksporterbar `CryptoKey`.
+    Klartekst i IndexedDB: kun `id`, `userId`, `createdAt`, `expiresAt`. Andre brukeres poster på samme
+    maskin vises ikke og kan ikke leses. Ukrypterte poster fra før kryptering krypteres ved første
+    lesing og tilfaller den som logger inn først
+  - **Aktiv «Logg ut»** krever bekreftelse og sletter brukerens konsultasjoner på maskinen (andres blir
+    liggende). 24-timers sletting gjelder som før, for alle brukere
+  - Innloggingssiden forklarer hvorfor brukeren ble logget ut (`?grunn=inaktiv|lukket|utlopt|utlogget`)
 - Promptbibliotek under Innstillinger: CRUD for maler per kategori (Konsultasjon, Møte, Diktat, Chat, AI-hjelp)
   - Maler kan merkes som delte; andre brukere kan importere delte maler
   - Konsultasjon/Møte-maler: velges i «Velg notatmal»-dropdown i konsultasjonsvisningen
@@ -365,7 +390,8 @@ Nettleser (klinikkens datamaskin)
 - Ingen lydopptak lagres — streames direkte gjennom Soniox
 - Transkript og notater beholdes kun i nettlesersesjon (eller IndexedDB med TTL)
 - Logging på serveren skal ikke inneholde pasientrelatert innhold
-- 2FA anbefalt for alle brukere
+- 2FA anbefalt for alle brukere (blir obligatorisk — brukerne varsles via meldingssystemet først)
+- Konsultasjoner i nettleseren er kryptert per bruker; nøkkelen finnes bare i minnet mens brukeren er innlogget
 
 ## Mappestruktur
 
@@ -389,19 +415,21 @@ legeassist/
 ├── scripts/
 │   └── verktoy-selvtest.mjs       # npm run verktoy:test — referansekasus, terskler, notat-synk
 ├── prisma/
-│   └── schema.prisma              # User (inkl. dpa*), Mal, sesjon, PasswordSetupToken, DpaVersjon
+│   └── schema.prisma              # User (inkl. dpa*, datanokkel), Mal, sesjon, PasswordSetupToken, DpaVersjon, Melding, MeldingLest
 ├── src/
 │   ├── app/                       # Next.js App Router
 │   │   ├── (auth)/                # Offentlige: login, tilgang (tilgangsforespørsel), sett-passord
 │   │   ├── databehandleravtale/   # Offentlig: gjeldende DPA + sikkerhet/ROS/teknisk
 │   │   ├── godta-avtale/          # Innlogget signeringsgate (egen rot-rute, ingen app-skall)
+│   │   ├── utlogget/              # Offentlig: logger ut via Auth.js når nettleseren har vært lukket
 │   │   ├── (app)/                 # Hovedapp (beskyttet; gates av DPA-signatur)
 │   │   │   ├── konsultasjon/      # Konsultasjonsvisning + notatgenerering
 │   │   │   ├── innstillinger/     # Brukerinnstillinger (2FA, DPA-status, Bedrock-info)
 │   │   │   └── admin/
 │   │   │       ├── innstillinger/ # Adminside: modell/region/nøkler (kun admin)
 │   │   │       ├── brukere/       # Adminside: opprett/inviter/slett brukere
-│   │   │       └── databehandleravtale/ # Adminside: opprett/se DPA-versjoner
+│   │   │       ├── databehandleravtale/ # Adminside: opprett/se DPA-versjoner
+│   │   │       └── meldinger/     # Adminside: publiser meldinger, se hvem som har lest
 │   │   ├── api/
 │   │   │   ├── auth/              # NextAuth
 │   │   │   ├── soniox-token/      # Genererer temp-tokens for Soniox
@@ -409,6 +437,8 @@ legeassist/
 │   │   │   ├── chat/              # SSE-endpoint for multi-turn chat via Bedrock
 │   │   │   ├── verktoyforslag/    # AI-forslag om kliniske verktøy (JSON, hvitlistet på server)
 │   │   │   ├── maler/             # CRUD for Mal (GET/POST, PUT/DELETE per ID, delte maler, importer)
+│   │   │   ├── datanokkel/        # Brukerens nøkkel for kryptering i nettleseren (opprettes ved behov)
+│   │   │   ├── okt/puls/          # Livstegn fra aktiv klient (holder serverøkten i live)
 │   │   │   └── admin/
 │   │   │       ├── settings/      # GET/POST for SystemSetting (modell, region)
 │   │   │       └── test-bedrock/  # Tilkoblingstest mot Bedrock
@@ -420,7 +450,8 @@ legeassist/
 │   │   ├── admin-brukere.ts       # opprettBruker (m/invitasjon), sendInvitasjonPaaNytt, slettBruker
 │   │   ├── tilgang.ts             # sendTilgangsforesporsel + settPassordMedToken (signerer DPA)
 │   │   ├── dpa.ts                 # signerAvtale (innlogget signering)
-│   │   └── admin-dpa.ts           # opprettDpaVersjon (admin, immutable versjoner)
+│   │   ├── admin-dpa.ts           # opprettDpaVersjon (admin, immutable versjoner)
+│   │   └── meldinger.ts           # markerMeldingLest, opprettMelding, settMeldingAktiv
 │   ├── components/
 │   │   ├── ui/                    # shadcn/ui-komponenter
 │   │   ├── dpa/                   # dpa-sammendrag, godta-avtale-skjema, markdown (renderer)
@@ -439,6 +470,8 @@ legeassist/
 │   │   │   ├── diktering-knapp.tsx        # Gjenbrukbart mikrofonikon: live transkribering inn i et tekstfelt
 │   │   │   ├── vedlegg-panel.tsx          # Vedlegg: opplasting, kamera, oppgavevalg (modus: ocr|standard)
 │   │   │   ├── to-faktor-paaminnelse.tsx  # Diskret 2FA-påminnelse (~1/mnd, localStorage)
+│   │   │   ├── melding-visning.tsx        # Uleste admin-meldinger som modal, «Jeg har lest»
+│   │   │   ├── okt-vakt.tsx               # Inaktivitetsvakt: varsel, utlogging (låser), puls
 │   │   │   ├── app-header-meny.tsx        # Brukermeny (innstillinger, DPA, admin-lenker)
 │   │   │   └── app-sidebar.tsx            # Sidebar med konsultasjonsliste (stikkord)
 │   │   ├── settings/
@@ -456,7 +489,11 @@ legeassist/
 │   │   ├── passord-token.ts      # Engangstoken for passordoppsett (SHA-256-hash)
 │   │   ├── dpa.ts                # DPA: hentGjeldendeDpa, harGyldigSignatur, baseline (server-only)
 │   │   ├── admin.ts               # isAdmin(), hentSystemSetting(), tilgjengeligeModeller/Regioner()
-│   │   ├── idb.ts                 # IndexedDB-operasjoner (konsultasjoner, 24t TTL)
+│   │   ├── idb.ts                 # IndexedDB-operasjoner (konsultasjoner kryptert per bruker, 24t TTL)
+│   │   ├── datakrypto.ts          # Nøkkel fra /api/datanokkel (kun i minnet) + AES-GCM krypter/dekrypter
+│   │   ├── okt.ts                 # Øktregler: 1 t inaktivitet, 12 t maks, øktcookie, fornyOktToken
+│   │   ├── aktivitet.ts           # registrerAktivitet() — signal til OktVakt (f.eks. under opptak)
+│   │   ├── meldinger-forslag.ts   # Forhåndsutfylt sikkerhetsmelding i admin-skjemaet
 │   │   ├── staging.ts             # Grunntekster + TYPE_STAGING + CHAT/AIHJELP/PROMPTBYGGER_STAGING + felles seksjoner
 │   │   ├── staging-registry.ts    # STAGING_REGISTRY: overstyrbare staging-tekster (fil-standard)
 │   │   ├── staging-server.ts      # Server-resolver: DB-override + fil-fallback, bygger system prompt
