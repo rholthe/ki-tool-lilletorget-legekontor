@@ -56,7 +56,7 @@ import { useMikrofon } from "@/hooks/use-mikrofon"
 import { useTranskribering, type MoteForm } from "@/hooks/use-transkribering"
 import { useClaude } from "@/hooks/use-claude"
 import { useHurtigtaster } from "@/hooks/use-hurtigtaster"
-import { TYPE_STAGING, konsultasjonEtikett, type Vedlegg, type Konsultasjon, type KonsultasjonsForm } from "@/types/konsultasjon"
+import { TYPE_STAGING, konsultasjonEtikett, type Vedlegg, type KonsultasjonsForm } from "@/types/konsultasjon"
 import { TYPE_TEMA } from "@/lib/tema"
 import { VedleggPanel } from "@/components/app/vedlegg-panel"
 import { ChatModal } from "@/components/app/chat-modal"
@@ -210,7 +210,7 @@ export function KonsultasjonView() {
     }
 
     prevAktivIdRef.current = aktiv?.id ?? null
-  }, [aktiv?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [aktiv?.id])
 
   // Autolagring av transkript til IndexedDB hvert 10. sekund under aktivt opptak.
   useEffect(() => {
@@ -220,7 +220,7 @@ export function KonsultasjonView() {
       if (t) oppdater({ transkript: t })
     }, 10_000)
     return () => clearInterval(id)
-  }, [transkribering.status, oppdater]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [transkribering.status, oppdater])
 
   // Hurtigtaster: Alt+R veksler opptak (kontekstavhengig), Alt+S stopper & sender
   function hurtigtastOpptak() {

@@ -8,7 +8,7 @@ import {
   useRef,
   type ReactNode,
 } from "react"
-import { lagreKonsultasjon, hentKonsultasjon } from "@/lib/idb"
+import { lagreKonsultasjon } from "@/lib/idb"
 import type { Konsultasjon } from "@/types/konsultasjon"
 
 interface KonsultasjonContextValue {

@@ -59,6 +59,9 @@ export function VedleggPanel({ vedlegg, onChange, modus, kompakt }: Props) {
   // Koble stream til video-elementet (kjører når enten stream eller videoEl endres)
   useEffect(() => {
     if (videoEl && kameraStream) {
+      // Å sette srcObject på et DOM-element er nettopp det effekter er til for;
+      // regelen tror feilaktig at videoEl er React-tilstand som ikke skal endres.
+      // eslint-disable-next-line react-hooks/immutability
       videoEl.srcObject = kameraStream
     }
   }, [videoEl, kameraStream])
