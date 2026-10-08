@@ -167,7 +167,7 @@ export function AppSidebar() {
   }
 
   return (
-    <aside className="w-64 flex flex-col h-full bg-white border-r border-slate-200 shrink-0">
+    <aside className="w-72 flex flex-col h-full bg-white border-r border-slate-200 shrink-0">
       {/* Ny konsultasjon-knapper */}
       <div className="px-3 py-3 space-y-1.5">
         {NY_KNAPPER.map(({ type, ikon, farge }, i) => (
@@ -175,11 +175,11 @@ export function AppSidebar() {
             key={type}
             onClick={() => opprettNy(type)}
             title={`Hurtigtast: Alt+${i + 1}`}
-            className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-white text-sm font-medium transition-colors ${farge}`}
+            className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-white text-sm font-medium transition-colors whitespace-nowrap ${farge}`}
           >
-            {ikon}
-            <span>+ {TYPE_LABELS[type]}</span>
-            <kbd className="ml-auto text-[10px] font-sans font-medium px-1.5 py-0.5 rounded bg-white/20 text-white/90">
+            <span className="shrink-0 flex">{ikon}</span>
+            <span className="min-w-0 truncate">+ {TYPE_LABELS[type]}</span>
+            <kbd className="ml-auto shrink-0 text-[10px] font-sans font-medium px-1.5 py-0.5 rounded bg-white/20 text-white/90">
               Alt+{i + 1}
             </kbd>
           </button>
