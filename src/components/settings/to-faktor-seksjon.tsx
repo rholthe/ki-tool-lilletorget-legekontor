@@ -124,8 +124,8 @@ export function ToFaktorSeksjon({ er2FAaktivert }: ToFaktorSeksjonProps) {
           </div>
           <p className="text-xs text-slate-500 max-w-sm">
             {aktivert
-              ? "Kontoen din er beskyttet med en engangskode fra YubiKey Authenticator eller annen TOTP-app."
-              : "Aktiver 2FA for å kreve en engangskode i tillegg til passord ved innlogging. Fungerer med YubiKey Authenticator, Google Authenticator og Authy."}
+              ? "Kontoen din er beskyttet med en engangskode fra autentiseringsappen din."
+              : "Aktiver 2FA for å kreve en engangskode i tillegg til passord ved innlogging. Fungerer med Microsoft Authenticator, Google Authenticator og andre autentiseringsapper."}
           </p>
         </div>
         {aktivert ? (
@@ -159,8 +159,8 @@ export function ToFaktorSeksjon({ er2FAaktivert }: ToFaktorSeksjonProps) {
           <DialogHeader>
             <DialogTitle>Aktiver to-faktor-autentisering</DialogTitle>
             <DialogDescription>
-              Bruk YubiKey Authenticator eller en annen TOTP-app for å scanne
-              QR-koden og koble kontoen din.
+              Bruk en autentiseringsapp på mobilen, for eksempel Microsoft
+              Authenticator eller Google Authenticator, til å skanne QR-koden.
             </DialogDescription>
           </DialogHeader>
 
@@ -169,7 +169,7 @@ export function ToFaktorSeksjon({ er2FAaktivert }: ToFaktorSeksjonProps) {
               <div className="rounded-lg bg-slate-50 border border-slate-200 p-3 text-sm text-slate-600 space-y-2">
                 <p className="font-medium text-slate-700">Slik aktiverer du:</p>
                 <ol className="list-decimal list-inside space-y-1 text-xs">
-                  <li>Installer YubiKey Authenticator på telefonen din</li>
+                  <li>Installer Microsoft Authenticator eller Google Authenticator på mobilen (gratis i App Store og Google Play)</li>
                   <li>Trykk «Fortsett» for å få opp QR-kode</li>
                   <li>Skann koden i appen</li>
                   <li>Bekreft med 6-sifret kode fra appen</li>
@@ -203,7 +203,7 @@ export function ToFaktorSeksjon({ er2FAaktivert }: ToFaktorSeksjonProps) {
           {steg === "qr" && (
             <div className="space-y-4">
               <p className="text-sm text-slate-600">
-                Skann QR-koden med YubiKey Authenticator eller annen TOTP-app:
+                Skann QR-koden med autentiseringsappen (f.eks. Microsoft eller Google Authenticator):
               </p>
               {qrUrl && (
                 <div className="flex justify-center">

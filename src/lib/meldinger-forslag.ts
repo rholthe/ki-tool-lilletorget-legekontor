@@ -24,7 +24,7 @@ Fra **fredag 16. oktober** må alle logge inn med en engangskode fra mobilen i t
 
 Gjør dette allerede nå:
 
-1. Last ned en autentiseringsapp på mobilen, for eksempel **Microsoft Authenticator**, **Google Authenticator** eller **YubiKey Authenticator**. Appene er gratis i App Store og Google Play.
+1. Last ned en autentiseringsapp på mobilen, for eksempel **Microsoft Authenticator** eller **Google Authenticator**. Appene er gratis i App Store og Google Play.
 2. I legeassist går du til **Innstillinger → Konto** og trykker **Aktiver 2FA**.
 3. Skann QR-koden med appen, og skriv inn den sekssifrede koden appen viser.
 

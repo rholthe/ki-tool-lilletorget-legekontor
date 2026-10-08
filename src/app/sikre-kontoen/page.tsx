@@ -35,7 +35,7 @@ export default async function SikreKontoenSide() {
           <CardDescription>
             Legeassist behandler pasientopplysninger, og alle brukere må nå logge inn med en
             engangskode fra mobilen i tillegg til passordet. Installer en autentiseringsapp
-            (f.eks. Microsoft Authenticator, Google Authenticator eller YubiKey Authenticator),
+            (f.eks. Microsoft Authenticator eller Google Authenticator),
             trykk «Aktiver 2FA» og skann QR-koden.
           </CardDescription>
         </CardHeader>

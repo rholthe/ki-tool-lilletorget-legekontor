@@ -109,7 +109,7 @@ export default function LoginPage() {
         <CardDescription>
           {step === "credentials"
             ? "Skriv inn e-post og passord"
-            : "Skriv inn engangskoden fra autentiseringsappen din (f.eks. YubiKey Authenticator)"}
+            : "Skriv inn engangskoden fra autentiseringsappen din (f.eks. Microsoft eller Google Authenticator)"}
         </CardDescription>
       </CardHeader>
 
@@ -166,8 +166,8 @@ export default function LoginPage() {
                 className="tracking-widest text-center text-lg font-mono"
               />
               <p className="text-xs text-slate-500">
-                Åpne YubiKey Authenticator eller annen TOTP-app og skriv inn
-                6-sifret kode for legeassist.
+                Åpne autentiseringsappen på mobilen og skriv inn den sekssifrede
+                koden for legeassist.
               </p>
             </div>
           )}
