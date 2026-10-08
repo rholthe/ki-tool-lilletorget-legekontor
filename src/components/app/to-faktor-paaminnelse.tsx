@@ -8,9 +8,12 @@ import { cn } from "@/lib/utils"
 
 const LAGRINGSNOKKEL = "legeassist:2fa-paaminnelse-sist"
 const INTERVALL_MS = 30 * 24 * 60 * 60 * 1000 // ~1 måned
+const INTERVALL_MED_FRIST_MS = 20 * 60 * 60 * 1000 // daglig når 2FA snart blir obligatorisk
 
 interface Props {
   er2FAaktivert: boolean
+  /** F.eks. «fredag 16. oktober» når admin har satt en frist som ikke er nådd ennå. */
+  fristTekst?: string | null
 }
 
 /**
@@ -18,16 +21,17 @@ interface Props {
  * og maks ca. én gang i måneden (huskes i localStorage). Lukkes/utsettes
  * uten å avbryte arbeidsflyten.
  */
-export function ToFaktorPaaminnelse({ er2FAaktivert }: Props) {
+export function ToFaktorPaaminnelse({ er2FAaktivert, fristTekst }: Props) {
   const [vis, setVis] = useState(false)
 
   useEffect(() => {
     if (er2FAaktivert) return
     const sist = localStorage.getItem(LAGRINGSNOKKEL)
-    if (!sist || Date.now() - Number(sist) > INTERVALL_MS) {
+    const intervall = fristTekst ? INTERVALL_MED_FRIST_MS : INTERVALL_MS
+    if (!sist || Date.now() - Number(sist) > intervall) {
       setVis(true)
     }
-  }, [er2FAaktivert])
+  }, [er2FAaktivert, fristTekst])
 
   function utsett() {
     localStorage.setItem(LAGRINGSNOKKEL, String(Date.now()))
@@ -47,8 +51,9 @@ export function ToFaktorPaaminnelse({ er2FAaktivert }: Props) {
             Sikre kontoen din
           </p>
           <p className="text-xs text-slate-500">
-            Du har ikke aktivert to-faktor-autentisering. Det gir kontoen din et
-            ekstra lag med beskyttelse.
+            {fristTekst
+              ? `To-faktor blir obligatorisk fra ${fristTekst}. Aktiver det nå, så blir du ikke stoppet ved innlogging da.`
+              : "Du har ikke aktivert to-faktor-autentisering. Det gir kontoen din et ekstra lag med beskyttelse."}
           </p>
         </div>
         <button

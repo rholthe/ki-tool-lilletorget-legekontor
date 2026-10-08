@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth"
 import { NextResponse } from "next/server"
+import { maaAktivere2fa } from "@/lib/to-faktor-krav"
 
 // Soniox token-endepunkt (fra offisiell demo: soniox_examples/apps/soniox-live-demo/server)
 // SONIOX_API_HOST kan settes til EU-spesifikt endepunkt når Soniox tilbyr det
@@ -17,6 +18,12 @@ export async function GET() {
   const session = await auth()
   if (!session) {
     return NextResponse.json({ feil: "Uautorisert" }, { status: 401 })
+  }
+  if (await maaAktivere2fa(session.user.id)) {
+    return NextResponse.json(
+      { feil: "To-faktor er obligatorisk. Aktiver det under Innstillinger → Konto." },
+      { status: 403 }
+    )
   }
 
   const apiKey = process.env.SONIOX_API_KEY

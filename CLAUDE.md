@@ -135,6 +135,12 @@ Nettleser (klinikkens datamaskin)
   - **Aktiv «Logg ut»** krever bekreftelse og sletter brukerens konsultasjoner på maskinen (andres blir
     liggende). 24-timers sletting gjelder som før, for alle brukere
   - Innloggingssiden forklarer hvorfor brukeren ble logget ut (`?grunn=inaktiv|lukket|utlopt|utlogget`)
+- Obligatorisk to-faktor fra en dato (`src/lib/to-faktor-krav.ts`, SystemSetting `krev_2fa_fra`, YYYY-MM-DD i norsk tid)
+  - Settes/fjernes av admin på `/admin/brukere` (viser også «X av Y har aktivert»)
+  - Før datoen: daglig påminnelse med datoen (`ToFaktorPaaminnelse fristTekst`)
+  - Fra datoen: `(app)/layout.tsx` sender brukere uten 2FA til `/sikre-kontoen` (egen rot-rute som
+    `/godta-avtale`), og `/api/claude`, `/api/chat`, `/api/verktoyforslag` og `/api/soniox-token` svarer 403
+    (`maaAktivere2fa`). `deaktiver2FA` nektes mens kravet gjelder
 - Promptbibliotek under Innstillinger: CRUD for maler per kategori (Konsultasjon, Møte, Diktat, Chat, AI-hjelp)
   - Maler kan merkes som delte; andre brukere kan importere delte maler
   - Konsultasjon/Møte-maler: velges i «Velg notatmal»-dropdown i konsultasjonsvisningen
@@ -422,6 +428,7 @@ legeassist/
 │   │   ├── databehandleravtale/   # Offentlig: gjeldende DPA + sikkerhet/ROS/teknisk
 │   │   ├── godta-avtale/          # Innlogget signeringsgate (egen rot-rute, ingen app-skall)
 │   │   ├── utlogget/              # Offentlig: logger ut via Auth.js når nettleseren har vært lukket
+│   │   ├── sikre-kontoen/         # Gate: aktiver 2FA når det er obligatorisk (ingen app-skall)
 │   │   ├── (app)/                 # Hovedapp (beskyttet; gates av DPA-signatur)
 │   │   │   ├── konsultasjon/      # Konsultasjonsvisning + notatgenerering
 │   │   │   ├── innstillinger/     # Brukerinnstillinger (2FA, DPA-status, Bedrock-info)
@@ -451,7 +458,8 @@ legeassist/
 │   │   ├── tilgang.ts             # sendTilgangsforesporsel + settPassordMedToken (signerer DPA)
 │   │   ├── dpa.ts                 # signerAvtale (innlogget signering)
 │   │   ├── admin-dpa.ts           # opprettDpaVersjon (admin, immutable versjoner)
-│   │   └── meldinger.ts           # markerMeldingLest, opprettMelding, settMeldingAktiv
+│   │   ├── meldinger.ts           # markerMeldingLest, opprettMelding, settMeldingAktiv
+│   │   └── krav-2fa.ts            # settKrav2faFra (admin)
 │   ├── components/
 │   │   ├── ui/                    # shadcn/ui-komponenter
 │   │   ├── dpa/                   # dpa-sammendrag, godta-avtale-skjema, markdown (renderer)
@@ -492,6 +500,7 @@ legeassist/
 │   │   ├── idb.ts                 # IndexedDB-operasjoner (konsultasjoner kryptert per bruker, 24t TTL)
 │   │   ├── datakrypto.ts          # Nøkkel fra /api/datanokkel (kun i minnet) + AES-GCM krypter/dekrypter
 │   │   ├── okt.ts                 # Øktregler: 1 t inaktivitet, 12 t maks, øktcookie, fornyOktToken
+│   │   ├── to-faktor-krav.ts      # Obligatorisk 2FA fra dato: hentKrav2faFra, maaAktivere2fa (server-only)
 │   │   ├── aktivitet.ts           # registrerAktivitet() — signal til OktVakt (f.eks. under opptak)
 │   │   ├── meldinger-forslag.ts   # Forhåndsutfylt sikkerhetsmelding i admin-skjemaet
 │   │   ├── staging.ts             # Grunntekster + TYPE_STAGING + CHAT/AIHJELP/PROMPTBYGGER_STAGING + felles seksjoner

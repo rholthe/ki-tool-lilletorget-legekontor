@@ -10,6 +10,7 @@ import { KonsultasjonProvider } from "@/hooks/use-konsultasjon"
 import { auth } from "@/lib/auth"
 import { isAdmin } from "@/lib/admin"
 import { harGyldigSignatur } from "@/lib/dpa"
+import { hentKrav2faFra, dagensDatoNorge, datoTekst } from "@/lib/to-faktor-krav"
 import { prisma } from "@/lib/db"
 
 export default async function AppLayout({
@@ -31,6 +32,13 @@ export default async function AppLayout({
   // Ingen appbruk uten gyldig signert databehandleravtale
   if (session?.user?.id && !(await harGyldigSignatur(bruker))) {
     redirect("/godta-avtale")
+  }
+
+  // Obligatorisk to-faktor fra datoen admin har satt
+  const krav2faFra = await hentKrav2faFra()
+  const krav2faAktivt = krav2faFra !== null && dagensDatoNorge() >= krav2faFra
+  if (session?.user?.id && krav2faAktivt && !bruker?.twoFactorEnabled) {
+    redirect("/sikre-kontoen")
   }
 
   // Aktive meldinger fra admin som brukeren ikke har bekreftet lest, eldste først
@@ -72,7 +80,10 @@ export default async function AppLayout({
         </div>
       </div>
       <OktVakt />
-      <ToFaktorPaaminnelse er2FAaktivert={bruker?.twoFactorEnabled ?? true} />
+      <ToFaktorPaaminnelse
+        er2FAaktivert={bruker?.twoFactorEnabled ?? true}
+        fristTekst={krav2faFra && !krav2faAktivt ? datoTekst(krav2faFra) : null}
+      />
       <MeldingVisning
         meldinger={ulesteMeldinger.map((m) => ({ ...m, publisertAt: m.publisertAt.toISOString() }))}
       />

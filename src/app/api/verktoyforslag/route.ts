@@ -4,6 +4,7 @@ import { AnthropicBedrock } from "@anthropic-ai/bedrock-sdk"
 import { hentSystemSetting, standardModell, standardRegion } from "@/lib/admin"
 import { hentStagingOverrides, byggVerktoyforslagStaging } from "@/lib/staging-server"
 import { forslagKandidater } from "@/lib/verktoy/sok"
+import { maaAktivere2fa } from "@/lib/to-faktor-krav"
 
 /**
  * AI-forslag om hvilke kliniske verktøy legen bør åpne.
@@ -91,6 +92,12 @@ export async function POST(req: Request) {
   const session = await auth()
   if (!session) {
     return NextResponse.json({ feil: "Uautorisert" }, { status: 401 })
+  }
+  if (await maaAktivere2fa(session.user.id)) {
+    return NextResponse.json(
+      { feil: "To-faktor er obligatorisk. Aktiver det under Innstillinger → Konto." },
+      { status: 403 }
+    )
   }
 
   if (!process.env.BEDROCK_API_KEY || !process.env.BEDROCK_SECRET_KEY) {

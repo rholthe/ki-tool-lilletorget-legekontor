@@ -19,6 +19,7 @@ import {
 } from "@/lib/staging-server"
 import { formaterTilNotat } from "@/lib/verktoy/beregn"
 import type { VerktoyResultat } from "@/lib/verktoy/typer"
+import { maaAktivere2fa } from "@/lib/to-faktor-krav"
 
 interface RequestBody {
   type: KonsultasjonsType
@@ -44,6 +45,12 @@ export async function POST(req: Request) {
   const session = await auth()
   if (!session) {
     return NextResponse.json({ feil: "Uautorisert" }, { status: 401 })
+  }
+  if (await maaAktivere2fa(session.user.id)) {
+    return NextResponse.json(
+      { feil: "To-faktor er obligatorisk. Aktiver det under Innstillinger → Konto." },
+      { status: 403 }
+    )
   }
 
   if (!process.env.BEDROCK_API_KEY || !process.env.BEDROCK_SECRET_KEY) {

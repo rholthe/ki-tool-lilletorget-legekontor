@@ -6,6 +6,7 @@ import qrcode from "qrcode"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 import { encrypt, decrypt } from "@/lib/crypto"
+import { erKrav2faAktivt } from "@/lib/to-faktor-krav"
 
 export async function generer2FAHemmelighet(): Promise<
   { qrUrl: string; manuellKode: string } | { feil: string }
@@ -81,6 +82,10 @@ export async function deaktiver2FA(
 
   const passordOk = await bcrypt.compare(passord, bruker.passwordHash)
   if (!passordOk) return { feil: "Feil passord" }
+
+  if (await erKrav2faAktivt()) {
+    return { feil: "To-faktor er obligatorisk og kan ikke slås av." }
+  }
 
   await prisma.user.update({
     where: { id: bruker.id },
