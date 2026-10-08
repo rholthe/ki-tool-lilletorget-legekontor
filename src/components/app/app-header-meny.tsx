@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { signOut } from "next-auth/react"
-import { Settings, ShieldCheck, LogOut, ChevronDown, User, Users, FileText } from "lucide-react"
+import { Settings, ShieldCheck, LogOut, ChevronDown, User, Users, FileText, Megaphone } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -56,6 +56,12 @@ export function AppHeaderMeny({ visNavn, erAdmin }: Props) {
                 <Link href="/admin/brukere" className="flex items-center gap-2 w-full">
                   <Users className="w-4 h-4" />
                   Brukere
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Link href="/admin/meldinger" className="flex items-center gap-2 w-full">
+                  <Megaphone className="w-4 h-4" />
+                  Meldinger
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem>

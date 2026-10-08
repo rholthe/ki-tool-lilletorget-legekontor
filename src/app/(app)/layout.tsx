@@ -4,6 +4,7 @@ import { BookOpen } from "lucide-react"
 import { AppSidebar } from "@/components/app/app-sidebar"
 import { AppHeaderMeny } from "@/components/app/app-header-meny"
 import { ToFaktorPaaminnelse } from "@/components/app/to-faktor-paaminnelse"
+import { MeldingVisning } from "@/components/app/melding-visning"
 import { KonsultasjonProvider } from "@/hooks/use-konsultasjon"
 import { auth } from "@/lib/auth"
 import { isAdmin } from "@/lib/admin"
@@ -30,6 +31,15 @@ export default async function AppLayout({
   if (session?.user?.id && !(await harGyldigSignatur(bruker))) {
     redirect("/godta-avtale")
   }
+
+  // Aktive meldinger fra admin som brukeren ikke har bekreftet lest, eldste først
+  const ulesteMeldinger = session?.user?.id
+    ? await prisma.melding.findMany({
+        where: { aktiv: true, lest: { none: { userId: session.user.id } } },
+        select: { id: true, tittel: true, innhold: true, publisertAt: true },
+        orderBy: { publisertAt: "asc" },
+      })
+    : []
 
   return (
     <KonsultasjonProvider>
@@ -61,6 +71,9 @@ export default async function AppLayout({
         </div>
       </div>
       <ToFaktorPaaminnelse er2FAaktivert={bruker?.twoFactorEnabled ?? true} />
+      <MeldingVisning
+        meldinger={ulesteMeldinger.map((m) => ({ ...m, publisertAt: m.publisertAt.toISOString() }))}
+      />
     </KonsultasjonProvider>
   )
 }

@@ -29,6 +29,7 @@ model User {
   sessions       Session[]
   authenticators Authenticator[]
   maler          Mal[]
+  meldingerLest  MeldingLest[]
 
   passordOppsett PasswordSetupToken?
 
@@ -149,4 +150,31 @@ model DpaVersjon {
   publisertAt     DateTime @default(now())
 
   @@index([gjeldende])
+}
+
+// Meldinger fra admin til alle brukere (f.eks. nye sikkerhetsrutiner). Vises
+// som en modal øverst i appen til brukeren aktivt har trykket «lest».
+// `aktiv = false` trekker meldingen tilbake (vises ikke lenger, lesestatus beholdes).
+model Melding {
+  id          String        @id @default(cuid())
+  tittel      String        @db.VarChar(200)
+  innhold     String        @db.Text // markdown
+  aktiv       Boolean       @default(true)
+  opprettetAv String? // e-post til admin som opprettet meldingen
+  publisertAt DateTime      @default(now())
+  lest        MeldingLest[]
+
+  @@index([aktiv, publisertAt])
+}
+
+model MeldingLest {
+  meldingId String
+  userId    String
+  lestAt    DateTime @default(now())
+
+  melding Melding @relation(fields: [meldingId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([meldingId, userId])
+  @@index([userId])
 }
