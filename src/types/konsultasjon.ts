@@ -49,13 +49,6 @@ export interface Vedlegg {
   ocrBruk?: VedleggOcrBruk
 }
 
-/** Ett AI-forslag om hvilket klinisk verktøy legen bør åpne. */
-export interface VerktoyForslag {
-  /** Id fra verktøyregisteret — validert mot hvitliste på serveren. */
-  id: string
-  begrunnelse: string
-}
-
 export interface ChatMelding {
   id: string
   role: "user" | "assistant" | "system"
@@ -83,15 +76,6 @@ export interface Konsultasjon {
   stikkord?: string[]
   /** Utførte kliniske verktøy — lagres strukturert så de overlever regenerering av notatet. */
   verktoyResultater?: VerktoyResultat[]
-  /**
-   * AI-forslag om verktøy, med avtrykk av teksten de ble laget fra. Lagres slik
-   * at modalen kan åpnes og lukkes uten å utløse et nytt Bedrock-kall.
-   */
-  verktoyForslag?: {
-    forslag: VerktoyForslag[]
-    avtrykk: string
-    hentetAt: number
-  }
   chatHistorikk?: ChatMelding[]
   chatKontekstSnapshot?: {
     transkript: string

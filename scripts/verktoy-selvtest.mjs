@@ -10,6 +10,9 @@
  *   2. Terskeldekning: hver oppnåelige sum treffer en terskel, ellers ville
  *      skjemaet vist en sum uten tolkning.
  *   3. Notat-synk er idempotent og legger seksjonen foran `--- OCR ---`.
+ *
+ * I tillegg sjekkes søket: at vanlige søk (synonymer, bøyninger, skrivefeil,
+ * tastatur uten æøå) gir riktig verktøy blant de øverste treffene.
  */
 
 import { execFileSync } from "node:child_process"
@@ -31,6 +34,7 @@ execFileSync(
     "src/lib/verktoy/beregn.ts",
     "src/lib/verktoy/retningslinje.ts",
     "src/lib/verktoy/kalkulator.ts",
+    "src/lib/verktoy/sok.ts",
     "--outDir",
     utMappe,
     "--module",
@@ -64,6 +68,7 @@ const {
   formaterTilNotat,
   synkVerktoySeksjon,
 } = require(path.join(utMappe, "beregn.js"))
+const { sokOppslag, foreslaaOppslag, treffId } = require(path.join(utMappe, "sok.js"))
 
 let feil = 0
 
@@ -266,6 +271,67 @@ for (const kalkulator of INNEBYGDE_KALKULATORER) {
       `  ${(kalkulator.testkasus ?? []).length} referansekasus · ✓ alle sjekker grønne`
     )
   }
+}
+
+/*
+ * Søk: hvert kasus er et søk legen kan tenkes å skrive, og id-en som må stå
+ * blant de `topp` første treffene. Ett kasus per mekanisme — synonym,
+ * bøyning, skrivefeil, manglende æøå, forkortelse, flere ord.
+ */
+const SOKEKASUS = [
+  { sok: "ørebetennelse", id: "antibiotika-allmennpraksis:akutt-mediaotitt", topp: 1 },
+  { sok: "orebetennelse", id: "antibiotika-allmennpraksis:akutt-mediaotitt", topp: 1 },
+  { sok: "ørebetenelse", id: "antibiotika-allmennpraksis:akutt-mediaotitt", topp: 1 },
+  { sok: "halsbetennelsen", id: "antibiotika-allmennpraksis:streptokokkhalsinfeksjon", topp: 1 },
+  { sok: "vondt i halsen", id: "antibiotika-allmennpraksis:streptokokkhalsinfeksjon", topp: 1 },
+  { sok: "blærebetennelse", id: "antibiotika-allmennpraksis:cystitt-kvinne", topp: 2 },
+  { sok: "af", id: "chadsvasc", topp: 1 },
+  { sok: "drypp", id: "chadsvasc", topp: 2 },
+  { sok: "blodpropp", id: "wells-dvt", topp: 3 },
+  { sok: "blodpropp", id: "wells-le", topp: 3 },
+  { sok: "hoven legg", id: "wells-dvt", topp: 1 },
+  { sok: "trist", id: "madrs", topp: 2 },
+  { sok: "depresjon", id: "mdi", topp: 2 },
+  { sok: "glemsom", id: "klokketest", topp: 1 },
+  { sok: "alzheimer", id: "klokketest", topp: 1 },
+  { sok: "gravid", id: "svangerskap", topp: 1 },
+  { sok: "termn", id: "svangerskap", topp: 1 },
+  { sok: "kolesterol", id: "norrisk2", topp: 1 },
+  { sok: "vondt i kneet", id: "kne", topp: 1 },
+  { sok: "korsband", id: "kne", topp: 1 },
+  { sok: "frossen skulder", id: "skulder", topp: 1 },
+  { sok: "blodforgiftning", id: "qsofa", topp: 3 },
+  { sok: "slapp baby", id: "pevs", topp: 1 },
+  { sok: "chads", id: "chadsvasc", topp: 1 },
+  { sok: "cha2ds2", id: "chadsvasc", topp: 1 },
+  { sok: "flått", id: "antibiotika-allmennpraksis:erytema-migrans", topp: 1 },
+  { sok: "hjernehinnebetennelse", id: "antibiotika-allmennpraksis:bakteriell-meningitt", topp: 1 },
+]
+
+console.log("\nSøk")
+{
+  const forFeil = feil
+  for (const { sok, id, topp } of SOKEKASUS) {
+    const ider = sokOppslag(sok).map(treffId)
+    const plass = ider.indexOf(id)
+    sjekk(
+      plass !== -1 && plass < topp,
+      `«${sok}»: ${id} på plass ${plass === -1 ? "–" : plass + 1}, forventet topp ${topp} (fikk ${ider.slice(0, 4).join(", ") || "ingen"})`
+    )
+  }
+  // Korte forkortelser skal ikke slå ut inni andre ord
+  sjekk(
+    sokOppslag("le").every((t) => treffId(t) !== "antibiotika-allmennpraksis:akutt-sinusitt"),
+    "«le» treffer sinusitt — korte ord skal kreve ordstart"
+  )
+  sjekk(sokOppslag("xyzzyq").length === 0, "meningsløst søk gir treff")
+  sjekk(
+    foreslaaOppslag("Pasienten har vridd kneet og har korsbandskade").some(
+      (f) => treffId(f.treff) === "kne"
+    ),
+    "forslag fra transkript fanger ikke «vridd kneet»"
+  )
+  if (feil === forFeil) console.log(`  ${SOKEKASUS.length} søk · ✓ alle sjekker grønne`)
 }
 
 console.log(

@@ -1,19 +1,35 @@
 /**
  * Søk i verktøylisten og nøkkelordbaserte forslag ut fra konsultasjonens innhold.
  *
- * Forslagene er rent tekstlige — ingen AI, ingen nettverkskall, ingen ventetid.
- * AI-baserte forslag kommer som et supplement senere.
+ * Alt skjer lokalt — ingen AI, ingen nettverkskall, ingen ventetid.
  *
  * Retningslinjenes **tilstander** er egne treff, ikke bare retningslinjen de
  * ligger i. Legen søker etter «ørebetennelse», ikke etter «Antibiotika i
  * allmennpraksis».
  */
 
-import type { Kalkulator, Oppslag, Retningslinje, Tilstand, Verktoy } from "./typer"
-import { INNEBYGDE_OPPSLAG, erKalkulator, erRetningslinje } from "./registry"
+import type { Kalkulator, Oppslag, Retningslinje, Tilstand, Verktoy, VerktoyKategori } from "./typer"
+import { INNEBYGDE_OPPSLAG, KATEGORI_LABEL, erKalkulator, erRetningslinje } from "./registry"
+import { SYNONYMGRUPPER } from "./synonymer"
 
-function normaliser(tekst: string): string {
-  return tekst.toLowerCase().trim()
+/**
+ * Små bokstaver, uten aksenter, og med æøå brettet til ae/o/a — slik at
+ * «orebetennelse» (tastatur uten æøå) og «dyspne» treffer det samme som
+ * «ørebetennelse» og «dyspné». NFKD gjør også ₂ i CHA₂DS₂-VASc til 2.
+ * Tegnsetting blir mellomrom, så «d-dimer» og «d dimer» er likt.
+ */
+export function normaliser(tekst: string): string {
+  return tekst
+    .toLowerCase()
+    .replace(/æ/g, "ae")
+    .replace(/ø/g, "o")
+    .replace(/å/g, "a")
+    .normalize("NFKD")
+    .replace(/\p{M}/gu, "")
+    .replace(/aa/g, "a")
+    .replace(/oe/g, "o")
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .trim()
 }
 
 function escapeRegex(tekst: string): string {
@@ -59,7 +75,175 @@ function alleTreff(oppslag: Oppslag[]): Treff[] {
   })
 }
 
-/** Fritekstsøk mot navn, langt navn og søkeord. */
+/** Småord som ikke skal kreves i søket («vondt i kneet»). */
+const FYLLORD = new Set(["i", "og", "pa", "med", "av", "for", "til", "en", "et", "ved", "hos"])
+
+/**
+ * Antall redigeringer (innsetting, sletting, bytte, ombytting av to naboer)
+ * mellom to ord. Avbryter tidlig når grensen er passert.
+ */
+function redigeringsavstand(a: string, b: string, grense: number): number {
+  if (Math.abs(a.length - b.length) > grense) return grense + 1
+  const d: number[][] = Array.from({ length: a.length + 1 }, (_, i) => [i])
+  for (let j = 1; j <= b.length; j++) d[0][j] = j
+  for (let i = 1; i <= a.length; i++) {
+    let radMin = Infinity
+    for (let j = 1; j <= b.length; j++) {
+      const kost = a[i - 1] === b[j - 1] ? 0 : 1
+      d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + kost)
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
+        d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1)
+      }
+      radMin = Math.min(radMin, d[i][j])
+    }
+    if (radMin > grense) return grense + 1
+  }
+  return d[a.length][b.length]
+}
+
+/** Tillatte skrivefeil øker med ordlengden; korte ord må være riktige. */
+function feilgrense(ord: string): number {
+  if (ord.length >= 8) return 2
+  if (ord.length >= 4) return 1
+  return 0
+}
+
+/**
+ * Hvor godt ett søkeord treffer ett felt (0 = ikke). Rangeringen:
+ * helt felt > ordstart > bøyd form > inni et ord > skrivefeil.
+ */
+function ordPoeng(ord: string, felt: string, feltOrd: string[], tillatFeil: boolean): number {
+  if (felt === ord) return 100
+  if (feltOrd.includes(ord)) return 90
+  if (feltOrd.some((w) => w.startsWith(ord))) return 80
+  // Bøyd form: «halsbetennelsen», «kneet» — søkeordet er lengre enn feltordet
+  if (ord.length >= 4 && feltOrd.some((w) => w.length >= 4 && ord.startsWith(w))) return 70
+  // Inni et sammensatt ord: «betennelse» i «halsbetennelse». Ikke for korte ord,
+  // ellers treffer «tia» i «visuospatial»
+  if (ord.length >= 4 && felt.includes(ord)) return 60
+
+  const grense = tillatFeil ? feilgrense(ord) : 0
+  if (grense > 0) {
+    for (const w of feltOrd) {
+      // Også mot starten av lengre ord, så halvskrevne ord med skrivefeil treffer
+      const mot = w.length > ord.length + grense ? w.slice(0, ord.length) : w
+      if (redigeringsavstand(ord, mot, grense) <= grense) return 40
+    }
+  }
+  return 0
+}
+
+interface Felt {
+  tekst: string
+  ord: string[]
+  /** Navnet teller litt mer enn søkeordene. */
+  erNavn: boolean
+}
+
+function lagFelter(navn: string[], ovrige: string[]): Felt[] {
+  const lag = (t: string, erNavn: boolean): Felt => {
+    const tekst = normaliser(t)
+    return { tekst, ord: tekst.split(" ").filter(Boolean), erNavn }
+  }
+  return [...navn.map((n) => lag(n, true)), ...ovrige.map((o) => lag(o, false))]
+}
+
+/**
+ * Ord som lister en hel kategori. Uten «skår» ville søket bare truffet
+ * «skarlagensfeber», siden å brettes til a.
+ */
+const KATEGORI_SOKEORD: Record<VerktoyKategori, string[]> = {
+  score: [KATEGORI_LABEL.score, "skår", "score", "skala"],
+  undersokelse: [KATEGORI_LABEL.undersokelse, "undersøkelse", "klinisk undersøkelse"],
+  kalkulator: [KATEGORI_LABEL.kalkulator, "beregning", "kalkulere"],
+  retningslinje: [KATEGORI_LABEL.retningslinje, "behandling", "behandlingsanbefaling"],
+}
+
+function felterFor(t: Treff): Felt[] {
+  if (t.slag === "verktoy") {
+    return lagFelter(
+      [t.verktoy.navn, t.verktoy.langtNavn],
+      [...t.verktoy.sokeord, ...KATEGORI_SOKEORD[t.verktoy.kategori]]
+    )
+  }
+  if (t.slag === "kalkulator") {
+    return lagFelter(
+      [t.kalkulator.navn, t.kalkulator.langtNavn],
+      [...t.kalkulator.sokeord, ...KATEGORI_SOKEORD.kalkulator]
+    )
+  }
+  return lagFelter(
+    [t.tilstand.navn],
+    [
+      t.retningslinje.navn,
+      t.retningslinje.langtNavn,
+      ...t.tilstand.sokeord,
+      ...t.retningslinje.sokeord,
+      ...KATEGORI_SOKEORD.retningslinje,
+    ]
+  )
+}
+
+const NORMALISERTE_GRUPPER = SYNONYMGRUPPER.map((g) => g.map(normaliser))
+
+/**
+ * Synonymer for hele søket. Et gruppeord gjelder når søket er lik det, er
+ * starten av det (fra fire bokstaver), eller er en skrivefeil av det.
+ */
+function synonymerFor(q: string): string[] {
+  const ut = new Set<string>()
+  for (const gruppe of NORMALISERTE_GRUPPER) {
+    const treffer = gruppe.some(
+      (term) =>
+        term === q ||
+        (q.length >= 4 && term.startsWith(q)) ||
+        (feilgrense(q) > 0 && redigeringsavstand(q, term, feilgrense(q)) <= feilgrense(q))
+    )
+    if (treffer) for (const term of gruppe) if (term !== q) ut.add(term)
+  }
+  return [...ut]
+}
+
+/** Beste treff for ett ord mot alle feltene. */
+function besteOrdPoeng(ord: string, felter: Felt[], tillatFeil: boolean): number {
+  let best = 0
+  for (const f of felter) {
+    const p = ordPoeng(ord, f.tekst, f.ord, tillatFeil)
+    if (p > 0) best = Math.max(best, p + (f.erNavn ? 5 : 0))
+  }
+  return best
+}
+
+/**
+ * Alle ord i søket må treffe et felt; svakeste ord bestemmer poengsummen.
+ * Med synonymer kan hvert ord også treffe via sin gruppe («slapp baby» →
+ * «slapt barn»), men et synonymtreff rangeres under et direkte treff.
+ *
+ * Skrivefeil tolereres bare i det legen faktisk skrev. Synonymene er riktig
+ * stavet, og med toleranse ville «knesmerter» truffet «øresmerter».
+ */
+function frasePoeng(frase: string, felter: Felt[], erSynonym = false): number {
+  const alle = frase.split(" ").filter(Boolean)
+  const ord = alle.length > 1 ? alle.filter((o) => !FYLLORD.has(o)) : alle
+  if (ord.length === 0) return 0
+
+  let svakest = Infinity
+  for (const o of ord) {
+    let best = besteOrdPoeng(o, felter, !erSynonym)
+    if (!erSynonym && best < 90) {
+      for (const s of synonymerFor(o)) best = Math.max(best, frasePoeng(s, felter, true) * 0.85)
+    }
+    if (best === 0) return 0
+    svakest = Math.min(svakest, best)
+  }
+  return svakest
+}
+
+/**
+ * Fritekstsøk mot navn, langt navn og søkeord, med synonymer, bøyningsformer
+ * og skrivefeil. Treffene er rangert — beste først. Uten søk returneres alle
+ * rader i registerets rekkefølge.
+ */
 export function sokOppslag(
   sok: string,
   oppslag: Oppslag[] = INNEBYGDE_OPPSLAG
@@ -68,21 +252,19 @@ export function sokOppslag(
   const alle = alleTreff(oppslag)
   if (!q) return alle
 
-  return alle.filter((t) => {
-    const felter =
-      t.slag === "verktoy"
-        ? [t.verktoy.navn, t.verktoy.langtNavn, ...t.verktoy.sokeord]
-        : t.slag === "kalkulator"
-          ? [t.kalkulator.navn, t.kalkulator.langtNavn, ...t.kalkulator.sokeord]
-          : [
-            t.tilstand.navn,
-            t.retningslinje.navn,
-            t.retningslinje.langtNavn,
-            ...t.tilstand.sokeord,
-            ...t.retningslinje.sokeord,
-          ]
-    return felter.map(normaliser).some((f) => f.includes(q))
-  })
+  const synonymer = synonymerFor(q)
+
+  return alle
+    .map((t, indeks) => {
+      const felter = felterFor(t)
+      let poeng = frasePoeng(q, felter)
+      // Hele søket som synonym: «vondt i kneet» → «kne»
+      for (const s of synonymer) poeng = Math.max(poeng, frasePoeng(s, felter, true) * 0.85)
+      return { t, poeng, indeks }
+    })
+    .filter((r) => r.poeng > 0)
+    .sort((a, b) => b.poeng - a.poeng || a.indeks - b.indeks)
+    .map((r) => r.t)
 }
 
 export interface Forslag {
@@ -115,7 +297,7 @@ export function foreslaaOppslag(
           : treff.slag === "kalkulator"
             ? treff.kalkulator.sokeord
             : treff.tilstand.sokeord
-      return { treff, ord: sokeord.filter((o) => inneholderOrd(kilde, o)) }
+      return { treff, ord: sokeord.filter((o) => inneholderOrd(kilde, normaliser(o))) }
     })
     .filter((f) => f.ord.length > 0)
     .sort((a, b) => b.ord.length - a.ord.length)
@@ -128,31 +310,4 @@ export function finnTreff(
   oppslag: Oppslag[] = INNEBYGDE_OPPSLAG
 ): Treff | undefined {
   return alleTreff(oppslag).find((t) => treffId(t) === id)
-}
-
-export interface Kandidat {
-  id: string
-  navn: string
-  beskrivelse: string
-}
-
-/**
- * Kandidatlisten som sendes til språkmodellen ved AI-forslag.
- *
- * Bygges på serveren, aldri av klienten: modellen får kun lov til å returnere
- * id-er herfra, og samme liste brukes til å validere svaret. Da kan verken
- * modellen eller en manipulert klient introdusere et verktøy som ikke finnes.
- */
-export function forslagKandidater(oppslag: Oppslag[] = INNEBYGDE_OPPSLAG): Kandidat[] {
-  return alleTreff(oppslag).map((t) =>
-    t.slag === "verktoy"
-      ? { id: treffId(t), navn: t.verktoy.navn, beskrivelse: t.verktoy.langtNavn }
-      : t.slag === "kalkulator"
-        ? { id: treffId(t), navn: t.kalkulator.navn, beskrivelse: t.kalkulator.langtNavn }
-        : {
-          id: treffId(t),
-          navn: t.tilstand.navn,
-          beskrivelse: `Behandlingsanbefaling — ${t.retningslinje.navn}`,
-        }
-  )
 }

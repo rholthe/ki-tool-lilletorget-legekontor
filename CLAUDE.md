@@ -136,7 +136,7 @@ Nettleser (klinikkens datamaskin)
     `/godta-avtale`), og `/api/ai/oppsett` og `/api/soniox-token` svarer 403
     (`maaAktivere2fa`). `deaktiver2FA` nektes mens kravet gjelder
 - Bruksstatistikk (`Bruk`-tabellen, `/admin/bruk`, «Bruk og kostnader» i adminmenyen)
-  - Én rad per Claude-kall (`funksjon`: notat, chat, aihjelp, promptbygger, verktoyforslag) og per
+  - Én rad per Claude-kall (`funksjon`: notat, chat, aihjelp, promptbygger; `verktoyforslag` kun historisk) og per
     Soniox-økt (transkribering, diktering). Kun tall: tokens fra Bedrocks egne invocation-metrics,
     `total_audio_proc_ms` fra Soniox, antall tegn. Rapporteres av nettleseren (`rapporterForbruk`,
     `soniox-maaler.ts`, `keepalive`) til `/api/bruk`, som validerer (zod, øvre grenser) og regner kostnad
@@ -329,22 +329,24 @@ Nettleser (klinikkens datamaskin)
     en prosent), så der dekker referansekasusene grenseverdiene i stedet. Prosjektet har ingen
     testrunner, og poengsummene er nettopp det som ikke får være feil — kjør dette etter hver
     endring i et verktøy
-  - Søkbar liste + nøkkelordbaserte forslag ut fra transkript/kontekst (`src/lib/verktoy/sok.ts`).
-    Retningslinjenes tilstander er egne rader, så legen kan søke på «ørebetennelse»
-  - **AI-forslag** (`/api/verktoyforslag`, `use-verktoyforslag.ts`): supplerer nøkkelordene der de
-    ikke strekker til — «slapp, blek, puster fort» nevner verken PEVS eller qSOFA ved navn
-    - **Hvitlisten bygges på serveren** fra registeret, ikke av klienten, og samme liste validerer
-      svaret. Id-er som ikke står der forkastes, så verken modellen eller en manipulert klient kan
-      introdusere et verktøy som ikke finnes
-    - Modellen foreslår, den regner ikke: den peker på hvilket verktøy legen bør åpne, all
-      poengsummering skjer fortsatt i `beregn.ts`
-    - Vanlig JSON, ikke SSE — ett kort strukturert svar, ikke en samtale. Ingen assistant-prefill:
-      Bedrock svarer «This model does not support assistant message prefill», så `lesForslag`
-      plukker JSON ut av svaret i stedet
-    - Forslagene lagres på `Konsultasjon.verktoyForslag` med et avtrykk av kildeteksten. Modalen
-      kan åpnes og lukkes fritt uten nytt Bedrock-kall; kallet gjentas først når teksten endres.
-      800 ms debounce, siden kontekst/tilleggsinfo er tekstfelt legen skriver i
-    - Prompt i staging-registeret som `felles:verktoyforslag` (admin kan justere den)
+  - Søk og forslag skjer lokalt i `src/lib/verktoy/sok.ts`, **uten AI**. Retningslinjenes
+    tilstander er egne rader, så legen kan søke på «ørebetennelse»
+    - **Fritekstsøket** er rangert (beste treff først, Enter åpner det) og tåler synonymer,
+      bøyninger («halsbetennelsen»), skrivefeil («ørebetenelse», avstand 1 fra 4 bokstaver, 2 fra 8)
+      og tastatur uten æøå («orebetennelse»). `normaliser()` bretter æ/ø/å og aksenter på begge sider
+    - **Synonymgrupper** i `src/lib/verktoy/synonymer.ts` (fagterm, folkelig ord, forkortelse:
+      «drypp» → CHA₂DS₂-VASc, «slapp baby» → PEVS). Gjelder kun søkefeltet — brede ord der ville
+      gitt forslag i annenhver konsultasjon. Det som skal utløse forslag, står i `sokeord`
+    - Synonymer får ikke skrivefeiltoleranse (ellers traff «knesmerter» «øresmerter»), og treff
+      inni et ord krever minst fire bokstaver (ellers traff «tia» «visuospatial»)
+    - **Forslag** ut fra transkript/kontekst er hele-ord-treff på `sokeord`; retningslinjens egne
+      søkeord teller ikke
+    - «Nylig brukt» (maks 5, kun treff-id-er i localStorage `legeassist:verktoy-nylig`)
+    - Selvtesten har søkekasus (`SOKEKASUS`) — legg til et kasus når et søk har bommet
+    - AI-forslag (Claude foreslo verktøy ut fra hele transkriptet) ble fjernet 2026-10-09: kallet
+      gikk på nytt ved hver endring i transkriptet, med hele transkriptet som input, og sto for en
+      uforholdsmessig stor del av kostnadene. `verktoyforslag` består i `/api/bruk` og
+      `/admin/bruk` bare for historikkens skyld
   - Resultatet lagres strukturert som `Konsultasjon.verktoyResultater` (IndexedDB), ikke bare som
     tekst i notatet — ellers forsvinner det ved «Regenerer»
   - `synkVerktoySeksjon()` skriver seksjonen `--- KLINISKE VERKTØY ---` inn i notatet. Idempotent
@@ -503,7 +505,7 @@ legeassist/
 │   │   ├── admin.ts               # isAdmin(), hentSystemSetting(), tilgjengeligeModeller/Regioner()
 │   │   ├── idb.ts                 # IndexedDB-operasjoner (konsultasjoner kryptert per bruker, 24t TTL)
 │   │   ├── bedrock-nettleser.ts   # Claude fra nettleseren: SigV4, event-strøm, forbruksrapport
-│   │   ├── ai-foresporsler.ts     # Bygger notat-/chat-/verktøyforslag-forespørsler (flyttet fra API-rutene)
+│   │   ├── ai-foresporsler.ts     # Bygger notat-/chat-forespørsler (flyttet fra API-rutene)
 │   │   ├── staging-bygg.ts        # Rene funksjoner for systemprompter (brukes i nettleseren)
 │   │   ├── soniox-maaler.ts       # Måler lydtid/tegn per Soniox-økt og rapporterer
 │   │   ├── bruk-priser.ts         # Priser + kostnadsberegning (server-only)
@@ -520,7 +522,8 @@ legeassist/
 │   │   ├── verktoy/               # Kliniske verktøy (typer, beregning, søk, definisjoner)
 │   │   │   ├── typer.ts           # Verktoy, Felt, Seksjon, Terskel, VerktoyResultat
 │   │   │   ├── beregn.ts          # beregn/byggResultat/synkVerktoySeksjon/kjorTestkasus
-│   │   │   ├── sok.ts             # sokOppslag + foreslaaOppslag (nøkkelord, tilstander som egne treff)
+│   │   │   ├── sok.ts             # sokOppslag (rangert, synonymer/skrivefeil) + foreslaaOppslag (nøkkelord)
+│   │   │   ├── synonymer.ts       # Synonymgrupper for søkefeltet (ikke for forslag)
 │   │   │   ├── retningslinje.ts   # byggRetningslinjeResultat + ferskhetssjekk (dagerSidenVerifisert)
 │   │   │   ├── formler.ts         # Navngitte formler for beregning.type «formel» (norrisk2, mdi)
 │   │   │   ├── kalkulator.ts      # beregnKalkulator/byggKalkulatorResultat + erSynlig
@@ -634,7 +637,7 @@ Prosjektet bruker Prisma 7 med den Rust-frie query-compileren og **mariadb-drive
 ### Arkitektur (nettleseren kaller Bedrock direkte)
 
 ```
-1. Browser: useClaude / useChat / useVerktoyForslag / promptbygger
+1. Browser: useClaude / useChat / promptbygger
    ├─ hentAiOppsett()  → GET /api/ai/oppsett (bufret til 5 min før nøklene utløper)
    │    { modell, region, overrides (staging), legitimasjon: STS-nøkler 1 t }
    ├─ ai-foresporsler.ts bygger { system, messages, maxTokens } — samme logikk som de gamle API-rutene
@@ -648,7 +651,7 @@ Prosjektet bruker Prisma 7 med den Rust-frie query-compileren og **mariadb-drive
 
 - `@anthropic-ai/bedrock-sdk` brukes ikke i nettleseren: strømdekodingen er Node-spesifikk
   (`eventstream-serde-node`). Den brukes fortsatt på serveren av `/api/admin/test-bedrock`
-- `strommFraClaude()` (notat, chat, AI-hjelp, promptbygger) og `sendTilClaude()` (verktøyforslag)
+- `strommFraClaude()` (notat, chat, AI-hjelp, promptbygger) og `sendTilClaude()` (ikke-strømmende, ingen brukere etter at verktøyforslag ble fjernet)
 - Konsekvens: systempromptene (staging-overrides) sendes til innloggede brukere og kan ses i
   utviklerverktøy. Ikke legg hemmeligheter i staging-tekster
 - `/api/claude`, `/api/chat` og `/api/verktoyforslag` er fjernet (2026-10-09)

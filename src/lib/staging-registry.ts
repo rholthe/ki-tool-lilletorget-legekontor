@@ -9,7 +9,6 @@ import {
   AIHJELP_STAGING,
   VEDLEGG_SEKSJON,
   VERKTOY_SEKSJON,
-  VERKTOYFORSLAG_STAGING,
   STIKKORD_SEKSJON,
 } from "@/lib/staging"
 import { VEDLEGG_INSTRUKS_DEFAULT } from "@/lib/vedlegg"
@@ -173,14 +172,6 @@ export const STAGING_REGISTRY: StagingEntry[] = [
     beskrivelse:
       "Legges på kun når legen har utført et klinisk verktøy. Må beholde plassholderen {VERKTOY}. Appen skriver selve resultatseksjonen i notatet — teksten her skal hindre at Claude gjengir eller endrer poengsummene.",
     standard: VERKTOY_SEKSJON,
-  },
-  {
-    key: "felles:verktoyforslag",
-    gruppe: "Felles",
-    label: "AI-forslag om kliniske verktøy",
-    beskrivelse:
-      "Brukes når appen ber Claude foreslå hvilke verktøy legen bør åpne. Må beholde plassholderne {KANDIDATER} og {KONTEKST}, og må be om ren JSON på formatet {\"forslag\":[{\"id\":…,\"begrunnelse\":…}]} — serveren forkaster svar den ikke kan tolke, og id-er som ikke finnes i kandidatlisten. Modellen skal aldri beregne skår.",
-    standard: VERKTOYFORSLAG_STAGING,
   },
 ]
 

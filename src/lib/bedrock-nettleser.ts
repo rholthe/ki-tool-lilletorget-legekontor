@@ -31,7 +31,7 @@ export interface AiForbruk {
 }
 
 /** Funksjonene som logges i bruksstatistikken. */
-export type AiFunksjon = "notat" | "chat" | "aihjelp" | "promptbygger" | "verktoyforslag"
+export type AiFunksjon = "notat" | "chat" | "aihjelp" | "promptbygger"
 
 // ─── Oppsett (nøkler hentes på nytt 5 min før de utløper) ────────────────────
 

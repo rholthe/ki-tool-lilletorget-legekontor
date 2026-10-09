@@ -5,7 +5,6 @@ export {
   byggStaging,
   byggChatStaging,
   resolverVedleggInstruksjon,
-  byggVerktoyforslagStaging,
 } from "@/lib/staging-bygg"
 
 const PREFIKS = "staging:"
