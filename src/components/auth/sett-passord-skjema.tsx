@@ -11,7 +11,8 @@ import { DpaSammendrag } from "@/components/dpa/dpa-sammendrag"
 
 const initialState: SettPassordState = {}
 
-export function SettPassordSkjema({ token }: { token: string }) {
+/** `tilbakestilling`: brukeren har passord fra før — ingen ny signering av avtalen. */
+export function SettPassordSkjema({ token, tilbakestilling = false }: { token: string; tilbakestilling?: boolean }) {
   const router = useRouter()
   const [state, formAction, isPending] = useActionState(
     settPassordMedToken,
@@ -31,7 +32,7 @@ export function SettPassordSkjema({ token }: { token: string }) {
         <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center mx-auto">
           <CheckCircle2 className="w-7 h-7 text-green-600" />
         </div>
-        <p className="font-semibold text-slate-800">Passord satt!</p>
+        <p className="font-semibold text-slate-800">{tilbakestilling ? "Passordet er endret" : "Passord satt!"}</p>
         <p className="text-sm text-slate-500">Sender deg til innlogging...</p>
       </div>
     )
@@ -65,6 +66,7 @@ export function SettPassordSkjema({ token }: { token: string }) {
         />
       </div>
 
+      {!tilbakestilling && (
       <div className="space-y-2 pt-1">
         <DpaSammendrag />
         <label className="flex items-start gap-2 text-sm text-slate-700">
@@ -81,6 +83,7 @@ export function SettPassordSkjema({ token }: { token: string }) {
           </span>
         </label>
       </div>
+      )}
 
       {state.error && (
         <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">
@@ -89,7 +92,7 @@ export function SettPassordSkjema({ token }: { token: string }) {
       )}
 
       <Button type="submit" className="w-full" disabled={isPending}>
-        {isPending ? "Lagrer..." : "Sett passord og fullfør"}
+        {isPending ? "Lagrer..." : tilbakestilling ? "Lagre nytt passord" : "Sett passord og fullfør"}
       </Button>
     </form>
   )

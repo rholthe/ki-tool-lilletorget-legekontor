@@ -9,6 +9,8 @@ import { sendEpost, hentBasisUrl } from "@/lib/mail"
 import { lagPassordOppsettToken } from "@/lib/passord-token"
 import { slettKoder } from "@/lib/gjenoppretting"
 import { varsleNullstilt2fa } from "@/lib/to-faktor-varsel"
+import { sendPassordlenke } from "@/lib/passord-epost"
+import { TILBAKESTILLING_ADMIN_MS } from "@/lib/passord-token"
 
 const opprettSchema = z.object({
   name: z.string().min(2, "Navn må ha minst 2 tegn"),
@@ -188,4 +190,38 @@ export async function nullstill2fa(userId: string): Promise<Nullstill2faState> {
 
   revalidatePath("/admin/brukere")
   return { ok: true, melding: "To-faktor nullstilt" }
+}
+
+/**
+ * Admin sender lenke for nytt passord til en aktiv bruker — reserven når
+ * brukeren ikke får til «Glemt passord» selv. Lenken bytter bare passordet;
+ * to-faktor står urørt.
+ */
+export async function sendPassordlenkeTilBruker(userId: string): Promise<ResendState> {
+  const session = await auth()
+  if (!session?.user?.email || !isAdmin(session.user.email)) {
+    return { ok: false, melding: "Uautorisert" }
+  }
+
+  const bruker = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, name: true, email: true, passwordHash: true },
+  })
+  if (!bruker) return { ok: false, melding: "Bruker ikke funnet", brukerId: userId }
+  if (!bruker.passwordHash) {
+    return { ok: false, melding: "Brukeren har ikke satt passord — send invitasjonen på nytt", brukerId: userId }
+  }
+
+  try {
+    await sendPassordlenke(bruker, {
+      gyldigMs: TILBAKESTILLING_ADMIN_MS,
+      gyldigTekst: "24 timer",
+      avAdministrator: true,
+    })
+  } catch (e) {
+    console.error("Klarte ikke sende passordlenke:", e instanceof Error ? e.message : e)
+    return { ok: false, melding: "Sending feilet – sjekk SMTP-oppsett", brukerId: userId }
+  }
+  console.info(`[passord] lenke sendt til bruker ${bruker.id} av ${session.user.email}`)
+  return { ok: true, melding: "Passordlenke sendt", brukerId: userId }
 }

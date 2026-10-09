@@ -10,6 +10,7 @@ export const proxy = auth((req) => {
     pathname.startsWith("/utlogget") ||
     pathname.startsWith("/tilgang") ||
     pathname.startsWith("/sett-passord") ||
+    pathname.startsWith("/glemt-passord") ||
     pathname.startsWith("/databehandleravtale") ||
     pathname.startsWith("/api/auth")
 

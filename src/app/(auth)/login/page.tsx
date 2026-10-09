@@ -144,7 +144,12 @@ export default function LoginPage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="password">Passord</Label>
+                <div className="flex items-baseline justify-between">
+                  <Label htmlFor="password">Passord</Label>
+                  <Link href="/glemt-passord" className="text-xs text-blue-600 hover:underline">
+                    Glemt passord?
+                  </Link>
+                </div>
                 <Input
                   id="password"
                   type="password"

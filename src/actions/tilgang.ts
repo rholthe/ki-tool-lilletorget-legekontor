@@ -4,7 +4,9 @@ import bcrypt from "bcryptjs"
 import { z } from "zod"
 import { prisma } from "@/lib/db"
 import { sendEpost, tilgangsforesporselMottaker } from "@/lib/mail"
-import { finnBrukerForToken, forbrukToken } from "@/lib/passord-token"
+import { headers } from "next/headers"
+import { TILBAKESTILLING_SELV_MS, finnBrukerForToken, forbrukToken } from "@/lib/passord-token"
+import { sendPassordEndret, sendPassordlenke } from "@/lib/passord-epost"
 import { hentGjeldendeDpa } from "@/lib/dpa"
 
 // ─── Tilgangsforespørsel (offentlig skjema) ──────────────────────────────────
@@ -92,7 +94,7 @@ export async function settPassordMedToken(
 
   const bruker = await finnBrukerForToken(token)
   if (!bruker) {
-    return { error: "Lenken er ugyldig eller utløpt. Be administrator om en ny invitasjon." }
+    return { error: "Lenken er ugyldig eller utløpt. Be om en ny lenke på innloggingssiden eller hos administrator." }
   }
 
   const parsed = passordSchema.safeParse(passord)
@@ -104,12 +106,22 @@ export async function settPassordMedToken(
     return { error: "Passordene er ikke like" }
   }
 
+  const passwordHash = await bcrypt.hash(passord, 12)
+
+  // Tilbakestilling: bare passordet byttes. Signaturen på databehandleravtalen
+  // står (er den utdatert, tar /godta-avtale seg av det etter innlogging)
+  if (bruker.harPassord) {
+    await prisma.user.update({ where: { id: bruker.id }, data: { passwordHash } })
+    await forbrukToken(bruker.id)
+    await sendPassordEndret(bruker)
+    return { success: true }
+  }
+
   if (!godta) {
     return { error: "Du må signere databehandleravtalen for å fullføre." }
   }
 
   const gjeldende = await hentGjeldendeDpa()
-  const passwordHash = await bcrypt.hash(passord, 12)
   await prisma.user.update({
     where: { id: bruker.id },
     data: {
@@ -121,4 +133,66 @@ export async function settPassordMedToken(
   await forbrukToken(bruker.id)
 
   return { success: true }
+}
+
+// ─── Glemt passord ────────────────────────────────────────────────────────────
+
+export type GlemtPassordState = { sendt?: boolean; error?: string }
+
+/** Forespørsler siste time, per e-post og per IP. I minnet: én serverprosess. */
+const forsok = new Map<string, number[]>()
+const VINDU_MS = 60 * 60 * 1000
+const MAKS_PER_EPOST = 3
+const MAKS_PER_IP = 10
+
+function forMange(nokkel: string, maks: number): boolean {
+  const naa = Date.now()
+  const liste = (forsok.get(nokkel) ?? []).filter((t) => naa - t < VINDU_MS)
+  if (liste.length >= maks) {
+    forsok.set(nokkel, liste)
+    return true
+  }
+  liste.push(naa)
+  forsok.set(nokkel, liste)
+  return false
+}
+
+/**
+ * Sender lenke for nytt passord. Svarer alltid det samme, og sender i
+ * bakgrunnen, så verken svaret eller svartiden avslører om adressen har konto.
+ */
+export async function bePassordlenke(
+  _prev: GlemtPassordState,
+  formData: FormData
+): Promise<GlemtPassordState> {
+  const epost = String(formData.get("epost") ?? "").trim().toLowerCase()
+  if (!z.string().email().safeParse(epost).success) {
+    return { error: "Skriv inn en gyldig e-postadresse." }
+  }
+
+  const h = await headers()
+  const ip = h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || "ukjent"
+  // Begge tellerne oppdateres, så en IP ikke kan prøve mange adresser
+  const epostFull = forMange(`epost:${epost}`, MAKS_PER_EPOST)
+  const ipFull = forMange(`ip:${ip}`, MAKS_PER_IP)
+  if (epostFull || ipFull) return { sendt: true }
+
+  void (async () => {
+    try {
+      const bruker = await prisma.user.findUnique({
+        where: { email: epost },
+        select: { id: true, email: true, name: true },
+      })
+      if (!bruker) return
+      await sendPassordlenke(bruker, {
+        gyldigMs: TILBAKESTILLING_SELV_MS,
+        gyldigTekst: "én time",
+        avAdministrator: false,
+      })
+    } catch (e) {
+      console.error(`[passord] sending av lenke feilet: ${e instanceof Error ? e.message : e}`)
+    }
+  })()
+
+  return { sendt: true }
 }

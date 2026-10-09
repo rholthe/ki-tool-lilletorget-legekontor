@@ -1,7 +1,7 @@
 "use client"
 
 import { useActionState, useEffect, useRef, useState, useTransition } from "react"
-import { ShieldCheck, ShieldOff, UserPlus, Mail, Clock, CheckCircle2, Trash2, ShieldAlert, RotateCcw } from "lucide-react"
+import { ShieldCheck, ShieldOff, UserPlus, Mail, Clock, CheckCircle2, Trash2, ShieldAlert, RotateCcw, KeyRound } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -16,6 +16,7 @@ import {
 import {
   nullstill2fa,
   opprettBruker,
+  sendPassordlenkeTilBruker,
   sendInvitasjonPaaNytt,
   slettBruker,
   type OpprettBrukerState,
@@ -170,6 +171,14 @@ function BrukerRadVisning({ bruker }: { bruker: BrukerRad }) {
     })
   }
 
+  function sendPassordlenke() {
+    setTilbakemelding(null)
+    startTransition(async () => {
+      const res = await sendPassordlenkeTilBruker(bruker.id)
+      setTilbakemelding({ ok: !!res.ok, tekst: res.melding ?? "" })
+    })
+  }
+
   function bekreftSletting() {
     setSlettFeil("")
     startSletting(async () => {
@@ -228,6 +237,19 @@ function BrukerRadVisning({ bruker }: { bruker: BrukerRad }) {
             <Button variant="outline" size="sm" className="shrink-0" onClick={resend} disabled={pending}>
               <Mail className="w-3.5 h-3.5 mr-1.5" />
               {pending ? "Sender..." : "Send på nytt"}
+            </Button>
+          )}
+          {bruker.harSattPassord && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0"
+              title="Sender en lenke for nytt passord (gyldig i 24 timer). To-faktor endres ikke."
+              onClick={sendPassordlenke}
+              disabled={pending}
+            >
+              <KeyRound className="w-3.5 h-3.5 mr-1.5" />
+              {pending ? "Sender..." : "Nytt passord"}
             </Button>
           )}
           {bruker.twoFactorEnabled && (

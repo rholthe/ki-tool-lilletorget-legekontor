@@ -99,7 +99,15 @@ Nettleser (klinikkens datamaskin)
     `ACCESS_REQUEST_TO`; lenket fra login («Kontakt en administrator»)
   - E-post via SMTP (`src/lib/mail.ts`, nodemailer) fra mailcow-postboksen `legeassist@lilletorget.org`
     (port 587/STARTTLS; postboksen har `smtp_access=1`, `force_pw_update=0` og egen ProISP-relay)
-  - Offentlige ruter i `proxy.ts`: `/login`, `/tilgang`, `/sett-passord`, `/databehandleravtale`, `/api/auth`
+  - **Glemt passord** (`/glemt-passord`, `bePassordlenke` i `actions/tilgang.ts`): lenke på e-post, gyldig
+    1 time, engangs (samme `PasswordSetupToken` som invitasjonen; `lagPassordOppsettToken(userId, gyldigMs)`).
+    Svarer alltid «Hvis adressen har en konto …» og sender i bakgrunnen, så verken svar eller svartid
+    avslører kontoer. Maks 3 per e-post og 10 per IP per time (i minnet). **Lenken bytter bare passordet —
+    to-faktor står urørt**, så overtatt e-post alene gir ikke tilgang. `/sett-passord` ser selv om det er
+    tilbakestilling (`harPassord`): da ingen ny DPA-signering, og e-post «passordet ditt er endret» etterpå
+  - Admin: «Nytt passord» på `/admin/brukere` for aktive brukere (`sendPassordlenkeTilBruker`, lenke gyldig
+    24 t) — reserven når brukeren ikke får det til selv
+  - Offentlige ruter i `proxy.ts`: `/login`, `/tilgang`, `/sett-passord`, `/glemt-passord`, `/databehandleravtale`, `/api/auth`
 - Databehandleravtale (DPA): ingen appbruk uten gyldig signatur
   - Admin-versjonert i DB (`DpaVersjon`: versjon, innhold/markdown, krevNySignering,
     gjeldende, publisertAt). Publiserte versjoner er uforanderlige (ingen redigering).
@@ -604,7 +612,8 @@ legeassist/
 │   │   ├── auth.ts                # NextAuth konfigurasjon
 │   │   ├── db.ts                  # Prisma-klient (Prisma 7 + mariadb-driveradapter, parser DATABASE_URL)
 │   │   ├── mail.ts               # SMTP (nodemailer): sendEpost, hentBasisUrl (server-only)
-│   │   ├── passord-token.ts      # Engangstoken for passordoppsett (SHA-256-hash)
+│   │   ├── passord-token.ts      # Engangstoken for passordoppsett/tilbakestilling (SHA-256-hash, gyldighet per bruk)
+│   │   ├── passord-epost.ts      # E-post: lenke for nytt passord, varsel om endret passord
 │   │   ├── dpa.ts                # DPA: hentGjeldendeDpa, harGyldigSignatur, baseline (server-only)
 │   │   ├── admin.ts               # isAdmin(), hentSystemSetting(), tilgjengeligeModeller/Regioner()
 │   │   ├── idb.ts                 # IndexedDB-operasjoner (konsultasjoner kryptert per bruker, 24t TTL)
