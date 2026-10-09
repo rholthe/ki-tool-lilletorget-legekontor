@@ -37,6 +37,7 @@ model User {
   meldingerLest  MeldingLest[]
 
   passordOppsett PasswordSetupToken?
+  gjenopprettingskoder Gjenopprettingskode[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -52,6 +53,21 @@ model PasswordSetupToken {
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Engangskoder for innlogging når telefonen med autentiseringsappen er borte.
+// Ti per bruker, laget når to-faktor aktiveres. Bare HMAC (med serverens
+// nøkkel) lagres; klarteksten vises én gang. `bruktAt` settes ved bruk.
+model Gjenopprettingskode {
+  id        String    @id @default(cuid())
+  userId    String
+  kodeHash  String    @unique @db.VarChar(64)
+  bruktAt   DateTime?
+  opprettet DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model Account {

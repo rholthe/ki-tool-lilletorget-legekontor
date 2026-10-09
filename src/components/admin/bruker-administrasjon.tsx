@@ -1,7 +1,7 @@
 "use client"
 
 import { useActionState, useEffect, useRef, useState, useTransition } from "react"
-import { ShieldCheck, ShieldOff, UserPlus, Mail, Clock, CheckCircle2, Trash2, ShieldAlert } from "lucide-react"
+import { ShieldCheck, ShieldOff, UserPlus, Mail, Clock, CheckCircle2, Trash2, ShieldAlert, RotateCcw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -14,6 +14,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog"
 import {
+  nullstill2fa,
   opprettBruker,
   sendInvitasjonPaaNytt,
   slettBruker,
@@ -144,6 +145,22 @@ function BrukerRadVisning({ bruker }: { bruker: BrukerRad }) {
   const [slettAapen, setSlettAapen] = useState(false)
   const [sletter, startSletting] = useTransition()
   const [slettFeil, setSlettFeil] = useState("")
+  const [nullstillAapen, setNullstillAapen] = useState(false)
+  const [nullstiller, startNullstilling] = useTransition()
+  const [nullstillFeil, setNullstillFeil] = useState("")
+
+  function bekreftNullstilling() {
+    setNullstillFeil("")
+    startNullstilling(async () => {
+      const res = await nullstill2fa(bruker.id)
+      if (res.ok) {
+        setNullstillAapen(false)
+        setTilbakemelding({ ok: true, tekst: "To-faktor nullstilt" })
+      } else {
+        setNullstillFeil(res.melding ?? "Nullstilling feilet")
+      }
+    })
+  }
 
   function resend() {
     setTilbakemelding(null)
@@ -213,6 +230,21 @@ function BrukerRadVisning({ bruker }: { bruker: BrukerRad }) {
               {pending ? "Sender..." : "Send på nytt"}
             </Button>
           )}
+          {bruker.twoFactorEnabled && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0"
+              title="Når brukeren har mistet telefonen og gjenopprettingskodene"
+              onClick={() => {
+                setNullstillFeil("")
+                setNullstillAapen(true)
+              }}
+            >
+              <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
+              Nullstill 2FA
+            </Button>
+          )}
           {!bruker.erAdmin && (
             <Button
               variant="outline"
@@ -228,6 +260,34 @@ function BrukerRadVisning({ bruker }: { bruker: BrukerRad }) {
             </Button>
           )}
         </div>
+
+        <Dialog open={nullstillAapen} onOpenChange={setNullstillAapen}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle>Nullstille to-faktor?</DialogTitle>
+              <DialogDescription>
+                To-faktor og gjenopprettingskodene til <strong>{bruker.email}</strong> slettes.
+                Brukeren logger da inn med bare passord, og må sette opp to-faktor på nytt —
+                når det er obligatorisk, før appen kan brukes. Brukeren får e-post om
+                nullstillingen. Gjør dette bare når du vet at det er brukeren selv som har
+                mistet tilgangen.
+              </DialogDescription>
+            </DialogHeader>
+            {nullstillFeil && (
+              <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+                {nullstillFeil}
+              </p>
+            )}
+            <div className="flex justify-end gap-2 mt-2">
+              <Button variant="outline" size="sm" onClick={() => setNullstillAapen(false)}>
+                Avbryt
+              </Button>
+              <Button size="sm" onClick={bekreftNullstilling} disabled={nullstiller}>
+                {nullstiller ? "Nullstiller..." : "Nullstill to-faktor"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         <Dialog open={slettAapen} onOpenChange={setSlettAapen}>
           <DialogContent className="max-w-sm">

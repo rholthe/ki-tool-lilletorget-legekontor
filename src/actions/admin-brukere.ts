@@ -7,6 +7,8 @@ import { auth } from "@/lib/auth"
 import { isAdmin } from "@/lib/admin"
 import { sendEpost, hentBasisUrl } from "@/lib/mail"
 import { lagPassordOppsettToken } from "@/lib/passord-token"
+import { slettKoder } from "@/lib/gjenoppretting"
+import { varsleNullstilt2fa } from "@/lib/to-faktor-varsel"
 
 const opprettSchema = z.object({
   name: z.string().min(2, "Navn må ha minst 2 tegn"),
@@ -152,4 +154,38 @@ export async function slettBruker(userId: string): Promise<SlettState> {
   revalidatePath("/admin/brukere")
 
   return { ok: true, melding: "Bruker slettet" }
+}
+
+export type Nullstill2faState = { ok?: boolean; melding?: string }
+
+/**
+ * Admin nullstiller to-faktor for en bruker (også seg selv), når telefonen og
+ * gjenopprettingskodene er borte. Hemmeligheten og kodene slettes. Er to-faktor
+ * obligatorisk, sendes brukeren til «Sikre kontoen» ved neste forespørsel og må
+ * sette det opp på nytt før appen kan brukes. Brukeren varsles på e-post.
+ */
+export async function nullstill2fa(userId: string): Promise<Nullstill2faState> {
+  const session = await auth()
+  if (!session?.user?.email || !isAdmin(session.user.email)) {
+    return { ok: false, melding: "Uautorisert" }
+  }
+
+  const bruker = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, email: true, name: true, twoFactorEnabled: true },
+  })
+  if (!bruker) return { ok: false, melding: "Bruker ikke funnet" }
+  if (!bruker.twoFactorEnabled) return { ok: false, melding: "To-faktor er ikke aktivert" }
+
+  await prisma.user.update({
+    where: { id: bruker.id },
+    data: { twoFactorEnabled: false, twoFactorSecret: null },
+  })
+  await slettKoder(bruker.id)
+  // Uten pasientdata: hvem som nullstilte for hvem, til sporbarhet
+  console.info(`[2fa] nullstilt for bruker ${bruker.id} av ${session.user.email}`)
+  await varsleNullstilt2fa(bruker)
+
+  revalidatePath("/admin/brukere")
+  return { ok: true, melding: "To-faktor nullstilt" }
 }

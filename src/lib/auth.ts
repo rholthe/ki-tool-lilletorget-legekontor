@@ -7,6 +7,8 @@ import { z } from "zod"
 import { prisma } from "@/lib/db"
 import { decrypt } from "@/lib/crypto"
 import { fornyOktToken } from "@/lib/okt"
+import { antallUbrukte, brukKode, erGjenopprettingskode } from "@/lib/gjenoppretting"
+import { varsleBruktGjenopprettingskode } from "@/lib/to-faktor-varsel"
 
 // Eget feilsignal for 2FA-krav — fanges av login-siden
 export class TwoFactorRequired extends CredentialsSignin {
@@ -44,18 +46,24 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const passwordOk = await bcrypt.compare(password, user.passwordHash)
         if (!passwordOk) return null
 
-        // 2FA-sjekk
+        // 2FA-sjekk: koden fra appen, eller en gjenopprettingskode (engangs)
         if (user.twoFactorEnabled) {
           if (!totp) throw new TwoFactorRequired()
           if (!user.twoFactorSecret) return null
-          const secret = decrypt(user.twoFactorSecret)
-          const totpOk = speakeasy.totp.verify({
-            secret,
-            encoding: "base32",
-            token: totp,
-            window: 1,
-          })
-          if (!totpOk) return null
+          const kode = totp.trim()
+          const totpOk =
+            /^\d{6}$/.test(kode) &&
+            speakeasy.totp.verify({
+              secret: decrypt(user.twoFactorSecret),
+              encoding: "base32",
+              token: kode,
+              window: 1,
+            })
+          if (!totpOk) {
+            if (!erGjenopprettingskode(kode) || !(await brukKode(user.id, kode))) return null
+            // Varsle brukeren, uten å holde igjen innloggingen
+            void antallUbrukte(user.id).then((igjen) => varsleBruktGjenopprettingskode(user, igjen))
+          }
         }
 
         return { id: user.id, email: user.email, name: user.name }

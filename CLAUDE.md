@@ -77,6 +77,16 @@ Nettleser (klinikkens datamaskin)
 - Transkriptviser (enkeltlinje): fortløpende transkripsjon vises som én linje — kun siste segment
   - Container: `overflow-x-hidden` med `scrollLeft = scrollWidth` via ref/useEffect
 - 2FA (TOTP), admin-side for Bedrock-konfigurasjon (modell/region/tilkoblingstest)
+  - **Gjenopprettingskoder** (`src/lib/gjenoppretting.ts`, tabell `Gjenopprettingskode`): ti engangskoder
+    (`XXXXX-XXXXX`, alfabet uten 0/O/1/I/L/U/V, ~49 bit) lages når 2FA aktiveres og vises én gang
+    (kopier/last ned, dialogen lukkes først etter «Jeg har lagret kodene»). Lagres som HMAC-SHA256 med
+    `TOTP_ENCRYPTION_KEY`, ikke ren hash. Innloggingen godtar en kode i stedet for TOTP («Har du ikke
+    telefonen?»); bruken er atomisk (`updateMany … bruktAt: null`) og brukeren får e-post
+    (`to-faktor-varsel.ts`). Innstillinger viser antall ubrukte og «Lag nye koder» (krever gyldig TOTP).
+    Valgt framfor et felles superpassord i `.env`: per bruker, engangs, kan byttes, og bruk varsles
+  - **Admin nullstiller 2FA** på `/admin/brukere` («Nullstill 2FA», også for seg selv): sletter hemmelighet
+    og koder, e-post til brukeren, logglinje uten innhold. Når 2FA er obligatorisk, sender
+    `(app)/layout.tsx` brukeren til `/sikre-kontoen` ved neste forespørsel (leser DB hver gang)
   - 2FA-påminnelse: diskret kort nederst til høyre for brukere uten 2FA, maks ~1 gang/mnd
     (`to-faktor-paaminnelse.tsx`, husker i localStorage `legeassist:2fa-paaminnelse-sist`)
 - Brukeradministrasjon (kun admin): selvregistrering er deaktivert
@@ -607,6 +617,8 @@ legeassist/
 │   │   ├── datakrypto.ts          # Nøkkel fra /api/datanokkel (kun i minnet) + AES-GCM krypter/dekrypter
 │   │   ├── okt.ts                 # Øktregler: 1 t inaktivitet, 12 t maks, øktcookie, fornyOktToken
 │   │   ├── to-faktor-krav.ts      # Obligatorisk 2FA fra dato: hentKrav2faFra, maaAktivere2fa (server-only)
+│   │   ├── gjenoppretting.ts      # Gjenopprettingskoder: lagNyeKoder, brukKode (HMAC, engangs)
+│   │   ├── to-faktor-varsel.ts    # E-post ved brukt gjenopprettingskode og nullstilt 2FA
 │   │   ├── aktivitet.ts           # registrerAktivitet() — signal til OktVakt (f.eks. under opptak)
 │   │   ├── meldinger-forslag.ts   # Forhåndsutfylt sikkerhetsmelding i admin-skjemaet
 │   │   ├── staging.ts             # Grunntekster + TYPE_STAGING + CHAT/AIHJELP/PROMPTBYGGER_STAGING + felles seksjoner

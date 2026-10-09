@@ -8,6 +8,8 @@ import { ToFaktorSeksjon } from "@/components/settings/to-faktor-seksjon"
 import { PromptbibliotekKlient } from "@/components/settings/promptbibliotek-klient"
 
 interface Props {
+  /** Ubrukte gjenopprettingskoder (0 når 2FA er av). */
+  ubrukteKoder: number
   bruker: {
     name: string | null
     email: string | null
@@ -21,7 +23,7 @@ interface Props {
   erAdmin: boolean
 }
 
-export function InnstillingerKlient({ bruker, aktivModell, aktivRegion, harBedrockNokler, erAdmin }: Props) {
+export function InnstillingerKlient({ bruker, ubrukteKoder, aktivModell, aktivRegion, harBedrockNokler, erAdmin }: Props) {
   const searchParams = useSearchParams()
   const router = useRouter()
   const aktivFane = searchParams.get("tab") === "prompts" ? "prompts" : "konto"
@@ -81,7 +83,7 @@ export function InnstillingerKlient({ bruker, aktivModell, aktivRegion, harBedro
               <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">Sikkerhet</h2>
             </div>
             <div className="rounded-xl border border-slate-200 bg-white p-5">
-              <ToFaktorSeksjon er2FAaktivert={bruker?.twoFactorEnabled ?? false} />
+              <ToFaktorSeksjon er2FAaktivert={bruker?.twoFactorEnabled ?? false} ubrukteKoder={ubrukteKoder} />
             </div>
           </section>
 

@@ -36,6 +36,8 @@ export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [totp, setTotp] = useState("")
+  /** Gjenopprettingskode i stedet for koden fra appen (telefonen er borte). */
+  const [brukerGjenoppretting, setBrukerGjenoppretting] = useState(false)
   const [feil, setFeil] = useState("")
   const [isPending, startTransition] = useTransition()
 
@@ -82,7 +84,11 @@ export default function LoginPage() {
       })
 
       if (result?.error) {
-        setFeil("Ugyldig engangskode. Prøv igjen.")
+        setFeil(
+          brukerGjenoppretting
+            ? "Ugyldig eller allerede brukt gjenopprettingskode. Prøv en annen."
+            : "Ugyldig engangskode. Prøv igjen."
+        )
         setTotp("")
         return
       }
@@ -109,7 +115,9 @@ export default function LoginPage() {
         <CardDescription>
           {step === "credentials"
             ? "Skriv inn e-post og passord"
-            : "Skriv inn engangskoden fra autentiseringsappen din (f.eks. Microsoft eller Google Authenticator)"}
+            : brukerGjenoppretting
+              ? "Skriv inn én av gjenopprettingskodene du lagret da du aktiverte to-faktor"
+              : "Skriv inn engangskoden fra autentiseringsappen din (f.eks. Microsoft eller Google Authenticator)"}
         </CardDescription>
       </CardHeader>
 
@@ -149,7 +157,7 @@ export default function LoginPage() {
             </>
           )}
 
-          {step === "totp" && (
+          {step === "totp" && !brukerGjenoppretting && (
             <div className="space-y-1.5">
               <Label htmlFor="totp">Engangskode (6 siffer)</Label>
               <Input
@@ -169,6 +177,52 @@ export default function LoginPage() {
                 Åpne autentiseringsappen på mobilen og skriv inn den sekssifrede
                 koden for legeassist.
               </p>
+              <button
+                type="button"
+                className="text-xs text-blue-600 hover:underline"
+                onClick={() => {
+                  setBrukerGjenoppretting(true)
+                  setTotp("")
+                  setFeil("")
+                }}
+              >
+                Har du ikke telefonen? Bruk en gjenopprettingskode
+              </button>
+            </div>
+          )}
+
+          {step === "totp" && brukerGjenoppretting && (
+            <div className="space-y-1.5">
+              <Label htmlFor="gjenoppretting">Gjenopprettingskode</Label>
+              <Input
+                id="gjenoppretting"
+                type="text"
+                autoComplete="off"
+                autoCapitalize="characters"
+                spellCheck={false}
+                maxLength={20}
+                placeholder="XXXXX-XXXXX"
+                value={totp}
+                onChange={(e) => setTotp(e.target.value.toUpperCase())}
+                required
+                autoFocus
+                className="tracking-widest text-center text-lg font-mono"
+              />
+              <p className="text-xs text-slate-500">
+                Hver kode virker én gang. Du får en e-post når en kode er brukt. Sett opp to-faktor på
+                nytt under Innstillinger etterpå, eller be administrator nullstille den.
+              </p>
+              <button
+                type="button"
+                className="text-xs text-blue-600 hover:underline"
+                onClick={() => {
+                  setBrukerGjenoppretting(false)
+                  setTotp("")
+                  setFeil("")
+                }}
+              >
+                Bruk koden fra appen i stedet
+              </button>
             </div>
           )}
 
@@ -196,6 +250,7 @@ export default function LoginPage() {
               onClick={() => {
                 setStep("credentials")
                 setTotp("")
+                setBrukerGjenoppretting(false)
                 setFeil("")
               }}
             >
