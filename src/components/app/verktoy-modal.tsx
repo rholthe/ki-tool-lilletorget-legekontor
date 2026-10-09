@@ -78,7 +78,14 @@ import {
   treffId,
 } from "@/lib/verktoy/sok"
 import type { Treff } from "@/lib/verktoy/sok"
-import type { Fagomrade, Retningslinje, Side, Svarverdi, VerktoyKategori } from "@/lib/verktoy/typer"
+import type {
+  Fagomrade,
+  LeseRetningslinje,
+  Retningslinje,
+  Side,
+  Svarverdi,
+  VerktoyKategori,
+} from "@/lib/verktoy/typer"
 import { cuid } from "@/lib/cuid"
 
 interface Props {
@@ -135,6 +142,22 @@ const FAGOMRADE_IKON: Record<Fagomrade, LucideIcon> = {
 const FANE_NOKKEL = "legeassist:verktoy-fane"
 /** Fanen for retningslinjene til oppslag (leseren). */
 const ANDRE_RETNINGSLINJER = "andre-retningslinjer"
+/** Fanen for pakkeforløp og andre nasjonale forløp. */
+const PAKKEFORLOP = "pakkeforlop"
+
+/**
+ * Snarvei til det fastlegen trenger i et forløp: kriteriene ved begrunnet
+ * mistanke, eller — der kilden ikke har en slik side (prostatakreft har dem
+ * under «Mistanke», kreft hos barn per krefttype) — første side i kapittelet
+ * «Inngang til pakkeforløp …».
+ */
+function henvisningFor(r: LeseRetningslinje): { treff: Treff; etikett: string } | undefined {
+  const sider = leseenheter(r)
+  const kriterier = sider.find((t) => t.slag === "leseenhet" && /^\s*begrunnet mistanke/i.test(t.enhet.tittel))
+  if (kriterier) return { treff: kriterier, etikett: "Kriterier" }
+  const inngang = sider.find((t) => t.slag === "leseenhet" && /^inngang/i.test(t.kapittel))
+  return inngang ? { treff: inngang, etikett: "Inngang" } : undefined
+}
 
 /** «verktoy» eller id-en til en retningslinje. Husker siste fane — bare en bekvemmelighet. */
 function lesFane(): string {
@@ -264,7 +287,19 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
   }
   const aktivRetningslinje = retningslinjer.find((r) => r.id === fane)
   // En lagret fane for en retningslinje som ikke er lastet (ennå), viser verktøyene
-  const visFane = aktivRetningslinje || fane === ANDRE_RETNINGSLINJER ? fane : "verktoy"
+  const visFane =
+    aktivRetningslinje || fane === ANDRE_RETNINGSLINJER || fane === PAKKEFORLOP ? fane : "verktoy"
+  const leseRetningslinjer = useMemo(() => lese.filter((r) => r.art !== "forlop"), [lese])
+  const forlop = useMemo(() => lese.filter((r) => r.art === "forlop"), [lese])
+  const forlopGrupper = useMemo(() => {
+    const kreft = forlop.filter((r) => /pakkeforløp/i.test(r.navn))
+    const andre = forlop.filter((r) => !/pakkeforløp/i.test(r.navn))
+    const sorter = (l: LeseRetningslinje[]) => [...l].sort((a, b) => a.kortNavn.localeCompare(b.kortNavn, "nb"))
+    return [
+      { tittel: "Pakkeforløp", liste: sorter(kreft) },
+      { tittel: "Andre nasjonale forløp", liste: sorter(andre) },
+    ].filter((g) => g.liste.length > 0)
+  }, [forlop])
   const fagGrupper = useMemo(() => grupperEtterFagomrade(INNEBYGDE_OPPSLAG), [])
   const kapittelGrupper = useMemo(
     () => (aktivRetningslinje ? kapitlerFor(aktivRetningslinje) : []),
@@ -792,7 +827,8 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
                   {[
                     { id: "verktoy", navn: "Verktøy", antall: INNEBYGDE_OPPSLAG.length },
                     ...retningslinjer.map((r) => ({ id: r.id, navn: r.kortNavn, antall: r.tilstander.length })),
-                    { id: ANDRE_RETNINGSLINJER, navn: "Andre retningslinjer", antall: lese.length },
+                    { id: ANDRE_RETNINGSLINJER, navn: "Andre retningslinjer", antall: leseRetningslinjer.length },
+                    { id: PAKKEFORLOP, navn: "Pakkeforløp", antall: forlop.length },
                   ].map((f) => (
                     <button
                       key={f.id}
@@ -854,8 +890,76 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
                       )
                     })}
                   </div>
+                ) : visFane === PAKKEFORLOP ? (
+                  forlop.length === 0 ? (
+                    <p className="text-sm text-slate-400 italic">
+                      {lasterRetningslinjer
+                        ? "Henter forløp…"
+                        : leseVenter > 0
+                          ? "Forløpene hentes fra Helsedirektoratet. Lukk og åpne modalen om et øyeblikk."
+                          : "Ingen forløp er valgt ennå. Administrator velger dem under Admin → Retningslinjer."}
+                    </p>
+                  ) : (
+                    <div className="space-y-4">
+                      <p className="text-xs text-slate-500">
+                        Pakkeforløp og nasjonale forløp fra Helsedirektoratet, gjengitt ordrett. «Kriterier»
+                        åpner kriteriene for henvisning ved begrunnet mistanke, «Inngang» inngangen til
+                        forløpet der kilden ikke har en egen kriterieside.
+                      </p>
+                      {forlopGrupper.map((g) => (
+                        <section key={g.tittel} className="space-y-1.5">
+                          <h3 className="text-xs font-semibold text-slate-600 uppercase tracking-wide px-1">
+                            {g.tittel}
+                          </h3>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-0.5">
+                            {g.liste.map((r) => {
+                              const forste = leseenheter(r)[0]
+                              const henvisning = henvisningFor(r)
+                              return (
+                                <div
+                                  key={r.id}
+                                  className="flex items-baseline justify-between gap-2 px-2 py-1 rounded-md hover:bg-slate-50"
+                                >
+                                  {forste ? (
+                                    <button
+                                      onClick={() => velg(forste)}
+                                      className="text-left text-sm text-slate-800 hover:text-blue-700 min-w-0"
+                                    >
+                                      {r.kortNavn}
+                                    </button>
+                                  ) : (
+                                    <a
+                                      href={r.url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-sm text-slate-800 hover:underline"
+                                    >
+                                      {r.kortNavn}
+                                    </a>
+                                  )}
+                                  {henvisning && (
+                                    <button
+                                      onClick={() => velg(henvisning.treff)}
+                                      title={
+                                        henvisning.etikett === "Kriterier"
+                                          ? "Begrunnet mistanke – kriterier for henvisning"
+                                          : "Inngang til pakkeforløpet"
+                                      }
+                                      className="shrink-0 text-[11px] font-medium text-blue-600 hover:underline"
+                                    >
+                                      {henvisning.etikett}
+                                    </button>
+                                  )}
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </section>
+                      ))}
+                    </div>
+                  )
                 ) : visFane === ANDRE_RETNINGSLINJER ? (
-                  lese.length === 0 ? (
+                  leseRetningslinjer.length === 0 ? (
                     <p className="text-sm text-slate-400 italic">
                       {lasterRetningslinjer
                         ? "Henter retningslinjer…"
@@ -876,7 +980,7 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
                         </p>
                       )}
                       <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4">
-                        {lese.map((r) => {
+                        {leseRetningslinjer.map((r) => {
                           const forste = leseenheter(r)[0]
                           return (
                             <section

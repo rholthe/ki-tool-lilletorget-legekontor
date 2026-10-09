@@ -154,7 +154,7 @@ export function byggLeseResultat(
     id: opts.id,
     verktoyId: `${LESE_PREFIKS}${retningslinje.id}`,
     navn: enhet.tittel,
-    notatTittel: `Retningslinje (${retningslinje.kortNavn.toLowerCase()})`,
+    notatTittel: `${retningslinje.art === "forlop" ? "Pakkeforløp" : "Retningslinje"} (${retningslinje.kortNavn.toLowerCase()})`,
     svar: { enhet: enhet.id },
     sum: null,
     sumEtikett: "poeng",

@@ -220,6 +220,9 @@ const KATEGORI_SOKEORD: Record<VerktoyKategori, string[]> = {
   retningslinje: [KATEGORI_LABEL.retningslinje, "behandling", "behandlingsanbefaling"],
 }
 
+/** Forløpene: «pakkeforløp» og «henvisning» skal finne dem. */
+const FORLOP_SOKEORD = ["pakkeforløp", "nasjonalt forløp", "henvisning", "begrunnet mistanke"]
+
 function felterFor(t: Treff): Felt[] {
   // Fagområdet er søkbart, så «barn» eller «psykisk helse» lister hele området
   const fag = fagomraderFor(t).map((f) => FAGOMRADE_LABEL[f])
@@ -238,7 +241,12 @@ function felterFor(t: Treff): Felt[] {
   if (t.slag === "leseenhet") {
     return lagFelter(
       [t.enhet.tittel],
-      [t.kapittel, t.retningslinje.kortNavn, t.retningslinje.navn, ...KATEGORI_SOKEORD.retningslinje]
+      [
+        t.kapittel,
+        t.retningslinje.kortNavn,
+        t.retningslinje.navn,
+        ...(t.retningslinje.art === "forlop" ? FORLOP_SOKEORD : KATEGORI_SOKEORD.retningslinje),
+      ]
     )
   }
   return lagFelter(

@@ -28,13 +28,21 @@ export async function POST() {
   }
 }
 
-const Utvalg = z.object({ ider: z.array(z.string().regex(/^[0-9a-f-]{36}$/)).max(200) })
+const Utvalg = z.object({
+  samling: z.enum(["retningslinjer", "forlop"]),
+  ider: z.array(z.string().regex(/^[0-9a-f-]{36}$/)).max(200),
+})
 
-/** Lagrer hvilke retningslinjer som skal være med i leseren. */
+/** Lagrer hvilke retningslinjer eller forløp som skal være med i leseren. */
 export async function PUT(req: Request) {
   if (!(await erAdmin())) return NextResponse.json({ feil: "Ingen tilgang" }, { status: 403 })
   const parsed = Utvalg.safeParse(await req.json().catch(() => null))
   if (!parsed.success) return NextResponse.json({ feil: "Ugyldig utvalg" }, { status: 400 })
-  await lagreUtvalg(parsed.data.ider)
+  try {
+    await lagreUtvalg(parsed.data.samling, parsed.data.ider)
+  } catch (e) {
+    console.error(`[hapi] lagring av utvalg feilet: ${e instanceof Error ? e.message.slice(0, 200) : e}`)
+    return NextResponse.json({ feil: "Kunne ikke lagre utvalget (serverfeil)" }, { status: 500 })
+  }
   return NextResponse.json(await hentHapiStatus())
 }

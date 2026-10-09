@@ -332,7 +332,7 @@ Nettleser (klinikkens datamaskin)
   - **Oversikt med faner:** uten valgt verktøy fyller oversikten hele modalen, med forslag og
     «Nylig brukt» øverst. Fanen «Verktøy» viser verktøyene i koden som kort per fagområde
     (`Fagomrade` i `typer.ts`, `FAGOMRADE_LABEL` i `registry.ts` bestemmer rekkefølgen). Hver
-    retningslinje har egen fane med kildens kapitler som kort — ellers druknet 12 verktøy i 63
+    retningslinje har egen fane med kildens kapitler som kort, i tillegg til «Andre retningslinjer» og «Pakkeforløp» — ellers druknet 12 verktøy i 63
     antibiotikarader. Søket gjelder alle faner; siste fane huskes (localStorage
     `legeassist:verktoy-fane`). Når et verktøy velges, krymper søket til en linje med
     «Alle verktøy», og skjemaet får hele bredden. Går legen tilbake til oversikten (eller søker fra
@@ -430,6 +430,21 @@ Nettleser (klinikkens datamaskin)
       - «Legg i notat» (`byggLeseResultat`): anbefalingens tekst ordrett (uten markdown), eller bare
         tittelen for kapitteltekst og tekster over 500 tegn, + styrke og kilde med faglig dato.
         `verktoyId` = `les:<infoId>`, så resultatet kan gjenåpnes i leseren
+    - **Pakkeforløp og nasjonale forløp (fase 3):** egen fane «Pakkeforløp» (kreftforløpene og
+      «Andre nasjonale forløp»). Samme leser og datatype (`LeseRetningslinje` med `art: "forlop"`),
+      eget utvalg (`hapi_forlop_utvalg`; standard = alt med «pakkeforløp» i tittelen) og egen katalog
+      (`katalog:forlop`, `infoTyper=nasjonalt-forlop`). Rader `forlop:<infoId>`, rot
+      `/innhold/nasjonalt-forlop/0006-0007-<id>`. `retningslinjer-server.ts` har én `Samling` per type
+      - Snarvei per forløp (`henvisningFor`): «Kriterier» → siden «Begrunnet mistanke – kriterier for
+        henvisning», ellers «Inngang» → første side i «Inngang til pakkeforløp …» (prostatakreft har
+        kriteriene under «Mistanke», kreft hos barn per krefttype)
+      - «Om pakkeforløpet» og «Registrering av koder …» utelates (koding i spesialisthelsetjenesten)
+      - Notattittel «Pakkeforløp (brystkreft)»
+    - **Kvote:** HAPI tillater omtrent 1000 kall i minuttet og svarer 429 med `Retry-After`. `hent.ts`
+      sender alle kall med 200 ms mellomrom (felles for prosessen) og venter ved 429 (inntil 5 forsøk).
+      En full oppdatering (antibiotika + 8 retningslinjer + 28 forløp, ~1700 kall) tar ~6 min i
+      bakgrunnen. Noen forløp lenker til upubliserte enheter (204 No Content) og samme enhet to
+      ganger — begge hoppes over
     - **Lisens: NLOD** (vilkårene for Helsedirektoratets API, lest 2026-10-09). Krav: oppgi
       Helsedirektoratet som kilde, tydelig, i **samme skriftstørrelse som innholdet** og rett ved
       det (`retningslinje-visning.tsx` øverst, og i notatlinjen med faglig dato); ikke framstå som
@@ -448,8 +463,8 @@ Nettleser (klinikkens datamaskin)
       gjenåpning og «Regenerer»-motstand gratis, uten egen datamodell
 
 ### Planlagt
-- Retningslinjer fra HAPI, fase 3: pakkeforløp («Begrunnet mistanke – kriterier for henvisning»,
-  under `nasjonalt-forlop`). Osteoporose finnes ikke hos Helsedirektoratet
+- Pakkeforløp: velge kriteriene som er oppfylt (avkrysning av punktene under «Begrunnet mistanke»)
+  og få dem i notatet. Osteoporose finnes ikke hos Helsedirektoratet
 - Vektbasert barnedosering som egen `kalkulator`
 - Kliniske verktøy, gjenstående faser: MMS-NR (krever rettighetsavklaring for itemtekst),
   AI-forhåndsutfylling med bekreftelseskrav, admin-CRUD for egne verktøy

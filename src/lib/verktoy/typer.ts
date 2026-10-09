@@ -429,13 +429,19 @@ export interface LeseKapittel {
 }
 
 /**
- * En nasjonal faglig retningslinje fra Helsedirektoratet, til oppslag. Legen
+ * En nasjonal faglig retningslinje eller et nasjonalt forløp (pakkeforløp) fra
+ * Helsedirektoratet, til oppslag. Legen
  * fyller ikke ut noe, og vi tolker ingenting — innholdet vises ordrett med
  * kildens egen kapittelstruktur.
  */
 export interface LeseRetningslinje {
   id: string
   kategori: "leseretningslinje"
+  /**
+   * Nasjonale forløp (pakkeforløp) har samme oppbygning som retningslinjer og
+   * vises i samme leser, men i egen fane. Mangler feltet, er det en retningslinje.
+   */
+  art?: "forlop"
   navn: string
   /** «Diabetes» — kildens `kortTittel`. */
   kortNavn: string

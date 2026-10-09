@@ -47,22 +47,68 @@ export interface HapiTre {
 export interface HentValg {
   nokkel: string
   base?: string
-  /** Samtidige forespørsler. Lavt, så vi ikke belaster API-et unødig. */
+  /** Samtidige forespørsler. Tempoet styres uansett av `MELLOMROM_MS`. */
   samtidige?: number
   tidsavbruddMs?: number
 }
 
-export async function hentNode(sti: string, valg: HentValg): Promise<HapiNode> {
+/**
+ * API-et har en kvote på omtrent 1000 kall i minuttet per nøkkel, og svarer 429
+ * med `Retry-After` når den er brukt opp. En full oppdatering er over 1500 kall,
+ * så alle kall går med fast mellomrom — felles for alle hentinger i prosessen.
+ */
+const MELLOMROM_MS = 200
+const MAKS_FORSOK_429 = 5
+let nesteLedige = 0
+
+const vent = (ms: number) => new Promise((r) => setTimeout(r, ms))
+
+async function iTur(): Promise<void> {
+  const naa = Date.now()
+  const min = Math.max(naa, nesteLedige)
+  nesteLedige = min + MELLOMROM_MS
+  if (min > naa) await vent(min - naa)
+}
+
+/**
+ * Henter én node. Returnerer null ved 204 (No Content): noen forløp lenker til
+ * enheter som ikke er publisert. Treet hopper over dem i stedet for å feile.
+ */
+async function hentValgfri(sti: string, valg: HentValg): Promise<HapiNode | null> {
   const base = valg.base ?? HAPI_BASE
   const url = sti.startsWith("http") ? sti : `${base}${sti}`
   if (!url.startsWith(base)) throw new Error(`Uventet adresse utenfor HAPI: ${url}`)
 
-  const svar = await fetch(url, {
-    headers: { "Ocp-Apim-Subscription-Key": valg.nokkel, Accept: "application/json" },
-    signal: AbortSignal.timeout(valg.tidsavbruddMs ?? 30_000),
-  })
-  if (!svar.ok) throw new Error(`HAPI svarte ${svar.status} for ${sti}`)
-  return (await svar.json()) as HapiNode
+  for (let forsok = 1; ; forsok++) {
+    await iTur()
+    const svar = await fetch(url, {
+      headers: { "Ocp-Apim-Subscription-Key": valg.nokkel, Accept: "application/json" },
+      signal: AbortSignal.timeout(valg.tidsavbruddMs ?? 30_000),
+    })
+    if (svar.status === 429 && forsok < MAKS_FORSOK_429) {
+      // Vent så lenge API-et ber om, og hold igjen alle andre kall like lenge
+      const sek = Number(svar.headers.get("Retry-After")) || 30
+      const ms = (sek + 1) * 1000
+      nesteLedige = Math.max(nesteLedige, Date.now() + ms)
+      await vent(ms)
+      continue
+    }
+    if (svar.status === 204) return null
+    if (!svar.ok) throw new Error(`HAPI svarte ${svar.status} for ${sti}`)
+    return (await svar.json()) as HapiNode
+  }
+}
+
+export async function hentNode(sti: string, valg: HentValg): Promise<HapiNode> {
+  const node = await hentValgfri(sti, valg)
+  if (!node) throw new Error(`HAPI svarte uten innhold for ${sti}`)
+  return node
+}
+
+/** Barnelenker uten duplikater — samme enhet kan være lenket to ganger. */
+function unike(lenker: HapiLenke[]): HapiLenke[] {
+  const sett = new Set<string>()
+  return lenker.filter((l) => (sett.has(l.href) ? false : (sett.add(l.href), true)))
 }
 
 function barn(node: HapiNode): HapiLenke[] {
@@ -97,12 +143,13 @@ export async function hentTre(rotSti: string, valg: HentValg): Promise<HapiTre> 
     kapittelLenker.map((l) => async (): Promise<HapiKapittel> => {
       const node = await hentNode(l.href, valg)
       const enheter: HapiNode[] = []
-      let ko = barn(node)
+      let ko = unike(barn(node))
       while (ko.length > 0) {
-        const noder = await medBegrensning(ko.map((b) => () => hentNode(b.href, valg)), n)
+        const noder = await medBegrensning(ko.map((b) => () => hentValgfri(b.href, valg)), n)
         ko = []
         for (const b of noder) {
-          if (b.tekniskeData.infoType === "kapittel") ko.push(...barn(b))
+          if (!b) continue
+          if (b.tekniskeData.infoType === "kapittel") ko.push(...unike(barn(b)))
           else enheter.push(b)
         }
       }
@@ -142,11 +189,12 @@ export async function hentNestet(rotSti: string, valg: HentValg): Promise<HapiNe
   const rot = await hentNode(rotSti, valg)
 
   async function barnAv(node: HapiNode): Promise<{ kapitler: HapiNestetKapittel[]; enheter: HapiNode[] }> {
-    const lenker = barn(node).filter((l) => !UTELATTE_TYPER.has(l.type))
-    const noder = await medBegrensning(lenker.map((l) => () => hentNode(l.href, valg)), n)
+    const lenker = unike(barn(node)).filter((l) => !UTELATTE_TYPER.has(l.type))
+    const noder = await medBegrensning(lenker.map((l) => () => hentValgfri(l.href, valg)), n)
     const kapitler: HapiNestetKapittel[] = []
     const enheter: HapiNode[] = []
     for (const b of noder) {
+      if (!b) continue
       if (b.tekniskeData.infoType === "kapittel") {
         kapitler.push({ node: b, ...(await barnAv(b)) })
       } else {

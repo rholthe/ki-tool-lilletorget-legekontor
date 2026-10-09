@@ -324,7 +324,7 @@ for (const retningslinje of RETNINGSLINJER) {
  * og kryssreferanser til API-et som krever nøkkel.
  */
 {
-  console.log("\nRetningslinjer til oppslag (oversetting)")
+  console.log("\nRetningslinjer og forløp til oppslag (oversetting)")
   const forFeil = feil
   const node = (infoId, infoType, tittel, ekstra = {}) => ({
     id: `0006-x-${infoId}`,
@@ -377,6 +377,31 @@ for (const retningslinje of RETNINGSLINJER) {
   sjekk(utenMarkdown("**fet** og [lenke](https://x.no)\n- punkt") === "fet og lenke punkt", "utenMarkdown")
   const lang = byggLeseResultat(r, { ...metformin, tekst: "ord ".repeat(200) }, { id: "t" })
   sjekk(lang.detaljer[0] === "Metformin som førstevalg", "lang anbefaling skal gi bare tittelen i notatet")
+
+  // Forløp: samme leser, men egen art, og kodekapitlene for spesialisthelsetjenesten utelates
+  const forlop = byggLeseRetningslinje(
+    {
+      rot: node("66666666-6666-6666-6666-666666666666", "nasjonalt-forlop", "Pakkeforløp for testkreft", { kortTittel: "Testkreft" }),
+      enheter: [],
+      kapitler: [
+        {
+          node: node("77777777-7777-7777-7777-777777777777", "kapittel", "Inngang til pakkeforløp for testkreft"),
+          kapitler: [],
+          enheter: [node("88888888-8888-8888-8888-888888888888", "pakkeforlop-anbefaling", "Begrunnet mistanke – kriterier for henvisning til pakkeforløp", { tekst: "<ul><li>Palpabel tumor</li></ul>" })],
+        },
+        { node: node("99999999-9999-9999-9999-999999999999", "kapittel", "Registrering av koder i pakkeforløp for testkreft"), kapitler: [], enheter: [] },
+        { node: node("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", "kapittel", "Om pakkeforløpet", { tekst: "<p>Meta.</p>" }), kapitler: [], enheter: [] },
+      ],
+    },
+    "2026-10-09T00:00:00.000Z"
+  )
+  sjekk(forlop.art === "forlop", "forløpet fikk ikke art «forlop»")
+  sjekk(r.art === undefined, "retningslinjen fikk art")
+  sjekk(forlop.kapitler.length === 1, `kodekapitler slapp gjennom: ${forlop.kapitler.map((k) => k.tittel).join(", ")}`)
+  const kriterier = forlop.kapitler[0].enheter[0]
+  const forlopLinje = formaterTilNotat(byggLeseResultat(forlop, kriterier, { id: "f" }))
+  sjekk(forlopLinje.startsWith("Pakkeforløp (testkreft):"), `notattittel for forløp: ${forlopLinje.split("\n")[0]}`)
+
   if (feil === forFeil) console.log("  ✓ alle sjekker grønne")
 }
 

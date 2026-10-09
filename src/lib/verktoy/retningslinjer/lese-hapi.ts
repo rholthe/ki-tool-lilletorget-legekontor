@@ -13,8 +13,16 @@ import type { LeseEnhet, LeseKapittel, LeseRetningslinje } from "../typer"
 /** Økes når oversettingen endres, så mellomlagrede data bygges på nytt. */
 export const LESE_FORMAT = 1
 
-/** Kapitler som handler om hvordan retningslinjen er laget, ikke om pasienten. */
-const UTELATTE_KAPITLER = new Set(["Metode og prosess", "Om retningslinjen", "Referanser"])
+/**
+ * Kapitler som handler om hvordan retningslinjen er laget eller om koding i
+ * spesialisthelsetjenesten, ikke om pasienten foran fastlegen.
+ */
+const UTELATTE_KAPITLER = new Set(["Metode og prosess", "Om retningslinjen", "Om pakkeforløpet", "Referanser"])
+const UTELATTE_MONSTER = /^Registrering av koder/i
+
+function utelatt(tittel: string): boolean {
+  return UTELATTE_KAPITLER.has(tittel) || UTELATTE_MONSTER.test(tittel)
+}
 
 /** Kildens felt for begrunnelsen, i den rekkefølgen Helsedirektoratet viser dem. */
 const BEGRUNNELSE: [string, string][] = [
@@ -67,7 +75,7 @@ function byggKapittel(k: HapiNestetKapittel): LeseKapittel {
     id,
     tittel,
     url,
-    kapitler: k.kapitler.filter((u) => !UTELATTE_KAPITLER.has(avkod(u.node.tittel))).map(byggKapittel),
+    kapitler: k.kapitler.filter((u) => !utelatt(avkod(u.node.tittel))).map(byggKapittel),
     enheter,
   }
 }
@@ -107,13 +115,14 @@ export function byggLeseRetningslinje(tre: HapiNestetTre, hentetAt: string): Les
   const r: LeseRetningslinje = {
     id: tre.rot.tekniskeData.infoId,
     kategori: "leseretningslinje",
+    ...(tre.rot.tekniskeData.infoType === "nasjonalt-forlop" ? { art: "forlop" as const } : {}),
     navn: avkod(tre.rot.tittel),
     kortNavn: avkod((tre.rot as HapiNode & { kortTittel?: string }).kortTittel || tre.rot.tittel),
     url: tre.rot.url ?? "",
     sistFagligOppdatert: tre.rot.sistFagligOppdatert ?? "",
     hentetAt,
     kapitler: tre.kapitler
-      .filter((k) => !UTELATTE_KAPITLER.has(avkod(k.node.tittel)))
+      .filter((k) => !utelatt(avkod(k.node.tittel)))
       .map(byggKapittel),
     enheter: tre.enheter.map(byggEnhet),
   }

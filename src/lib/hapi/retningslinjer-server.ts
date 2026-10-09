@@ -37,27 +37,7 @@ import reserve from "@/lib/verktoy/retningslinjer/antibiotika-reserve.json"
 
 const MAKS_ALDER_MS = 24 * 60 * 60 * 1000
 const NYTT_FORSOK_MS = 15 * 60 * 1000
-const UTVALG_NOKKEL = "hapi_lese_utvalg"
-const KATALOG_ID = "katalog:retningslinje"
 const KATALOG_FORMAT = 1
-
-/**
- * Startutvalget når admin ikke har valgt noe: retningslinjer som brukes ofte i
- * allmennpraksis og som har innholdet sitt i API-et.
- */
-const STANDARD_UTVALG = [
-  "2ea5f302-48e0-4146-ae00-39a54dc2175f", // Diabetes
-  "9ae38771-d80b-4dc0-9909-bf408a1a054b", // Forebygging av hjerte- og karsykdom
-  "52970834-1ab0-41ea-b206-fd5c5435931d", // Kols
-  "fc862b0d-9931-46b8-92af-431d23e27b00", // Demens
-  "b0201403-cbe9-4d91-8ec4-0d8c70fa3253", // Hjerneslag
-  "3c290e30-2b8a-4d8e-99c8-10096fd5dbc3", // Svangerskapsomsorgen
-  "ad410d41-f16e-44e6-8138-2495a092b54c", // Svangerskapsdiabetes
-  "3aaebf57-2618-45dd-a6b5-ce90cc5b32c2", // Røykeavvenning
-]
-
-const leseRadId = (infoId: string) => `les:${infoId}`
-const rotSti = (infoId: string) => `/innhold/retningslinjer/0006-0001-${infoId}`
 
 function nokkel(): string | null {
   return process.env.HELSEDIR_API_KEY?.trim() || null
@@ -181,71 +161,7 @@ export async function hentRetningslinjer(): Promise<Retningslinje[]> {
   return [data ?? (reserve as Retningslinje)]
 }
 
-// ─── Retningslinjer til oppslag ───────────────────────────────────────────────
-
-const byggLeseRad = (infoId: string) => async (n: string, tid: string): Promise<Bygget> => {
-  const r = byggLeseRetningslinje(await hentNestet(rotSti(infoId), { nokkel: n }), tid)
-  return { data: r, sistFagligOppdatert: r.sistFagligOppdatert }
-}
-
-export async function hentUtvalg(): Promise<string[]> {
-  const raa = await hentSystemSetting(UTVALG_NOKKEL, "")
-  if (!raa) return STANDARD_UTVALG
-  try {
-    const liste = JSON.parse(raa)
-    return Array.isArray(liste) ? liste.filter((x): x is string => typeof x === "string") : STANDARD_UTVALG
-  } catch {
-    return STANDARD_UTVALG
-  }
-}
-
-export async function lagreUtvalg(ider: string[]): Promise<void> {
-  const rene = [...new Set(ider.filter((x) => /^[0-9a-f-]{36}$/.test(x)))]
-  await settSystemSetting(UTVALG_NOKKEL, JSON.stringify(rene))
-  // Hent de nye med en gang, så de dukker opp uten å vente på første bruker
-  const rader = await prisma.hapiInnhold.findMany({
-    where: { id: { in: rene.map(leseRadId) } },
-    select: { id: true },
-  })
-  const har = new Set(rader.map((r) => r.id))
-  for (const id of rene) {
-    if (!har.has(leseRadId(id))) startHenting(leseRadId(id), LESE_FORMAT, byggLeseRad(id)).catch(() => {})
-  }
-}
-
-/**
- * Innholdsfortegnelsene for utvalget, uten brødtekst. Retningslinjer som ikke
- * er hentet ennå, utelates og hentes i bakgrunnen.
- */
-export async function hentLeseIndekser(): Promise<{ indekser: LeseRetningslinje[]; venter: number }> {
-  const utvalg = await hentUtvalg()
-  const rader = await prisma.hapiInnhold.findMany({
-    where: { id: { in: utvalg.map(leseRadId) } },
-    select: META,
-  })
-  const etterId = new Map(rader.map((r) => [r.id, r]))
-  const ut: LeseRetningslinje[] = []
-  for (const infoId of utvalg) {
-    const rad = etterId.get(leseRadId(infoId))
-    if (!rad || rad.format !== LESE_FORMAT || erGammel(rad)) {
-      iBakgrunnen(leseRadId(infoId), LESE_FORMAT, byggLeseRad(infoId), rad?.sisteForsokAt ?? null)
-    }
-    if (!rad || rad.format !== LESE_FORMAT) continue
-    const data = await lesData<LeseRetningslinje>(rad)
-    if (data) ut.push(tilIndeks(data))
-  }
-  return { indekser: ut, venter: utvalg.length - ut.length }
-}
-
-/** Hele retningslinjen med tekst — bare for retningslinjer i utvalget. */
-export async function hentLeseRetningslinje(infoId: string): Promise<LeseRetningslinje | null> {
-  if (!(await hentUtvalg()).includes(infoId)) return null
-  const rad = await prisma.hapiInnhold.findUnique({ where: { id: leseRadId(infoId) }, select: META })
-  if (!rad || rad.format !== LESE_FORMAT) return null
-  return lesData<LeseRetningslinje>(rad)
-}
-
-// ─── Katalog (for adminvalget) ────────────────────────────────────────────────
+// ─── Retningslinjer og forløp til oppslag ─────────────────────────────────────
 
 export interface KatalogRad {
   id: string
@@ -254,8 +170,63 @@ export interface KatalogRad {
   sistFagligOppdatert: string
 }
 
-const byggKatalog = async (n: string): Promise<Bygget> => {
-  const liste = (await hentNode("/innhold/innhold?infoTyper=retningslinje", { nokkel: n })) as unknown
+/**
+ * En samling innhold til leseren. Retningslinjer og nasjonale forløp har samme
+ * oppbygning i API-et, men eget utvalg, egen katalog og egen fane.
+ */
+interface Samling {
+  navn: "retningslinjer" | "forlop"
+  prefiks: string
+  utvalgNokkel: string
+  katalogId: string
+  infoType: string
+  rotSti: (infoId: string) => string
+  /** Uten valg fra admin. Får katalogen, siden forløpene ikke har faste id-er å starte med. */
+  standard: (katalog: KatalogRad[]) => string[]
+}
+
+const RETNINGSLINJER: Samling = {
+  navn: "retningslinjer",
+  prefiks: "les:",
+  utvalgNokkel: "hapi_lese_utvalg",
+  katalogId: "katalog:retningslinje",
+  infoType: "retningslinje",
+  rotSti: (id) => `/innhold/retningslinjer/0006-0001-${id}`,
+  // Retningslinjer som brukes ofte i allmennpraksis og har innholdet sitt i API-et
+  standard: () => [
+    "2ea5f302-48e0-4146-ae00-39a54dc2175f", // Diabetes
+    "9ae38771-d80b-4dc0-9909-bf408a1a054b", // Forebygging av hjerte- og karsykdom
+    "52970834-1ab0-41ea-b206-fd5c5435931d", // Kols
+    "fc862b0d-9931-46b8-92af-431d23e27b00", // Demens
+    "b0201403-cbe9-4d91-8ec4-0d8c70fa3253", // Hjerneslag
+    "3c290e30-2b8a-4d8e-99c8-10096fd5dbc3", // Svangerskapsomsorgen
+    "ad410d41-f16e-44e6-8138-2495a092b54c", // Svangerskapsdiabetes
+    "3aaebf57-2618-45dd-a6b5-ce90cc5b32c2", // Røykeavvenning
+  ],
+}
+
+const FORLOP: Samling = {
+  navn: "forlop",
+  prefiks: "forlop:",
+  utvalgNokkel: "hapi_forlop_utvalg",
+  katalogId: "katalog:forlop",
+  infoType: "nasjonalt-forlop",
+  rotSti: (id) => `/innhold/nasjonalt-forlop/0006-0007-${id}`,
+  // Alle pakkeforløpene for kreft og det diagnostiske pakkeforløpet
+  standard: (katalog) => katalog.filter((k) => /pakkeforløp/i.test(k.tittel)).map((k) => k.id),
+}
+
+const SAMLINGER = [RETNINGSLINJER, FORLOP]
+
+const radId = (sam: Samling, infoId: string) => `${sam.prefiks}${infoId}`
+
+const byggLeseRad = (sam: Samling, infoId: string) => async (n: string, tid: string): Promise<Bygget> => {
+  const r = byggLeseRetningslinje(await hentNestet(sam.rotSti(infoId), { nokkel: n }), tid)
+  return { data: r, sistFagligOppdatert: r.sistFagligOppdatert }
+}
+
+const byggKatalog = (sam: Samling) => async (n: string): Promise<Bygget> => {
+  const liste = (await hentNode(`/innhold/innhold?infoTyper=${sam.infoType}`, { nokkel: n })) as unknown
   if (!Array.isArray(liste)) throw new Error("Uventet svar fra katalogen")
   const rader: KatalogRad[] = liste
     .filter((x) => x?.status === "Gjeldende" && x?.tekniskeData?.infoId)
@@ -269,17 +240,86 @@ const byggKatalog = async (n: string): Promise<Bygget> => {
   return { data: rader }
 }
 
-async function hentKatalog(): Promise<KatalogRad[]> {
-  const rad = await prisma.hapiInnhold.findUnique({ where: { id: KATALOG_ID }, select: META })
+async function hentKatalog(sam: Samling): Promise<KatalogRad[]> {
+  const rad = await prisma.hapiInnhold.findUnique({ where: { id: sam.katalogId }, select: META })
   if (!rad || rad.format !== KATALOG_FORMAT) {
-    // Admin venter på katalogen første gang. Den er ett enkelt kall, så den hentes
-    // direkte i stedet for å stå i kø bak retningslinjene
-    if (nokkel()) await hentOgLagre(KATALOG_ID, KATALOG_FORMAT, byggKatalog).catch(() => {})
-    const ny = await prisma.hapiInnhold.findUnique({ where: { id: KATALOG_ID }, select: META })
+    // Katalogen trengs før noe annet kan hentes. Den er ett enkelt kall, så den
+    // hentes direkte i stedet for å stå i kø bak retningslinjene
+    if (nokkel()) await hentOgLagre(sam.katalogId, KATALOG_FORMAT, byggKatalog(sam)).catch(() => {})
+    const ny = await prisma.hapiInnhold.findUnique({ where: { id: sam.katalogId }, select: META })
     return ny ? ((await lesData<KatalogRad[]>(ny)) ?? []) : []
   }
-  if (erGammel(rad)) iBakgrunnen(KATALOG_ID, KATALOG_FORMAT, byggKatalog, rad.sisteForsokAt)
+  if (erGammel(rad)) iBakgrunnen(sam.katalogId, KATALOG_FORMAT, byggKatalog(sam), rad.sisteForsokAt)
   return (await lesData<KatalogRad[]>(rad)) ?? []
+}
+
+async function hentUtvalgFor(sam: Samling): Promise<string[]> {
+  const raa = await hentSystemSetting(sam.utvalgNokkel, "")
+  if (raa) {
+    try {
+      const liste = JSON.parse(raa)
+      if (Array.isArray(liste)) return liste.filter((x): x is string => typeof x === "string")
+    } catch {
+      // Ugyldig verdi — bruk standard
+    }
+  }
+  return sam.standard(await hentKatalog(sam))
+}
+
+const samling = (navn: string) => SAMLINGER.find((s) => s.navn === navn)
+
+export async function lagreUtvalg(navn: string, ider: string[]): Promise<void> {
+  const sam = samling(navn)
+  if (!sam) throw new Error("Ukjent samling")
+  const rene = [...new Set(ider.filter((x) => /^[0-9a-f-]{36}$/.test(x)))]
+  await settSystemSetting(sam.utvalgNokkel, JSON.stringify(rene))
+  // Hent de nye med en gang, så de dukker opp uten å vente på første bruker
+  const rader = await prisma.hapiInnhold.findMany({
+    where: { id: { in: rene.map((id) => radId(sam, id)) } },
+    select: { id: true },
+  })
+  const har = new Set(rader.map((r) => r.id))
+  for (const id of rene) {
+    if (!har.has(radId(sam, id))) startHenting(radId(sam, id), LESE_FORMAT, byggLeseRad(sam, id)).catch(() => {})
+  }
+}
+
+/**
+ * Innholdsfortegnelsene for utvalgene, uten brødtekst. Det som ikke er hentet
+ * ennå, utelates (telles i `venter`) og hentes i bakgrunnen.
+ */
+export async function hentLeseIndekser(): Promise<{ indekser: LeseRetningslinje[]; venter: number }> {
+  const ut: LeseRetningslinje[] = []
+  let venter = 0
+  for (const sam of SAMLINGER) {
+    const utvalg = await hentUtvalgFor(sam)
+    const rader = await prisma.hapiInnhold.findMany({
+      where: { id: { in: utvalg.map((id) => radId(sam, id)) } },
+      select: META,
+    })
+    const etterId = new Map(rader.map((r) => [r.id, r]))
+    for (const infoId of utvalg) {
+      const rad = etterId.get(radId(sam, infoId))
+      if (!rad || rad.format !== LESE_FORMAT || erGammel(rad)) {
+        iBakgrunnen(radId(sam, infoId), LESE_FORMAT, byggLeseRad(sam, infoId), rad?.sisteForsokAt ?? null)
+      }
+      const data = rad && rad.format === LESE_FORMAT ? await lesData<LeseRetningslinje>(rad) : null
+      if (data) ut.push(tilIndeks(data))
+      else venter++
+    }
+  }
+  return { indekser: ut, venter }
+}
+
+/** Hele retningslinjen eller forløpet med tekst — bare det som er i et utvalg. */
+export async function hentLeseRetningslinje(infoId: string): Promise<LeseRetningslinje | null> {
+  for (const sam of SAMLINGER) {
+    if (!(await hentUtvalgFor(sam)).includes(infoId)) continue
+    const rad = await prisma.hapiInnhold.findUnique({ where: { id: radId(sam, infoId) }, select: META })
+    if (!rad || rad.format !== LESE_FORMAT) return null
+    return lesData<LeseRetningslinje>(rad)
+  }
+  return null
 }
 
 // ─── Status for admin ─────────────────────────────────────────────────────────
@@ -297,25 +337,24 @@ export interface HapiRadStatus {
   henter: boolean
 }
 
-export interface HapiStatus {
-  nokkelSatt: boolean
-  antibiotika: HapiRadStatus
+export interface HapiSamlingStatus {
   utvalg: HapiRadStatus[]
   katalog: KatalogRad[]
 }
 
-export async function hentHapiStatus(): Promise<HapiStatus> {
-  const [utvalg, katalog] = await Promise.all([hentUtvalg(), hentKatalog()])
-  const navn = new Map(katalog.map((k) => [k.id, k.kortTittel]))
-  const ider = [ANTIBIOTIKA_ID, ...utvalg.map(leseRadId)]
-  const rader = await prisma.hapiInnhold.findMany({
-    where: { id: { in: ider } },
-    select: { ...META, sistFagligOppdatert: true, sisteFeil: true },
-  })
-  const etterId = new Map(rader.map((r) => [r.id, r]))
+export interface HapiStatus {
+  nokkelSatt: boolean
+  antibiotika: HapiRadStatus
+  retningslinjer: HapiSamlingStatus
+  forlop: HapiSamlingStatus
+}
 
+export async function hentHapiStatus(): Promise<HapiStatus> {
   async function status(id: string, visningsnavn: string): Promise<HapiRadStatus> {
-    const rad = etterId.get(id)
+    const rad = await prisma.hapiInnhold.findUnique({
+      where: { id },
+      select: { ...META, sistFagligOppdatert: true, sisteFeil: true },
+    })
     let antall: number | null = null
     if (rad) {
       const data = await lesData<Retningslinje | LeseRetningslinje>(rad)
@@ -333,11 +372,20 @@ export async function hentHapiStatus(): Promise<HapiStatus> {
     }
   }
 
+  async function samlingStatus(sam: Samling): Promise<HapiSamlingStatus> {
+    const [katalog, utvalg] = await Promise.all([hentKatalog(sam), hentUtvalgFor(sam)])
+    const navn = new Map(katalog.map((k) => [k.id, k.kortTittel]))
+    return {
+      katalog,
+      utvalg: await Promise.all(utvalg.map((u) => status(radId(sam, u), navn.get(u) ?? u))),
+    }
+  }
+
   return {
     nokkelSatt: Boolean(nokkel()),
     antibiotika: await status(ANTIBIOTIKA_ID, "Antibiotika i primærhelsetjenesten"),
-    utvalg: await Promise.all(utvalg.map((u) => status(leseRadId(u), navn.get(u) ?? u))),
-    katalog,
+    retningslinjer: await samlingStatus(RETNINGSLINJER),
+    forlop: await samlingStatus(FORLOP),
   }
 }
 
@@ -345,9 +393,12 @@ export async function hentHapiStatus(): Promise<HapiStatus> {
 export async function oppdaterAlleNaa(): Promise<HapiStatus> {
   // Antibiotika først i køen, så admin får svar på den uten å vente på resten
   const antibiotika = startHenting(ANTIBIOTIKA_ID, ANTIBIOTIKA_FORMAT, byggAntibiotikaRad)
-  const utvalg = await hentUtvalg()
-  for (const id of utvalg) startHenting(leseRadId(id), LESE_FORMAT, byggLeseRad(id)).catch(() => {})
-  startHenting(KATALOG_ID, KATALOG_FORMAT, byggKatalog).catch(() => {})
+  for (const sam of SAMLINGER) {
+    startHenting(sam.katalogId, KATALOG_FORMAT, byggKatalog(sam)).catch(() => {})
+    for (const id of await hentUtvalgFor(sam)) {
+      startHenting(radId(sam, id), LESE_FORMAT, byggLeseRad(sam, id)).catch(() => {})
+    }
+  }
   await antibiotika
   return hentHapiStatus()
 }
