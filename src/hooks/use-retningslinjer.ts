@@ -23,7 +23,9 @@ let pagaende: Promise<Svar> | null = null
 
 function hent(): Promise<Svar> {
   if (!pagaende) {
-    pagaende = fetch("/api/retningslinjer")
+    // `no-store` også her, ikke bare i svaret: en nettleser som har et svar lagret fra
+    // før (da ruten sendte max-age=3600), ville ellers brukt det til det utløp
+    pagaende = fetch("/api/retningslinjer", { cache: "no-store" })
       .then(async (res) => {
         if (!res.ok) throw new Error(`Status ${res.status}`)
         const data = (await res.json()) as Partial<Svar>
@@ -82,7 +84,7 @@ export function hentFull(id: string): Promise<LeseRetningslinje> {
   if (lagret) return Promise.resolve(lagret)
   let p = fullPagaende.get(id)
   if (!p) {
-    p = fetch(`/api/retningslinjer/les/${encodeURIComponent(id)}`)
+    p = fetch(`/api/retningslinjer/les/${encodeURIComponent(id)}`, { cache: "no-store" })
       .then(async (res) => {
         if (!res.ok) throw new Error(`Status ${res.status}`)
         const r = (await res.json()) as LeseRetningslinje
