@@ -18,7 +18,8 @@ export async function GET() {
   ])
   return NextResponse.json(
     { retningslinjer, lese: indekser, leseVenter: venter },
-    // Nettleseren kan gjenbruke svaret en stund, men ikke mens noe ennå hentes
-    { headers: { "Cache-Control": venter > 0 ? "no-store" : "private, max-age=3600" } }
+    // Ingen mellomlagring i nettleseren: et gammelt svar ville skjult nye retningslinjer og
+    // forløp i opptil en time, også etter deploy. Siden henter uansett bare én gang per visning
+    { headers: { "Cache-Control": "no-store" } }
   )
 }

@@ -393,7 +393,7 @@ Nettleser (klinikkens datamaskin)
         bakgrunnen; feil → forrige versjon vises, feilen lagres (`sisteFeil`), nytt forsøk tidligst
         etter 15 min. Tom tabell/gammelt format → reservekopien
         `antibiotika-reserve.json` (i repoet, `npm run retningslinjer:reserve`)
-      - `/api/retningslinjer` (innlogget, `Cache-Control: private, max-age=3600`) →
+      - `/api/retningslinjer` (innlogget, `Cache-Control: no-store`) →
         `useRetningslinjer()` (én henting per sidevisning). Verktøymodalen slår sammen
         `INNEBYGDE_OPPSLAG` med retningslinjene; `sok.ts`-funksjonene tar listen som parameter
       - Admin: «Retningslinjer (Helsedirektoratet)» på `/admin/innstillinger` viser status og
@@ -420,8 +420,8 @@ Nettleser (klinikkens datamaskin)
       - Rader `les:<infoId>` i `HapiInnhold`. Alle hentinger går i én kø (aldri parallelle
         retningslinjer mot API-et); parset JSON holdes i minnet per `hentetAt`
       - `/api/retningslinjer` gir også innholdsfortegnelsene (`tilIndeks`, uten brødtekst, ~10–60 kB
-        per retningslinje) og `leseVenter`; da svarer ruten `no-store` så et halvt svar ikke
-        mellomlagres. Full tekst: `/api/retningslinjer/les/[id]` (kun retningslinjer i utvalget),
+        per retningslinje) og `leseVenter`. Begge rutene svarer `no-store`: med `max-age` viste
+        nettleseren et gammelt svar uten pakkeforløpene i opptil en time etter deploy. Full tekst: `/api/retningslinjer/les/[id]` (kun retningslinjer i utvalget),
         `useLeseRetningslinje()`/`hentFull()`
       - Søket: `Treff` har `slag: "leseenhet"` (tittel, kapittel, retningslinjenavn); ingen søkeord og
         ingen forslag fra transkriptet. Fanen «Andre retningslinjer» viser kort per retningslinje med

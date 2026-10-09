@@ -11,5 +11,6 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   const { id } = await params
   const retningslinje = await hentLeseRetningslinje(id)
   if (!retningslinje) return NextResponse.json({ feil: "Ikke funnet" }, { status: 404 })
-  return NextResponse.json(retningslinje, { headers: { "Cache-Control": "private, max-age=3600" } })
+  // Samme som listen: ikke mellomlagret i nettleseren, så oppdatert tekst vises med en gang
+  return NextResponse.json(retningslinje, { headers: { "Cache-Control": "no-store" } })
 }
