@@ -65,7 +65,7 @@ export default async function AdminBrukSide({ searchParams }: { searchParams: Pr
             <ChevronRight className="w-4 h-4" />
           </Link>
           <a href={`/api/admin/bruk/csv?mnd=${mnd}`} className="ml-3 inline-flex items-center gap-1.5 text-xs text-blue-600 hover:underline">
-            <Download className="w-3.5 h-3.5" /> CSV
+            <Download className="w-3.5 h-3.5" /> CSV per dag
           </a>
         </div>
       </div>

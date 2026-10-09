@@ -114,3 +114,71 @@ export async function hentMaanedsstatistikk(mnd: string): Promise<{ brukere: Bru
       .sort((a, b) => b.kostnadUsd - a.kostnadUsd),
   }
 }
+
+export interface DagRad extends BrukerRad {
+  /** YYYY-MM-DD i norsk tid. */
+  dato: string
+}
+
+const norskDato = new Intl.DateTimeFormat("sv-SE", {
+  timeZone: "Europe/Oslo",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+})
+
+/**
+ * Forbruk per bruker per dag i måneden (norsk tid), for CSV-eksporten. Bare dager
+ * med aktivitet. Radene summeres her i stedet for i databasen: en måned er noen
+ * tusen rader, og MariaDB-dato i norsk tid krever tidssonetabeller vi ikke kan
+ * regne med finnes.
+ */
+export async function hentDagsstatistikk(mnd: string): Promise<DagRad[]> {
+  const { fra, til } = grenser(mnd)
+  const [rader, alleBrukere] = await Promise.all([
+    prisma.bruk.findMany({
+      where: { opprettet: { gte: fra, lt: til } },
+      select: {
+        userId: true, tjeneste: true, opprettet: true,
+        inputTokens: true, outputTokens: true, cacheLesTokens: true, cacheSkrivTokens: true,
+        lydMs: true, antallTegn: true, kostnadUsd: true,
+      },
+    }),
+    prisma.user.findMany({ select: { id: true, name: true, email: true } }),
+  ])
+
+  const navnPaa = new Map(alleBrukere.map((u) => [u.id, u]))
+  const dager = new Map<string, DagRad>()
+  for (const b of rader) {
+    const dato = norskDato.format(b.opprettet)
+    const nokkel = `${dato}|${b.userId}`
+    let r = dager.get(nokkel)
+    if (!r) {
+      const u = navnPaa.get(b.userId)
+      r = {
+        dato, userId: b.userId, navn: u ? (u.name ?? u.email) : "Slettet bruker", epost: u?.email ?? "",
+        aiKall: 0, inputTokens: 0, outputTokens: 0, cacheTokens: 0, aiKostnadUsd: 0,
+        opptak: 0, lydTimer: 0, antallTegn: 0, sonioxKostnadUsd: 0, sumUsd: 0,
+      }
+      dager.set(nokkel, r)
+    }
+    const kost = Number(b.kostnadUsd)
+    if (b.tjeneste === "BEDROCK") {
+      r.aiKall++
+      r.inputTokens += b.inputTokens
+      r.outputTokens += b.outputTokens
+      r.cacheTokens += b.cacheLesTokens + b.cacheSkrivTokens
+      r.aiKostnadUsd += kost
+    } else {
+      r.opptak++
+      r.lydTimer += b.lydMs / 3_600_000
+      r.antallTegn += b.antallTegn
+      r.sonioxKostnadUsd += kost
+    }
+    r.sumUsd += kost
+  }
+
+  return [...dager.values()].sort(
+    (a, b) => a.dato.localeCompare(b.dato) || a.navn.localeCompare(b.navn, "nb")
+  )
+}

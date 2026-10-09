@@ -143,7 +143,9 @@ Nettleser (klinikkens datamaskin)
   - Priser i SystemSetting `bruk_priser` (`src/lib/bruk-priser.ts`), redigeres på admin-siden; kostnad
     lagres per rad, så prisendringer ikke endrer historikk. Standard: Sonnet 4.6 EU $3,30/$16,50 per MTok,
     Soniox $0,12/t, kurs 10,5 NOK
-  - Månedsvisning per bruker + per funksjon + CSV (`/api/admin/bruk/csv?mnd=YYYY-MM`, semikolon, norsk komma)
+  - Månedsvisning per bruker + per funksjon på siden. CSV (`/api/admin/bruk/csv?mnd=YYYY-MM`, semikolon,
+    norsk komma) er detaljert: én linje per bruker per dag med aktivitet (`hentDagsstatistikk`, dato i
+    norsk tid, summert i Node fordi MariaDB mangler tidssonetabeller). Summen av linjene = månedstallene
   - Ingen fremmednøkkel: statistikken består etter at en bruker slettes
   - Tallene kommer fra klienten og kan i teorien manipuleres; kryssjekk mot CloudTrail (`la-<userId>`),
     Soniox (`client_reference_id`) og fakturaene
