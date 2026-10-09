@@ -195,7 +195,7 @@ model Bruk {
   id               String   @id @default(cuid())
   userId           String
   tjeneste         String   @db.VarChar(20) // BEDROCK | SONIOX
-  funksjon         String   @db.VarChar(40) // notat, chat, aihjelp, promptbygger, verktoyforslag, transkribering, diktering
+  funksjon         String   @db.VarChar(40) // notat, chat, aihjelp, promptbygger, transkribering, diktering
   modell           String?  @db.VarChar(120)
   inputTokens      Int      @default(0)
   outputTokens     Int      @default(0)

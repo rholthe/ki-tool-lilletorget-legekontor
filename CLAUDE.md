@@ -136,7 +136,7 @@ Nettleser (klinikkens datamaskin)
     `/godta-avtale`), og `/api/ai/oppsett` og `/api/soniox-token` svarer 403
     (`maaAktivere2fa`). `deaktiver2FA` nektes mens kravet gjelder
 - Bruksstatistikk (`Bruk`-tabellen, `/admin/bruk`, «Bruk og kostnader» i adminmenyen)
-  - Én rad per Claude-kall (`funksjon`: notat, chat, aihjelp, promptbygger; `verktoyforslag` kun historisk) og per
+  - Én rad per Claude-kall (`funksjon`: notat, chat, aihjelp, promptbygger) og per
     Soniox-økt (transkribering, diktering). Kun tall: tokens fra Bedrocks egne invocation-metrics,
     `total_audio_proc_ms` fra Soniox, antall tegn. Rapporteres av nettleseren (`rapporterForbruk`,
     `soniox-maaler.ts`, `keepalive`) til `/api/bruk`, som validerer (zod, øvre grenser) og regner kostnad
@@ -365,8 +365,8 @@ Nettleser (klinikkens datamaskin)
     - Selvtesten har søkekasus (`SOKEKASUS`) — legg til et kasus når et søk har bommet
     - AI-forslag (Claude foreslo verktøy ut fra hele transkriptet) ble fjernet 2026-10-09: kallet
       gikk på nytt ved hver endring i transkriptet, med hele transkriptet som input, og sto for en
-      uforholdsmessig stor del av kostnadene. `verktoyforslag` består i `/api/bruk` og
-      `/admin/bruk` bare for historikkens skyld
+      uforholdsmessig stor del av kostnadene. Kategorien er fjernet fra `/api/bruk` og
+      `/admin/bruk`, og radene (46 stk., 1,27 USD, 09.10) er slettet fra `Bruk`
   - Resultatet lagres strukturert som `Konsultasjon.verktoyResultater` (IndexedDB), ikke bare som
     tekst i notatet — ellers forsvinner det ved «Regenerer»
   - `synkVerktoySeksjon()` skriver seksjonen `--- KLINISKE VERKTØY ---` inn i notatet. Idempotent

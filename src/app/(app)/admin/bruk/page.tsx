@@ -13,7 +13,6 @@ const FUNKSJON_NAVN: Record<string, string> = {
   chat: "Chat i konsultasjon",
   aihjelp: "AI-hjelp",
   promptbygger: "Lag prompt med AI",
-  verktoyforslag: "Verktøyforslag",
   transkribering: "Opptak (transkribering)",
   diktering: "Diktering i tekstfelt",
 }
