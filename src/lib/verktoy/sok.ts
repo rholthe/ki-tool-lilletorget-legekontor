@@ -202,6 +202,7 @@ function felterFor(t: Treff): Felt[] {
   return lagFelter(
     [t.tilstand.navn],
     [
+      t.tilstand.kapittel,
       t.retningslinje.navn,
       t.retningslinje.langtNavn,
       ...t.tilstand.sokeord,

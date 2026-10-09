@@ -10,12 +10,15 @@ import {
   Check,
   Droplet,
   ExternalLink,
+  Eye,
   Glasses,
   Hand,
   HeartPulse,
   History,
   LayoutGrid,
   Siren,
+  Smile,
+  Utensils,
   Wind,
   Zap,
   Info,
@@ -35,6 +38,7 @@ import { RetningslinjeVisning } from "@/components/app/retningslinje-visning"
 import { KalkulatorVisning } from "@/components/app/kalkulator-visning"
 import { useKonsultasjon } from "@/hooks/use-konsultasjon"
 import { useVerktoy } from "@/hooks/use-verktoy"
+import { useRetningslinjer } from "@/hooks/use-retningslinjer"
 import {
   beregn,
   byggResultat,
@@ -54,6 +58,7 @@ import {
 } from "@/lib/verktoy/kalkulator"
 import {
   FAGOMRADE_LABEL,
+  INNEBYGDE_OPPSLAG,
   erKalkulator,
   erRetningslinje,
   finnOppslag,
@@ -67,7 +72,7 @@ import {
   treffId,
 } from "@/lib/verktoy/sok"
 import type { Treff } from "@/lib/verktoy/sok"
-import type { Fagomrade, Side, Svarverdi, VerktoyKategori } from "@/lib/verktoy/typer"
+import type { Fagomrade, Retningslinje, Side, Svarverdi, VerktoyKategori } from "@/lib/verktoy/typer"
 import { cuid } from "@/lib/cuid"
 
 interface Props {
@@ -116,6 +121,41 @@ const FAGOMRADE_IKON: Record<Fagomrade, LucideIcon> = {
   nevrologi: Zap,
   geriatri: Glasses,
   svangerskap: CalendarHeart,
+  oye: Eye,
+  mage_tarm: Utensils,
+  tannhelse: Smile,
+}
+
+const FANE_NOKKEL = "legeassist:verktoy-fane"
+/** Plassholderfane til fase 2 (andre retningslinjer og pakkeforløp). */
+const ANDRE_RETNINGSLINJER = "andre-retningslinjer"
+
+/** «verktoy» eller id-en til en retningslinje. Husker siste fane — bare en bekvemmelighet. */
+function lesFane(): string {
+  try {
+    return localStorage.getItem(FANE_NOKKEL) ?? "verktoy"
+  } catch {
+    return "verktoy"
+  }
+}
+
+function lagreFane(fane: string) {
+  try {
+    localStorage.setItem(FANE_NOKKEL, fane)
+  } catch {
+    // Privat modus o.l.
+  }
+}
+
+/** Tilstandene gruppert etter kildens egne kapitler, i kildens rekkefølge. */
+function kapitlerFor(retningslinje: Retningslinje): [string, Treff[]][] {
+  const grupper = new Map<string, Treff[]>()
+  for (const tilstand of retningslinje.tilstander) {
+    const liste = grupper.get(tilstand.kapittel) ?? []
+    liste.push({ slag: "tilstand", retningslinje, tilstand })
+    grupper.set(tilstand.kapittel, liste)
+  }
+  return [...grupper.entries()]
 }
 
 const NYLIG_NOKKEL = "legeassist:verktoy-nylig"
@@ -164,6 +204,10 @@ export function VerktoyModal({ open, onClose }: Props) {
 function VerktoyInnhold({ onClose }: { onClose: () => void }) {
   const { aktiv } = useKonsultasjon()
   const { resultater, lagreResultat, slettResultat } = useVerktoy()
+  const { retningslinjer, laster: lasterRetningslinjer, feil: retningslinjeFeil } =
+    useRetningslinjer()
+  /** Verktøyene i koden + retningslinjene fra Helsedirektoratet, når de er lastet. */
+  const oppslag = useMemo(() => [...INNEBYGDE_OPPSLAG, ...retningslinjer], [retningslinjer])
 
   const [sok, setSok] = useState("")
   const [valgt, setValgt] = useState<Treff | null>(null)
@@ -178,10 +222,10 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
     const tekst = [aktiv.transkript, aktiv.kontekst, aktiv.tilleggsinfo]
       .filter(Boolean)
       .join(" ")
-    return foreslaaOppslag(tekst)
-  }, [aktiv])
+    return foreslaaOppslag(tekst, oppslag)
+  }, [aktiv, oppslag])
 
-  const treff = useMemo(() => sokOppslag(sok), [sok])
+  const treff = useMemo(() => sokOppslag(sok, oppslag), [sok, oppslag])
 
   /**
    * Nylig brukte verktøy, kun id-er (ingen pasientdata). En id kan bli
@@ -189,8 +233,8 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
    */
   const [nyligIder, setNyligIder] = useState<string[]>(lesNylig)
   const nylig = useMemo(
-    () => nyligIder.map((id) => finnTreff(id)).filter((t): t is Treff => Boolean(t)),
-    [nyligIder]
+    () => nyligIder.map((id) => finnTreff(id, oppslag)).filter((t): t is Treff => Boolean(t)),
+    [nyligIder, oppslag]
   )
 
   /**
@@ -199,7 +243,24 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
    */
   const [visOversikt, setVisOversikt] = useState(true)
   const visSkjema = Boolean(valgt) && !visOversikt
-  const fagGrupper = useMemo(() => grupperEtterFagomrade(), [])
+  /**
+   * Oversikten deles i faner: verktøyene etter fagområde, og hver retningslinje
+   * etter sine egne kapitler. Ellers drukner tolv verktøy i 63 antibiotikarader.
+   * Søket gjelder alt.
+   */
+  const [fane, setFaneState] = useState<string>(lesFane)
+  function setFane(f: string) {
+    setFaneState(f)
+    lagreFane(f)
+  }
+  const aktivRetningslinje = retningslinjer.find((r) => r.id === fane)
+  // En lagret fane for en retningslinje som ikke er lastet (ennå), viser verktøyene
+  const visFane = aktivRetningslinje || fane === ANDRE_RETNINGSLINJER ? fane : "verktoy"
+  const fagGrupper = useMemo(() => grupperEtterFagomrade(INNEBYGDE_OPPSLAG), [])
+  const kapittelGrupper = useMemo(
+    () => (aktivRetningslinje ? kapitlerFor(aktivRetningslinje) : []),
+    [aktivRetningslinje]
+  )
 
   const kalkulator = valgt?.slag === "kalkulator" ? valgt.kalkulator : undefined
   /**
@@ -255,23 +316,23 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
     const resultat = resultater.find((r) => r.id === resultatId)
     if (!resultat) return
 
-    const oppslag = finnOppslag(resultat.verktoyId)
-    if (!oppslag) return
+    const funnet = finnOppslag(resultat.verktoyId, oppslag)
+    if (!funnet) return
 
-    if (erKalkulator(oppslag)) {
-      setValgt({ slag: "kalkulator", kalkulator: oppslag })
+    if (erKalkulator(funnet)) {
+      setValgt({ slag: "kalkulator", kalkulator: funnet })
       setSvar(resultat.svar)
       setValgteLinjer([])
-    } else if (erRetningslinje(oppslag)) {
+    } else if (erRetningslinje(funnet)) {
       const { tilstandId, valgte } = lesRetningslinjeValg(resultat)
-      const tilstand = oppslag.tilstander.find((t) => t.id === tilstandId)
+      const tilstand = funnet.tilstander.find((t) => t.id === tilstandId)
       if (!tilstand) return
-      setValgt({ slag: "tilstand", retningslinje: oppslag, tilstand })
+      setValgt({ slag: "tilstand", retningslinje: funnet, tilstand })
       setValgteLinjer(valgte)
       setSvar({})
     } else {
-      setValgt({ slag: "verktoy", verktoy: oppslag })
-      setSvar({ ...standardSvar(oppslag), ...resultat.svar })
+      setValgt({ slag: "verktoy", verktoy: funnet })
+      setSvar({ ...standardSvar(funnet), ...resultat.svar })
       setValgteLinjer([])
     }
 
@@ -661,37 +722,120 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
                   </div>
                 )}
 
-                {/* Kolonner i stedet for rutenett, så korte og lange områder pakkes tett */}
-                <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4">
-                  {fagGrupper.map(([fag, liste]) => {
-                    const Ikon = FAGOMRADE_IKON[fag]
-                    return (
-                      <section
-                        key={fag}
-                        className="break-inside-avoid mb-4 rounded-xl border border-slate-200 bg-white p-3"
-                      >
-                        <h3 className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 px-1">
-                          <Ikon className="w-3.5 h-3.5 text-slate-400" />
-                          {FAGOMRADE_LABEL[fag]}
-                        </h3>
-                        <div className="space-y-0.5">
-                          {liste.map((t) => (
-                            <button
-                              key={treffId(t)}
-                              onClick={() => velg(t)}
-                              className={`w-full text-left px-2 py-1.5 rounded-md flex items-baseline justify-between gap-2 transition-colors ${
-                                valgtId === treffId(t) ? "bg-blue-50" : "hover:bg-slate-50"
-                              }`}
-                            >
-                              <span className="text-sm text-slate-800">{treffNavn(t)}</span>
-                              <span className="text-[11px] text-slate-400 shrink-0">{treffType(t)}</span>
-                            </button>
-                          ))}
-                        </div>
-                      </section>
-                    )
-                  })}
+                {/* Faner */}
+                <div className="flex flex-wrap items-center gap-1 border-b border-slate-200">
+                  {[
+                    { id: "verktoy", navn: "Verktøy", antall: INNEBYGDE_OPPSLAG.length },
+                    ...retningslinjer.map((r) => ({ id: r.id, navn: r.kortNavn, antall: r.tilstander.length })),
+                    { id: ANDRE_RETNINGSLINJER, navn: "Andre retningslinjer", antall: null },
+                  ].map((f) => (
+                    <button
+                      key={f.id}
+                      onClick={() => setFane(f.id)}
+                      className={`-mb-px px-3 py-2 text-sm border-b-2 transition-colors ${
+                        visFane === f.id
+                          ? "border-slate-800 text-slate-900 font-medium"
+                          : "border-transparent text-slate-500 hover:text-slate-800"
+                      }`}
+                    >
+                      {f.navn}
+                      {f.antall === null ? (
+                        <span className="ml-1.5 text-[10px] uppercase tracking-wide text-slate-400">kommer</span>
+                      ) : (
+                        <span className="ml-1.5 text-xs text-slate-400 tabular-nums">{f.antall}</span>
+                      )}
+                    </button>
+                  ))}
+                  {lasterRetningslinjer && (
+                    <span className="px-3 py-2 text-xs text-slate-400 italic">Henter retningslinjer…</span>
+                  )}
                 </div>
+                {retningslinjeFeil && (
+                  <p className="text-xs text-amber-700">
+                    Kunne ikke hente retningslinjene. Skåringsverktøyene virker som vanlig — prøv
+                    igjen ved å lukke og åpne modalen.
+                  </p>
+                )}
+
+                {visFane === "verktoy" ? (
+                  /* Kolonner i stedet for rutenett, så korte og lange områder pakkes tett */
+                  <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4">
+                    {fagGrupper.map(([fag, liste]) => {
+                      const Ikon = FAGOMRADE_IKON[fag]
+                      return (
+                        <section
+                          key={fag}
+                          className="break-inside-avoid mb-4 rounded-xl border border-slate-200 bg-white p-3"
+                        >
+                          <h3 className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 px-1">
+                            <Ikon className="w-3.5 h-3.5 text-slate-400" />
+                            {FAGOMRADE_LABEL[fag]}
+                          </h3>
+                          <div className="space-y-0.5">
+                            {liste.map((t) => (
+                              <button
+                                key={treffId(t)}
+                                onClick={() => velg(t)}
+                                className={`w-full text-left px-2 py-1.5 rounded-md flex items-baseline justify-between gap-2 transition-colors ${
+                                  valgtId === treffId(t) ? "bg-blue-50" : "hover:bg-slate-50"
+                                }`}
+                              >
+                                <span className="text-sm text-slate-800">{treffNavn(t)}</span>
+                                <span className="text-[11px] text-slate-400 shrink-0">{treffType(t)}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </section>
+                      )
+                    })}
+                  </div>
+                ) : visFane === ANDRE_RETNINGSLINJER ? (
+                  <div className="max-w-xl rounded-xl border border-dashed border-slate-300 bg-slate-50 p-5 space-y-2">
+                    <h3 className="text-sm font-semibold text-slate-700">Kommer: flere retningslinjer og pakkeforløp</h3>
+                    <p className="text-sm text-slate-600">
+                      Nasjonale faglige retningslinjer fra Helsedirektoratet skal kunne slås opp her, med
+                      kapitler og anbefalinger gjengitt ordrett — for eksempel diabetes, kols, demens og
+                      forebygging av hjerte- og karsykdom. Pakkeforløpenes kriterier for henvisning ved
+                      begrunnet mistanke kommer også.
+                    </p>
+                    <p className="text-xs text-slate-400">
+                      Innholdet hentes fra Helsedirektoratet på samme måte som antibiotikaretningslinjen.
+                    </p>
+                  </div>
+                ) : (
+                  aktivRetningslinje && (
+                    <div className="space-y-3">
+                      <p className="text-xs text-slate-500">
+                        {aktivRetningslinje.langtNavn} · Helsedirektoratet
+                      </p>
+                      <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4">
+                        {kapittelGrupper.map(([kapittel, liste]) => (
+                          <section
+                            key={kapittel}
+                            className="break-inside-avoid mb-4 rounded-xl border border-slate-200 bg-white p-3"
+                          >
+                            <h3 className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5 px-1">
+                              {kapittel}
+                            </h3>
+                            <div>
+                              {liste.map((t) => (
+                                <button
+                                  key={treffId(t)}
+                                  onClick={() => velg(t)}
+                                  className={`w-full text-left px-2 py-1 rounded-md text-sm text-slate-800 transition-colors ${
+                                    valgtId === treffId(t) ? "bg-blue-50" : "hover:bg-slate-50"
+                                  }`}
+                                >
+                                  {treffNavn(t)}
+                                </button>
+                              ))}
+                            </div>
+                          </section>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                )}
               </>
             )}
           </div>

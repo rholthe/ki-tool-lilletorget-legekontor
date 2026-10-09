@@ -207,3 +207,18 @@ model Bruk {
   @@index([userId, opprettet])
   @@index([opprettet])
 }
+
+// Mellomlager for innhold hentet fra Helsedirektoratets API (HAPI). Offentlig
+// innhold under NLOD — aldri pasientdata. Én rad per kilde (f.eks. antibiotika-
+// retningslinjen), lagret ferdig oversatt. `format` er versjonen av
+// oversettingen: endres den, bygges raden på nytt ved neste henting.
+model HapiInnhold {
+  id                  String    @id @db.VarChar(80)
+  data                String    @db.LongText
+  format              Int
+  sistFagligOppdatert DateTime?
+  hentetAt            DateTime
+  // Siste feilmelding ved henting (uten innhold), null når siste henting gikk bra
+  sisteFeil           String?   @db.VarChar(500)
+  sisteForsokAt       DateTime?
+}

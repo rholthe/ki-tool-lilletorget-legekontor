@@ -32,6 +32,9 @@ export type Fagomrade =
   | "nevrologi"
   | "geriatri"
   | "svangerskap"
+  | "oye"
+  | "mage_tarm"
+  | "tannhelse"
 
 export type Funnverdi = "normal" | "patologisk" | "ikke_utfort"
 
@@ -280,42 +283,42 @@ export interface VerktoyResultat {
  */
 
 /** Én behandlingslinje, gjengitt slik den står i kilden. */
+/**
+ * Én behandlingslinje. `regimer` er Helsedirektoratets egen visningstekst
+ * (`displayOppsummering`) ordrett, ett element per preparat — flere ved
+ * kombinasjonsbehandling. Teksten settes sammen av kilden fra de strukturerte
+ * feltene og har med ladningsdose og merknad («- tabletter (erytromycinstearat)»),
+ * noe tittelfeltet i API-et av og til mangler.
+ */
 export interface Anbefaling {
+  /** Id-en til første doseringsregime i API-et — stabil mellom hentinger. */
   id: string
   /** Kildens egen etikett: «Voksne og barn > 40 kg», «Ved penicillinallergi: barn < 25 kg». */
   etikett: string
-  legemiddel: string
-  administrasjon: string
-  dose: string
-  /** «mikstur (etylsuksinat)», «kan knuses og blandes i mat». */
-  merknad?: string
-  /** Kombinasjonsbehandling — legemidler som gis i tillegg til hovedpreparatet. */
-  iTillegg?: { legemiddel: string; administrasjon: string; dose: string }[]
+  regimer: string[]
   gruppe: "standard" | "alternativ"
 }
 
 export interface Tilstand {
+  /** API-ets `infoId`. Ikke URL-sluggen — den er feil for enkelte tilstander og kan bli rettet. */
   id: string
   navn: string
+  /** Kapittelet i retningslinjen («Øvre luftveisinfeksjoner») — også søkbart. */
+  kapittel: string
   sokeord: string[]
   /** Per tilstand, ikke per retningslinje: ørebetennelse og cystitt hører hjemme ulike steder. */
   fagomrader: Fagomrade[]
-  /** Direkte lenke til kapitlet hos kilden — ett klikk til fasit. */
+  /** Direkte lenke til tilstanden på helsedirektoratet.no. */
   url: string
-  /** ISO-dato: når innholdet her sist ble sammenholdt med kilden. */
-  sistVerifisert: string
-  /** Kildens egen «sist oppdatert»-dato, slik den var ved verifiseringen. */
-  kildeOppdatert?: string
-  indikasjon: string[]
+  /** Kildens egen dato for siste faglige endring (ISO). */
+  sistFagligOppdatert: string
+  /** Markdown, konvertert fra kildens HTML. Rendres uten rå HTML. */
+  indikasjon: string
   varighet?: string
   /** Kan være tom — akutt bronkitt skal som regel ikke ha antibiotika. */
   anbefalinger: Anbefaling[]
-  merknader?: string[]
-  /**
-   * Settes når kun et utvalg av kildens rader er gjengitt. Legen må se dette i
-   * UI-et, ellers kan hun tro at listen er uttømmende.
-   */
-  utvalg?: boolean
+  /** «Annen behandling» fra kilden, som Markdown. */
+  merknader?: string
 }
 
 export interface Retningslinje {
@@ -329,6 +332,8 @@ export interface Retningslinje {
   kilde: Kilde
   url: string
   tilstander: Tilstand[]
+  /** Når innholdet sist ble hentet fra Helsedirektoratets API (ISO). */
+  hentetAt: string
 }
 
 /** Alt som kan velges i verktøymodalen. */

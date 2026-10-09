@@ -35,6 +35,7 @@ execFileSync(
     "src/lib/verktoy/retningslinje.ts",
     "src/lib/verktoy/kalkulator.ts",
     "src/lib/verktoy/sok.ts",
+    "src/lib/verktoy/retningslinjer/antibiotika-tillegg.ts",
     "--outDir",
     utMappe,
     "--module",
@@ -49,17 +50,26 @@ execFileSync(
 )
 
 const require = createRequire(import.meta.url)
-const { INNEBYGDE_VERKTOY, INNEBYGDE_RETNINGSLINJER, INNEBYGDE_KALKULATORER } = require(
+const { INNEBYGDE_VERKTOY, INNEBYGDE_KALKULATORER, INNEBYGDE_OPPSLAG } = require(
   path.join(utMappe, "registry.js")
 )
+const { TILSTAND_TILLEGG } = require(
+  path.join(utMappe, "retningslinjer", "antibiotika-tillegg.js")
+)
+
+// Retningslinjene kommer fra Helsedirektoratets API. Testen kjører på
+// reservekopien (`npm run retningslinjer:reserve`), som er det samme API-et
+// ga sist den ble hentet, oversatt av samme kode som serveren bruker.
+const ANTIBIOTIKA = JSON.parse(
+  fs.readFileSync(path.join(rot, "src/lib/verktoy/retningslinjer/antibiotika-reserve.json"), "utf8")
+)
+const RETNINGSLINJER = [ANTIBIOTIKA]
+const OPPSLAG = [...INNEBYGDE_OPPSLAG, ...RETNINGSLINJER]
+const FASIT = JSON.parse(fs.readFileSync(path.join(rot, "scripts/fasit/antibiotika-verifisert.json"), "utf8"))
 const { beregnKalkulator, byggKalkulatorResultat } = require(
   path.join(utMappe, "kalkulator.js")
 )
-const {
-  byggRetningslinjeResultat,
-  dagerSidenVerifisert,
-  VERIFISERING_ADVARSEL_DAGER,
-} = require(path.join(utMappe, "retningslinje.js"))
+const { byggRetningslinjeResultat } = require(path.join(utMappe, "retningslinje.js"))
 const {
   beregn,
   kjorTestkasus,
@@ -179,51 +189,121 @@ for (const verktoy of INNEBYGDE_VERKTOY) {
 }
 
 /*
- * Retningslinjer: ferskhet er hovedrisikoen.
+ * Retningslinjer fra Helsedirektoratet.
  *
- * CHA₂DS₂-VASc har ikke endret seg siden 2010, men en behandlingsretningslinje
- * revideres løpende — og en utdatert dose er en pasientsikkerhetsrisiko, ikke et
- * kosmetisk etterslep. Denne sjekken gjør vedlikeholdet mekanisk: den feiler i
- * utviklingsløpet lenge før noen rekker å følge en foreldet anbefaling.
+ * Innholdet er ikke vårt, men oversettingen er det: en feil i den gir en dose
+ * som ser riktig ut. Derfor sammenholdes reservekopien med de 18 tilstandene som
+ * ble verifisert manuelt mot retningslinjen (scripts/fasit/), på preparat og
+ * på hvert tall i dosen, i rekkefølge. Avviker en, har enten Helsedirektoratet
+ * endret anbefalingen (oppdater fasiten etter å ha lest kilden) eller
+ * oversettingen en feil.
  */
-for (const retningslinje of INNEBYGDE_RETNINGSLINJER) {
-  console.log(`\n${retningslinje.navn}`)
+const RESERVE_ADVARSEL_DAGER = 180
+
+const normEtikett = (s) =>
+  s
+    .toLowerCase()
+    .replace(/[–—]/g, "-")
+    .replace(/\bvaksne\b/g, "voksne")
+    .replace(/haemophilues/g, "haemophilus")
+    .replace(/\+/g, " og ")
+    .replace(/[^\p{L}\p{N}<>/]+/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+const ordsett = (s) => new Set(normEtikett(s).split(" "))
+function likhet(a, b) {
+  const A = ordsett(a)
+  const B = ordsett(b)
+  const felles = [...A].filter((x) => B.has(x)).length
+  return felles / new Set([...A, ...B]).size
+}
+const normPreparat = (s) => s.toLowerCase().replace(/cyklin/g, "syklin").replace(/sulfametoksasol/g, "sulfametoksazol")
+// Tallene i dosen, i rekkefølge: «200 mg x 1 … 100 mg x 1 fra dag 2» → 200,1,100,1,2
+const tall = (s) => (s.match(/\d+(?:[.,]\d+)?/g) ?? []).map((x) => x.replace(",", ".")).join(",")
+const navnNorm = (s) => s.replace(/[–—]/g, "-").toLowerCase()
+
+for (const retningslinje of RETNINGSLINJER) {
+  console.log(`\n${retningslinje.navn} (Helsedirektoratet, reservekopi)`)
   const forFeil = feil
 
-  for (const tilstand of retningslinje.tilstander) {
-    const dager = dagerSidenVerifisert(tilstand)
-    sjekk(Number.isFinite(dager), `${tilstand.navn}: sistVerifisert er ikke en gyldig dato`)
-    sjekk(
-      dager <= VERIFISERING_ADVARSEL_DAGER,
-      `${tilstand.navn}: sist sammenholdt med kilden for ${dager} dager siden ` +
-        `(grense ${VERIFISERING_ADVARSEL_DAGER}) — ${tilstand.url}`
-    )
-    sjekk(tilstand.indikasjon.length > 0, `${tilstand.navn}: mangler indikasjon`)
-    sjekk(/^https:\/\//.test(tilstand.url), `${tilstand.navn}: mangler lenke til kilden`)
+  const alder = Math.floor((Date.now() - new Date(retningslinje.hentetAt).getTime()) / 86_400_000)
+  sjekk(
+    alder <= RESERVE_ADVARSEL_DAGER,
+    `reservekopien er ${alder} dager gammel — kjør npm run retningslinjer:reserve og les diffen`
+  )
 
+  const tilstandIder = new Set(retningslinje.tilstander.map((t) => t.id))
+  sjekk(tilstandIder.size === retningslinje.tilstander.length, "to tilstander deler samme id")
+  for (const id of Object.keys(TILSTAND_TILLEGG)) {
+    sjekk(tilstandIder.has(id), `antibiotika-tillegg.ts: ${id} finnes ikke lenger i retningslinjen`)
+  }
+
+  for (const tilstand of retningslinje.tilstander) {
+    sjekk(/^https:\/\//.test(tilstand.url), `${tilstand.navn}: mangler lenke til kilden`)
+    sjekk(tilstand.fagomrader.length > 0, `${tilstand.navn}: mangler fagområde`)
+    sjekk(!Number.isNaN(new Date(tilstand.sistFagligOppdatert).getTime()), `${tilstand.navn}: mangler faglig dato`)
     const ider = tilstand.anbefalinger.map((a) => a.id)
-    sjekk(
-      new Set(ider).size === ider.length,
-      `${tilstand.navn}: to anbefalinger deler samme id`
-    )
+    sjekk(new Set(ider).size === ider.length, `${tilstand.navn}: to anbefalinger deler samme id`)
+    for (const a of tilstand.anbefalinger) {
+      sjekk(a.regimer.length > 0 && a.regimer.every((r) => /\S/.test(r)), `${tilstand.navn}: tom behandlingslinje`)
+      sjekk(!/&(gt|lt|amp|nbsp);/.test(a.etikett + a.regimer.join("")), `${tilstand.navn}: HTML-entitet i teksten`)
+    }
 
     // Notatlinjen bygges av koden og skal aldri kunne bli tom eller halv
     if (ider.length > 0) {
       const r = byggRetningslinjeResultat(retningslinje, tilstand, [ider[0]], { id: "t" })
       sjekk(r.detaljer.length > 0, `${tilstand.navn}: gir tom notatlinje`)
       const en = synkVerktoySeksjon("S: subjektivt", [r])
-      sjekk(
-        en === synkVerktoySeksjon(en, [r]),
-        `${tilstand.navn}: notat-synk er ikke idempotent`
-      )
-      if (tilstand.id === retningslinje.tilstander[0].id) {
+      sjekk(en === synkVerktoySeksjon(en, [r]), `${tilstand.navn}: notat-synk er ikke idempotent`)
+      if (tilstand === retningslinje.tilstander.find((t) => t.navn === "Akutt mediaotitt")) {
         console.log(`  ${formaterTilNotat(r).split("\n").map((l) => `    ${l}`).join("\n").trim()}`)
       }
     }
   }
 
+  // Mot den manuelle verifiseringen
+  let linjer = 0
+  for (const fasit of Object.values(FASIT.tilstander)) {
+    const t = retningslinje.tilstander.find((x) => navnNorm(x.navn) === navnNorm(fasit.navn))
+    if (!sjekk(Boolean(t), `fasit: «${fasit.navn}» finnes ikke i retningslinjen`)) continue
+    const ledige = [...t.anbefalinger]
+    for (const f of fasit.linjer) {
+      // Etiketten først, ellers den mest like (kilden har endret tegnsetting siden verifiseringen)
+      let a = ledige.find((x) => x.gruppe === f.gruppe && normEtikett(x.etikett) === normEtikett(f.etikett))
+      if (!a) {
+        const kandidater = ledige
+          .filter((x) => x.gruppe === f.gruppe)
+          .map((x) => [likhet(x.etikett, f.etikett), x])
+          .sort((p, q) => q[0] - p[0])
+        if (kandidater[0]?.[0] >= 0.75) a = kandidater[0][1]
+      }
+      if (!sjekk(Boolean(a), `${fasit.navn}: fant ikke «${f.etikett}»`)) continue
+      ledige.splice(ledige.indexOf(a), 1)
+      linjer++
+      sjekk(
+        a.regimer.length === f.preparater.length,
+        `${fasit.navn} «${f.etikett}»: ${a.regimer.length} preparater, fasit har ${f.preparater.length}`
+      )
+      f.preparater.forEach((preparat, i) => {
+        const regime = a.regimer[i] ?? ""
+        sjekk(
+          normPreparat(regime).startsWith(normPreparat(preparat)),
+          `${fasit.navn} «${f.etikett}»: «${regime}» er ikke ${preparat}`
+        )
+        // Tall etter preparatnavnet; navn som «B» i polymyksin B har ingen tall
+        const dose = regime.slice(preparat.length).replace(/^\D*?(?=\d)/, "")
+        sjekk(
+          tall(dose).startsWith(tall(f.doser[i])),
+          `${fasit.navn} «${f.etikett}»: dose «${dose}», fasit «${f.doser[i]}»`
+        )
+      })
+    }
+  }
+
+  const antallLinjer = retningslinje.tilstander.reduce((n, t) => n + t.anbefalinger.length, 0)
   console.log(
-    `  ${retningslinje.tilstander.length} tilstander` +
+    `  ${retningslinje.tilstander.length} tilstander, ${antallLinjer} behandlingslinjer · ` +
+      `${linjer} linjer sammenholdt med manuell verifisering` +
       (feil === forFeil ? " · ✓ alle sjekker grønne" : "")
   )
 }
@@ -278,13 +358,20 @@ for (const kalkulator of INNEBYGDE_KALKULATORER) {
  * blant de `topp` første treffene. Ett kasus per mekanisme — synonym,
  * bøyning, skrivefeil, manglende æøå, forkortelse, flere ord.
  */
+/** Treff-id for en tilstand, slått opp på navn — id-ene er API-ets UUID-er. */
+function tilstand(navn) {
+  const t = ANTIBIOTIKA.tilstander.find((x) => navnNorm(x.navn) === navnNorm(navn))
+  if (!t) throw new Error(`Ingen tilstand «${navn}» i reservekopien`)
+  return `${ANTIBIOTIKA.id}:${t.id}`
+}
+
 const SOKEKASUS = [
-  { sok: "ørebetennelse", id: "antibiotika-allmennpraksis:akutt-mediaotitt", topp: 1 },
-  { sok: "orebetennelse", id: "antibiotika-allmennpraksis:akutt-mediaotitt", topp: 1 },
-  { sok: "ørebetenelse", id: "antibiotika-allmennpraksis:akutt-mediaotitt", topp: 1 },
-  { sok: "halsbetennelsen", id: "antibiotika-allmennpraksis:streptokokkhalsinfeksjon", topp: 1 },
-  { sok: "vondt i halsen", id: "antibiotika-allmennpraksis:streptokokkhalsinfeksjon", topp: 1 },
-  { sok: "blærebetennelse", id: "antibiotika-allmennpraksis:cystitt-kvinne", topp: 2 },
+  { sok: "ørebetennelse", id: tilstand("Akutt mediaotitt"), topp: 1 },
+  { sok: "orebetennelse", id: tilstand("Akutt mediaotitt"), topp: 1 },
+  { sok: "ørebetenelse", id: tilstand("Akutt mediaotitt"), topp: 1 },
+  { sok: "halsbetennelsen", id: tilstand("Streptokokkhalsinfeksjon og skarlagensfeber"), topp: 1 },
+  { sok: "vondt i halsen", id: tilstand("Streptokokkhalsinfeksjon og skarlagensfeber"), topp: 1 },
+  { sok: "blærebetennelse", id: tilstand("Akutt cystitt hos ikke-gravid kvinne uten kompliserende forhold"), topp: 2 },
   { sok: "af", id: "chadsvasc", topp: 1 },
   { sok: "drypp", id: "chadsvasc", topp: 2 },
   { sok: "blodpropp", id: "wells-dvt", topp: 3 },
@@ -304,8 +391,8 @@ const SOKEKASUS = [
   { sok: "slapp baby", id: "pevs", topp: 1 },
   { sok: "chads", id: "chadsvasc", topp: 1 },
   { sok: "cha2ds2", id: "chadsvasc", topp: 1 },
-  { sok: "flått", id: "antibiotika-allmennpraksis:erytema-migrans", topp: 1 },
-  { sok: "hjernehinnebetennelse", id: "antibiotika-allmennpraksis:bakteriell-meningitt", topp: 1 },
+  { sok: "flått", id: tilstand("Borreliose – erytema migrans"), topp: 1 },
+  { sok: "hjernehinnebetennelse", id: tilstand("Bakteriell meningitt"), topp: 1 },
   // Fagområdene er søkbare
   { sok: "psykiatri", id: "madrs", topp: 2 },
   { sok: "eldre", id: "klokketest", topp: 2 },
@@ -316,7 +403,7 @@ console.log("\nSøk")
 {
   const forFeil = feil
   for (const { sok, id, topp } of SOKEKASUS) {
-    const ider = sokOppslag(sok).map(treffId)
+    const ider = sokOppslag(sok, OPPSLAG).map(treffId)
     const plass = ider.indexOf(id)
     sjekk(
       plass !== -1 && plass < topp,
@@ -325,18 +412,18 @@ console.log("\nSøk")
   }
   // Korte forkortelser skal ikke slå ut inni andre ord
   sjekk(
-    sokOppslag("le").every((t) => treffId(t) !== "antibiotika-allmennpraksis:akutt-sinusitt"),
+    sokOppslag("le", OPPSLAG).every((t) => treffId(t) !== tilstand("Akutt sinusitt")),
     "«le» treffer sinusitt — korte ord skal kreve ordstart"
   )
-  sjekk(sokOppslag("xyzzyq").length === 0, "meningsløst søk gir treff")
+  sjekk(sokOppslag("xyzzyq", OPPSLAG).length === 0, "meningsløst søk gir treff")
   // Et oppslag uten fagområde ville vært usynlig i oversikten
-  for (const t of alleTreff()) {
+  for (const t of alleTreff(OPPSLAG)) {
     sjekk(fagomraderFor(t).length > 0, `${treffId(t)} mangler fagområde`)
   }
-  const iOversikt = new Set(grupperEtterFagomrade().flatMap(([, l]) => l.map(treffId)))
-  sjekk(iOversikt.size === alleTreff().length, "ikke alle oppslag vises i oversikten")
+  const iOversikt = new Set(grupperEtterFagomrade(OPPSLAG).flatMap(([, l]) => l.map(treffId)))
+  sjekk(iOversikt.size === alleTreff(OPPSLAG).length, "ikke alle oppslag vises i oversikten")
   sjekk(
-    foreslaaOppslag("Pasienten har vridd kneet og har korsbandskade").some(
+    foreslaaOppslag("Pasienten har vridd kneet og har korsbandskade", OPPSLAG).some(
       (f) => treffId(f.treff) === "kne"
     ),
     "forslag fra transkript fanger ikke «vridd kneet»"
@@ -346,7 +433,7 @@ console.log("\nSøk")
 
 console.log(
   feil === 0
-    ? `\n✓ ${INNEBYGDE_VERKTOY.length} verktøy, ${INNEBYGDE_KALKULATORER.length} kalkulator(er) og ${INNEBYGDE_RETNINGSLINJER.length} retningslinje(r) — alle sjekker grønne`
+    ? `\n✓ ${INNEBYGDE_VERKTOY.length} verktøy, ${INNEBYGDE_KALKULATORER.length} kalkulator(er) og ${RETNINGSLINJER.length} retningslinje(r) — alle sjekker grønne`
     : `\n✗ ${feil} sjekk(er) feilet`
 )
 process.exit(feil === 0 ? 0 : 1)

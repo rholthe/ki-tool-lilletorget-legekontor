@@ -329,9 +329,12 @@ Nettleser (klinikkens datamaskin)
     en prosent), så der dekker referansekasusene grenseverdiene i stedet. Prosjektet har ingen
     testrunner, og poengsummene er nettopp det som ikke får være feil — kjør dette etter hver
     endring i et verktøy
-  - **Oversikt etter fagområde:** uten valgt verktøy fyller oversikten hele modalen — kort per
-    fagområde (`Fagomrade` i `typer.ts`, `FAGOMRADE_LABEL` i `registry.ts` bestemmer rekkefølgen),
-    med forslag og «Nylig brukt» øverst. Når et verktøy velges, krymper søket til en linje med
+  - **Oversikt med faner:** uten valgt verktøy fyller oversikten hele modalen, med forslag og
+    «Nylig brukt» øverst. Fanen «Verktøy» viser verktøyene i koden som kort per fagområde
+    (`Fagomrade` i `typer.ts`, `FAGOMRADE_LABEL` i `registry.ts` bestemmer rekkefølgen). Hver
+    retningslinje har egen fane med kildens kapitler som kort — ellers druknet 12 verktøy i 63
+    antibiotikarader. Fanen «Andre retningslinjer» er en plassholder for fase 2. Søket gjelder alle faner; siste fane huskes (localStorage
+    `legeassist:verktoy-fane`). Når et verktøy velges, krymper søket til en linje med
     «Alle verktøy», og skjemaet får hele bredden. Går legen tilbake til oversikten (eller søker fra
     skjemaet), beholdes skjemaet, og «Tilbake til …» henter det fram igjen med svarene
     - `fagomrader` er påkrevd på `Verktoy`, `Kalkulator` og hver `Tilstand` (ikke per retningslinje —
@@ -369,20 +372,48 @@ Nettleser (klinikkens datamaskin)
     poeng. Legen fyller ikke ut noe — hun slår opp. `Retningslinje` → `Tilstand` → `Anbefaling`
     (`src/lib/verktoy/typer.ts`), og `Oppslag = Verktoy | Retningslinje` deler modal, søk og
     notat-innsetting
-    - Implementert: Antibiotika i allmennpraksis (nasjonal faglig retningslinje, Helsedirektoratet),
-      kuratert utvalg på 18 tilstander i `src/lib/verktoy/retningslinjer/antibiotika.ts`
-      (øvre/nedre luftveier, urinveier, hud, genitalt, samt sepsis og bakteriell meningitt der
-      anbefalingen er prehospital engangsdose før innleggelse)
-    - **Alt innhold er hentet ordrett fra kilden**, aldri skrevet fra hukommelsen og aldri
-      omformulert av en språkmodell. Doser settes inn i notatet av koden, ikke via prompten —
-      en omskrevet «660 mg x 4» ville vært like usynlig som en feilsummert skår
+    - **Hentes fra Helsedirektoratets API (HAPI)**, ikke skrevet av oss. Antibiotika i
+      primærhelsetjenesten: alle 63 tilstander (11 kapitler) med strukturerte doseringsregimer
+      - `src/lib/hapi/hent.ts` (ren, nøkkel inn): `hentTre()` går produkt → kapittel → enhet med
+        3 samtidige kall. Header `Ocp-Apim-Subscription-Key`, nøkkel `HELSEDIR_API_KEY` i `.env`.
+        **Bruk produksjons-API-et** (`api.helsedirektoratet.no`); QA (`api-qa.`) har testdata og
+        utdaterte doser, og QA-nøkler virker ikke mot produksjon (egen portal: utvikler-qa.)
+      - `src/lib/verktoy/retningslinjer/antibiotika-hapi.ts` (ren): `byggAntibiotika()` oversetter
+        til `Retningslinje`/`Tilstand`/`Anbefaling`. Doseteksten er kildens `displayOppsummering`
+        ordrett — **ikke** tittelfeltet, som av og til mangler ladningsdosen («10 mg/kg … med
+        ladningsdose fra dag 2» mot «20 mg/kg ladningsdose etterfulgt av 10 mg/kg»). Flere
+        doseringsregimer i én rad = kombinasjon («+»). HTML → Markdown med `turndown`, vist med
+        react-markdown uten rå HTML (`retningslinje-visning.tsx`). Lenker til API-et skrives om
+        til helsedirektoratet.no. Øk `ANTIBIOTIKA_FORMAT` når oversettingen endres
+      - Id-er er API-ets `infoId`, ikke URL-sluggen (sluggen er feil for enkelte tilstander)
+      - `antibiotika-tillegg.ts`: det API-et ikke vet — fagområde og søkeord per `infoId`, ellers
+        fagområde fra kapittelet (`KAPITTEL_FAGOMRADE`). Selvtesten feiler på nøkler som forsvinner
+      - Server: `src/lib/hapi/retningslinjer-server.ts` mellomlagrer i `HapiInnhold` (ferdig
+        oversatt JSON). Forespørsler venter aldri på API-et: eldre enn et døgn → ny henting i
+        bakgrunnen; feil → forrige versjon vises, feilen lagres (`sisteFeil`), nytt forsøk tidligst
+        etter 15 min. Tom tabell/gammelt format → reservekopien
+        `antibiotika-reserve.json` (i repoet, `npm run retningslinjer:reserve`)
+      - `/api/retningslinjer` (innlogget, `Cache-Control: private, max-age=3600`) →
+        `useRetningslinjer()` (én henting per sidevisning). Verktøymodalen slår sammen
+        `INNEBYGDE_OPPSLAG` med retningslinjene; `sok.ts`-funksjonene tar listen som parameter
+      - Admin: «Retningslinjer (Helsedirektoratet)» på `/admin/innstillinger` viser status og
+        «Hent nå» (`/api/admin/retningslinjer`)
+      - UI viser «Hentet fra Helsedirektoratet …» og kildens «sist faglig oppdatert». Advarsel når
+        hentingen er eldre enn `HENTING_ADVARSEL_DAGER` (7) — da feiler hentingen
+      - **Kontroll:** `npm run verktoy:test` sammenholder reservekopien med de 100 behandlingslinjene
+        i 18 tilstander som ble verifisert manuelt 2026-08-20 (`scripts/fasit/antibiotika-verifisert.json`),
+        på preparat og hvert tall i dosen i rekkefølge. Feiler testen etter ny reservekopi: les
+        kilden, og oppdater fasiten hvis Helsedirektoratet har endret anbefalingen. Testen feiler
+        også når reservekopien er eldre enn 180 dager
+    - **Lisens: NLOD** (vilkårene for Helsedirektoratets API, lest 2026-10-09). Krav: oppgi
+      Helsedirektoratet som kilde, tydelig, i **samme skriftstørrelse som innholdet** og rett ved
+      det (`retningslinje-visning.tsx` øverst, og i notatlinjen med faglig dato); ikke framstå som
+      Helsedirektoratet; ikke endre faglig innhold slik at meningen endres
+    - **Innholdet vises og settes inn ordrett**, aldri omformulert av en språkmodell. Doser settes
+      inn i notatet av koden, ikke via prompten — en omskrevet «660 mg x 4» ville vært like
+      usynlig som en feilsummert skår
     - `Anbefaling` speiler kildens egne vektbånd (`etikett`: «Barn 25–35 kg») i stedet for en
-      voksen/barn-akse kilden ikke har. Båndene varierer mellom tilstander og mellom
-      standardbehandling og allergialternativ
-    - **Ferskhet er hoveddesigndriveren.** En behandlingsretningslinje revideres løpende, i
-      motsetning til CHA₂DS₂-VASc. `sistVerifisert` ligger per tilstand, vises i UI-et, og
-      `npm run verktoy:test` **feiler** når en tilstand er eldre enn
-      `VERIFISERING_ADVARSEL_DAGER` (180). Uten en mekanisk påminnelse blir dette glemt
+      voksen/barn-akse kilden ikke har
     - Tilstandene er egne rader i søkelisten — legen søker «ørebetennelse», ikke «Antibiotika i
       allmennpraksis». Retningslinjens egne søkeord teller ikke i forslagene («infeksjon» ville
       slått ut i annenhver konsultasjon)
@@ -392,9 +423,10 @@ Nettleser (klinikkens datamaskin)
       gjenåpning og «Regenerer»-motstand gratis, uten egen datamodell
 
 ### Planlagt
-- Antibiotikaretningslinjen: rettighetsavklaring med Helsedirektoratet før produksjonssetting
-  (utgiver oppgir ingen eksplisitt lisens); flere tilstander og kapitler; vektbasert
-  barnedosering som egen `kalkulator`
+- Retningslinjer fra HAPI, fase 2: leser for andre retningslinjer (diabetes, kols, demens,
+  hjerte-kar …) med admin-valg av hvilke som er med; fase 3: pakkeforløp («Begrunnet mistanke –
+  kriterier for henvisning», under `nasjonalt-forlop`). Osteoporose finnes ikke hos Helsedirektoratet
+- Vektbasert barnedosering som egen `kalkulator`
 - Kliniske verktøy, gjenstående faser: MMS-NR (krever rettighetsavklaring for itemtekst),
   AI-forhåndsutfylling med bekreftelseskrav, admin-CRUD for egne verktøy
   (`/admin/verktoy` + Prisma-modell)
@@ -435,7 +467,9 @@ legeassist/
 ├── db-tunnel.sh                   # Kjøres lokalt (Git Bash): SSH-tunnel til shared-mariadb (slår opp container-IP)
 ├── db-tunnel.ps1                  # Samme tunnel for PowerShell (bruker Windows sin ssh.exe)
 ├── scripts/
-│   └── verktoy-selvtest.mjs       # npm run verktoy:test — referansekasus, terskler, notat-synk
+│   ├── verktoy-selvtest.mjs       # npm run verktoy:test — referansekasus, terskler, notat-synk, søk, antibiotika mot fasit
+│   ├── retningslinjer-reserve.mjs # npm run retningslinjer:reserve — henter fra HAPI, skriver reservekopi
+│   └── fasit/                     # Manuelt verifiserte antibiotikadoser (kontroll av oversettingen)
 ├── prisma/
 │   └── schema.prisma              # User (inkl. dpa*, datanokkel), Mal, sesjon, PasswordSetupToken, DpaVersjon, Melding, MeldingLest
 ├── src/
@@ -528,6 +562,7 @@ legeassist/
 │   │   ├── staging-registry.ts    # STAGING_REGISTRY: overstyrbare staging-tekster (fil-standard)
 │   │   ├── staging-server.ts      # Server-resolver: DB-override + fil-fallback, bygger system prompt
 │   │   ├── tema.ts                # TYPE_TEMA (fargetema) + TYPE_IKON_KOMP (ikon per type)
+│   │   ├── hapi/                  # Helsedirektoratets API: hent.ts (ren), retningslinjer-server.ts
 │   │   ├── verktoy/               # Kliniske verktøy (typer, beregning, søk, definisjoner)
 │   │   │   ├── typer.ts           # Verktoy, Felt, Seksjon, Terskel, VerktoyResultat
 │   │   │   ├── beregn.ts          # beregn/byggResultat/synkVerktoySeksjon/kjorTestkasus
@@ -540,7 +575,7 @@ legeassist/
 │   │   │   ├── registry.ts        # INNEBYGDE_VERKTOY + finnVerktoy
 │   │   │   ├── definisjoner/      # Én fil per verktøy (chadsvasc, qsofa, pevs, wells-*, madrs,
 │   │   │   │                      #   mdi, klokketest, kne, skulder)
-│   │   │   └── retningslinjer/    # Én fil per retningslinje (antibiotika)
+│   │   │   └── retningslinjer/    # antibiotika-hapi.ts (oversetting), -tillegg.ts, -reserve.json
 │   │   └── vedlegg.ts             # VEDLEGG_OPPGAVE_INFO, VEDLEGG_OCR_BRUK_INFO, lagVedleggInstruksjon()
 │   ├── types/
 │   │   └── konsultasjon.ts        # Konsultasjon (inkl. stikkord, malId), ChatMelding, Vedlegg, VedleggOcrBruk, typer
@@ -582,6 +617,9 @@ ANTHROPIC_MODEL=eu.anthropic.claude-sonnet-4-6  # Standard Bedrock-modell-ID
 AWS_REGION=eu-central-1           # Frankfurt (EU-databehandling)
 BEDROCK_MODELS=eu.anthropic.claude-sonnet-4-6,eu.anthropic.claude-opus-4-8  # Tilgjengelige modeller (kommaseparert)
 BEDROCK_REGIONS=eu-central-1,eu-west-1  # Tilgjengelige regioner (kommaseparert)
+
+# Helsedirektoratets API (retningslinjer, NLOD) — produksjonsnøkkel fra utvikler.helsedirektoratet.no
+HELSEDIR_API_KEY=...
 
 # Administrasjon
 ADMIN_EMAILS=admin@klinikk.no     # Kommaseparert liste over admin-e-poster

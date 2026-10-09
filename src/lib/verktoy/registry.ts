@@ -17,7 +17,6 @@ import { MDI } from "./definisjoner/mdi"
 import { KLOKKETEST } from "./definisjoner/klokketest"
 import { KNEUNDERSOKELSE } from "./definisjoner/kne"
 import { SKULDERUNDERSOKELSE } from "./definisjoner/skulder"
-import { ANTIBIOTIKA } from "./retningslinjer/antibiotika"
 import { SVANGERSKAP } from "./definisjoner/svangerskap"
 
 /**
@@ -41,18 +40,15 @@ export const INNEBYGDE_VERKTOY: Verktoy[] = [
   SKULDERUNDERSOKELSE,
 ]
 
-/** Retningslinjer legen slår opp i, til forskjell fra skjemaer hun fyller ut. */
-export const INNEBYGDE_RETNINGSLINJER: Retningslinje[] = [ANTIBIOTIKA]
-
 /** Kalkulatorer med flere inngangsveier og flere utdata. */
 export const INNEBYGDE_KALKULATORER: Kalkulator[] = [SVANGERSKAP]
 
-/** Alt som kan velges i verktøymodalen. */
-export const INNEBYGDE_OPPSLAG: Oppslag[] = [
-  ...INNEBYGDE_VERKTOY,
-  ...INNEBYGDE_KALKULATORER,
-  ...INNEBYGDE_RETNINGSLINJER,
-]
+/**
+ * Det som ligger i koden. Retningslinjene hentes fra Helsedirektoratets API og
+ * lastes i tillegg (`useRetningslinjer`), så funksjonene under tar listen som
+ * parameter.
+ */
+export const INNEBYGDE_OPPSLAG: Oppslag[] = [...INNEBYGDE_VERKTOY, ...INNEBYGDE_KALKULATORER]
 
 export const KATEGORI_LABEL: Record<VerktoyKategori, string> = {
   score: "Skåringsverktøy",
@@ -74,6 +70,9 @@ export const FAGOMRADE_LABEL: Record<Fagomrade, string> = {
   nevrologi: "Nevrologi og kognisjon",
   geriatri: "Geriatri",
   svangerskap: "Svangerskap",
+  oye: "Øye",
+  mage_tarm: "Mage og tarm",
+  tannhelse: "Tannhelse",
 }
 
 export const FAGOMRADER = Object.keys(FAGOMRADE_LABEL) as Fagomrade[]
@@ -100,11 +99,4 @@ export function finnOppslag(
 
 export function finnVerktoy(id: string, verktoy: Verktoy[] = INNEBYGDE_VERKTOY): Verktoy | undefined {
   return verktoy.find((v) => v.id === id)
-}
-
-export function finnRetningslinje(
-  id: string,
-  retningslinjer: Retningslinje[] = INNEBYGDE_RETNINGSLINJER
-): Retningslinje | undefined {
-  return retningslinjer.find((r) => r.id === id)
 }

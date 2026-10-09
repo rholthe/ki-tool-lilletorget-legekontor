@@ -1,0 +1,2973 @@
+{
+ "id": "antibiotika-allmennpraksis",
+ "navn": "Antibiotika i primærhelsetjenesten",
+ "kortNavn": "Antibiotika",
+ "langtNavn": "Nasjonal faglig retningslinje for bruk av antibiotika i primærhelsetjenesten",
+ "kategori": "retningslinje",
+ "sokeord": [
+  "antibiotika",
+  "antibiotikum",
+  "infeksjon",
+  "penicillin",
+  "resistens",
+  "retningslinje",
+  "antibiotikabruk"
+ ],
+ "kilde": {
+  "navn": "Helsedirektoratet",
+  "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten",
+  "sistRevidert": "2026-07-05T15:00"
+ },
+ "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten",
+ "tilstander": [
+  {
+   "id": "640c22ac-60fc-4121-95fc-0147261eb23c",
+   "navn": "Konjunktivitt",
+   "kapittel": "Øyeinfeksjoner",
+   "sokeord": [],
+   "fagomrader": [
+    "oye"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/oyeinfeksjoner/konjunktivitt",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "### **Indikasjon for antibiotikabehandling**\n\nVed sekresjon fra øyet uten tydelig hyperemi av konjunktiva anbefales ikke antibiotika.\n\nVed lett til moderat konjunktivitt gis pasienten råd om egenbehandling, se «Annen behandling». [Vent-og-se-resept](http://www.antibiotikaiallmennpraksis.no/index.php?action=showtopic&topic=DPDFvEqa) (antibiotikaiallmennpraksis.no) på antibiotika kan tilbys.\n\nVed rikelig purulent sekresjon og hyperemi av konjunktiva kan pasienten tilbys antibiotika.\n\nVed konjunktivitt hos nyfødte (under 4 uker) tas prøve av sekret. Antibiotika kan startes i påvente av prøvesvar. Det bør konfereres med barnelege/øyelege. Nyfødte med mistenkt eller påvist gonokokk- eller herpesinfeksjon bør umiddelbart henvises til barneavdeling.\n\nPåvist klamydiakonjunktivitt behandles som [genital klamydia](https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/genitale-infeksjoner/genital-klamydiainfeksjon-icpc-koder-x92u72). Hos barn bør barnelege konfereres.",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-8f9ec3f0-d677-4e9a-92f8-93c3eed5374d",
+     "etikett": "Alternativ med kloramfenikol",
+     "regimer": [
+      "Kloramfenikol okulær 1 dråpe x 6 - øyedråper"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-fe6c2a88-324b-49f0-b0e3-e0872400418d",
+     "etikett": "Alternativ med fusidinsyre",
+     "regimer": [
+      "Fusidinsyre okulær 1 dråpe x 2 - øyedråper"
+     ],
+     "gruppe": "standard"
+    }
+   ],
+   "merknader": "**Antibiotikabehandling**\n\nAnbefalt behandlingsvarighet: til 2 dager etter symptomfrihet\n\n**Annen behandling**\n\n**Alle**\n\n-   Tørk/vask bort puss/sekret, også før eventuell drypping med øyedråper.\n-   Oppretthold god håndhygiene, bruk egne kluter/håndklær, ikke del med andre.\n\n**Større barn og voksne**\n\n-   Tåresubstitutt kan lindre ved virale infeksjoner.\n\n**Eldre**\n\n-   Tørre øyne disponerer for infeksjon. Tåresubstitutt forebygger.\n-   Behandling av feilstilling i øyelokk som ektropium, entropium og trikiasis, forebygger residiverende konjunktivitt."
+  },
+  {
+   "id": "e83561c1-f8e1-40f6-a06c-feb833b94d8b",
+   "navn": "Hordeolum (sti), chalazion",
+   "kapittel": "Øyeinfeksjoner",
+   "sokeord": [],
+   "fagomrader": [
+    "oye"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/oyeinfeksjoner/hordeolum-sti-chalazion",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "### **Indikasjon for antibiotikabehandling**\n\nØyelokkstilstandene hordeolum og chalazion bør primært behandles uten antibiotika, se «Annen behandling».\n\nVed intern hordeolum med samtidig tegn til konjunktivitt kan lokalvirkende antibiotikum tilbys, se [anbefalingen om konjunktivitt](https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/oyeinfeksjoner/konjunktivitt).\n\nVed preseptal cellulitt/orbital cellulitt konfereres pasienten med øyelege som øyeblikkelig hjelp.",
+   "anbefalinger": [],
+   "merknader": "**Annen behandling**\n\nHordeolum\n\n-   Varme kompresser i 10-15 minutter x 2-4 per dag.\n-   Øyelokkhygiene.\n\nVed residiverende hordeolum og samtidig rosacea-assosiert blefaritt\n\n-   Øyesalve med oksytetrasyklin + polymyxin B kan vurderes.\n-   Vurder å henvise til hudlege.\n\nChalazion\n\n-   Små chalazion kan spontant forsvinne. Varme kompresser x 2-4 kan evt. forsøkes. Henvis til øyelege ved plager over flere måneder."
+  },
+  {
+   "id": "5ba9595f-2f6f-4538-9cf7-1223ac1f623b",
+   "navn": "Blefaritt",
+   "kapittel": "Øyeinfeksjoner",
+   "sokeord": [],
+   "fagomrader": [
+    "oye"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/oyeinfeksjoner/blefaritt",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "### **Indikasjon for antibiotikabehandling**\n\nØyelokkstilstanden blefaritt bør primært behandles uten antibiotika, se «Annen behandling».\n\nVed tydelig infeksjon og manglende effekt av andre tiltak kan lokalbehandling med kortikosteroider og antibiotika i kombinasjon tilbys.",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-79ed8a92-4a50-4fb5-b1fe-7ccba1fcf1f0",
+     "etikett": "Standardbehandling",
+     "regimer": [
+      "Oksytetrasyklin/polymyksin B okulær x 4 - øyesalve"
+     ],
+     "gruppe": "standard"
+    }
+   ],
+   "merknader": "**Antibiotikabehandling**\n\nAnbefalt behandlingsvarighet: til symptomfrihet, opptil 14 dager.\n\n**Annen behandling**\n\n-   God øyelokkshygiene\n-   Varme kompresser opptil 2-4 ganger daglig"
+  },
+  {
+   "id": "80b5c426-6da2-4132-8397-c427a1804371",
+   "navn": "Dakryocystitt",
+   "kapittel": "Øyeinfeksjoner",
+   "sokeord": [],
+   "fagomrader": [
+    "oye"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/oyeinfeksjoner/dakryocystitt",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "Barn under 2 år med tåreflod uten samtidig tegn til infeksjon bør ikke behandles med antibiotika, se «Annen behandling».\n\nBarn under 1 måned med dakryocystitt bør henvises akutt til spesialist for behandling.\n\nVed purulent sekresjon i tåresekk uten abscess behandles som [konjunktivitt](https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/oyeinfeksjoner/konjunktivitt) etter at tåresekken er tømt for puss.\n\nVed abscess bør pasienten tilbys systemisk antibiotikabehandling.\n\nVed residiverende dakryocystitt bør varighet av antibiotikabehandlingen avtales med øyelege, for eksempel inntil mekanisk blokking eller operasjon av tåreveier er blitt utført.",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-d15e3475-320e-435e-b472-efe55d628ccb",
+     "etikett": "Voksne og barn > 40 kg",
+     "regimer": [
+      "Dikloksacillin oral 500 mg x 4"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-be1308b9-e95d-47a0-b979-886b559a5996",
+     "etikett": "Barn 20–40 kg",
+     "regimer": [
+      "Dikloksacillin oral 250 mg x 4"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-a160471f-9646-47cf-b0ee-95227e57cbdc",
+     "etikett": "Barn < 20 kg",
+     "regimer": [
+      "Amoksicillin oral 15 mg/kg x 3"
+     ],
+     "gruppe": "standard"
+    }
+   ],
+   "merknader": "**Antibiotikabehandling**\n\nAnbefalt behandlingsvarighet: 10 dager, eventuelt konferer med spesialist\n\n**Annen behandling**\n\n-   Hos barn under 2 år med tåreflod, uten tegn på infeksjon:\n    -   avvent spontan åpning av tårekanal\n    -   mukoid materiale kan lett masseres ut fra tåresekken.\n-   Ved pussekresjon:\n    -   tøm tåresekken for puss med lett press før applisering av lokal antibiotika."
+  },
+  {
+   "id": "f10d492e-2ce6-467c-82bd-717e0c85c483",
+   "navn": "Herpes zoster ophtalmicus (helvetesild)",
+   "kapittel": "Øyeinfeksjoner",
+   "sokeord": [
+    "helvetesild",
+    "zoster"
+   ],
+   "fagomrader": [
+    "oye"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/oyeinfeksjoner/iherpes-zoster-ophtalmicus-helvetesild",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "Ved mistanke om begynnende herpes zoster ophthalmicus er rask start av behandling viktig. Primærlege bør umiddelbart administrere behandling. Ta kontakt med øyelege for avtale om kontroll.",
+   "varighet": "7 døgn",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-d046de66-5589-4ebf-b9b4-2a64efea9b1a",
+     "etikett": "Standardbehandling",
+     "regimer": [
+      "Valaciklovir oral 1 g x 3"
+     ],
+     "gruppe": "standard"
+    }
+   ]
+  },
+  {
+   "id": "647a0ef7-cf66-46c3-9228-1f7a4203910f",
+   "navn": "Keratitt, endoftalmitt og orbital cellulitt",
+   "kapittel": "Øyeinfeksjoner",
+   "sokeord": [],
+   "fagomrader": [
+    "oye"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/oyeinfeksjoner/keratitt-endoftalmitt-og-orbital-cellulitt",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "Ved mistanke om keratitt, endoftalmitt, eller orbital cellulitt/orbital flegmone bør det konfereres med øyelege. Ved disse infeksjonene er rask oppstart av riktig behandling avgjørende for et godt behandlingsresultat.\n\nBehandlingen utføres på sykehus eller i samarbeid med øyelege.",
+   "anbefalinger": []
+  },
+  {
+   "id": "042ee08d-6735-4edc-871e-5dda78c03239",
+   "navn": "Akutt ekstern otitt",
+   "kapittel": "Øvre luftveisinfeksjoner",
+   "sokeord": [],
+   "fagomrader": [
+    "luftveier"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/infeksjoner-i-ovre-luftveier/akutt-ekstern-otitt",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "Pasienter med mistenkt bakteriell infeksjon i øregang bør tilbys lokalbehandling med kortikosteroider og antiinfektiva i tillegg til utrensing av puss og detritus.\n\nHvis infeksjonen spres og forårsaker bløtdelsinfeksjon i det omgivende vev, bør tilstanden behandles med systemisk antibiotika, se «Behandlingsalternativer».",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-680110af-c45e-420f-a813-fa1805ab5708",
+     "etikett": "Standardbehandling",
+     "regimer": [
+      "Hydrokortison/oksytetrasyklin/polymyksin B otisk 2 dråpe x 3 - øredråper"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-d15e3475-320e-435e-b472-efe55d628ccb",
+     "etikett": "Ved bløtdelsinfeksjon i omgivende vev",
+     "regimer": [
+      "Dikloksacillin oral 500 mg x 4"
+     ],
+     "gruppe": "alternativ"
+    }
+   ],
+   "merknader": "**Antibiotikabehandling**\n\nAnbefalt behandlingsvarighet ved bruk av\n\n-   oksytetrasyklin med polymyxin B og hydrokortison: 7 døgn\n-   dikloksacillin: 5 døgn\n\nLokalbehandlingen bør vare til et par dager etter symptomfrihet, forlenges inntil maksimalt 14 døgn.\n\n**Annen behandling**\n\n-   Rens ut puss, detritus og ørevoks.\n-   Lokalbehandling kan eventuelt startes med tampong innsatt med lokalbehandlende øredråper som pasienten selv fjerner etter 1–2 dager.\n-   Ved plagsomme smerter gis adekvat smertestillende behandling."
+  },
+  {
+   "id": "4cee7335-124b-47cd-9ba0-470788969408",
+   "navn": "Akutt mediaotitt",
+   "kapittel": "Øvre luftveisinfeksjoner",
+   "sokeord": [
+    "otitt",
+    "mediaotitt",
+    "mellomørebetennelse",
+    "ørebetennelse",
+    "øreverk",
+    "øresmerter",
+    "otitis media"
+   ],
+   "fagomrader": [
+    "luftveier",
+    "barn"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/infeksjoner-i-ovre-luftveier/akutt-mediaotitt",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "Hos barn med ukomplisert akutt mellomørebetennelse (se under) kan man avvente med kun symptomlindrende behandling i inntil tre dager. [Vent-og-se-resept](http://www.antibiotikaiallmennpraksis.no/index.php?action=showtopic&topic=DPDFvEqa) (antibiotikaiallmennpraksis.no) kan være et nyttig alternativ.\n\nBarn med akutt mellomørebetennelse bør tilbys antibiotika ved\n\n-   symptomvarighet mer enn tre dager uten bedring\n-   uttalte symptomer\n-   mistanke om komplikasjoner\n-   sekresjon fra øret, av mer enn to dagers varighet\n-   alder under ett år\n-   «ørebarn» - se definisjon under Praktisk\n-   dobbeltsidig mellomørebetennelse hos barn under to år.\n\nVoksne med akutt mellomørebetennelse bør behandles med antibiotika.\n\nInfeksjon i ører med ventilasjonsrør behandles primært med øredråper, se Annen behandling.",
+   "varighet": "5 døgn",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-e6a17cec-a5b4-4224-8254-93031347fb29",
+     "etikett": "Voksne og barn > 40 kg",
+     "regimer": [
+      "Fenoksymetylpenicillin oral 1 g x 4"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-810091b5-3383-4590-aa3a-a6c305ce4c4b",
+     "etikett": "Barn < 40 kg",
+     "regimer": [
+      "Fenoksymetylpenicillin oral 10 mg/kg x 4"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-c6e02f5d-6645-4583-926e-a245b3cdf016",
+     "etikett": "Ved hyppige og residiverende tilfeller: voksne og barn > 40 kg",
+     "regimer": [
+      "Amoksicillin oral 500 mg x 3"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-ebb73bb8-4e25-4292-adaf-ec44d9ccc20f",
+     "etikett": "Ved hyppige og residiverende tilfeller: barn < 40 kg",
+     "regimer": [
+      "Amoksicillin oral 10 mg/kg x 3"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-8233066b-5893-4233-82c7-5607fda6f3d0",
+     "etikett": "Ved terapisvikt: voksne og barn > 40 kg",
+     "regimer": [
+      "Amoksicillin og klavulansyre oral 500/125 mg x 3"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-1de30629-229f-4a49-98d6-e59fde9fca7c",
+     "etikett": "Ved terapisvikt: barn < 40 kg",
+     "regimer": [
+      "Amoksicillin og klavulansyre oral 15/2,1 mg/kg x 2 - mikstur"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-67de0e14-b9d6-438d-9395-64d4542e3abc",
+     "etikett": "Ved penicillinallergi: voksne og barn > 35 kg",
+     "regimer": [
+      "Erytromycin oral 500 mg x 2 - tabletter (erytromycinstearat)"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-3fcc2e95-6a9c-4189-b138-8a1859419933",
+     "etikett": "Ved penicillinallergi: barn 25-35 kg",
+     "regimer": [
+      "Erytromycin oral 250 mg x 2 - tabletter (erytromycinstearat)"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-bb9ab872-bf9d-4c55-a5fc-4c4a51874a37",
+     "etikett": "Ved penicillinallergi: barn < 25 kg",
+     "regimer": [
+      "Erytromycin oral 20 mg/kg x 2 - mikstur (etylsuksinat)"
+     ],
+     "gruppe": "alternativ"
+    }
+   ],
+   "merknader": "**Annen behandling**\n\nTilby symptomlindrende behandling til alle, uavhengig av om det gis antibiotika:\n\n-   smertestillende\n-   hevet hodeleie\n-   slimhinneavsvellende nesedråper kan forsøkes ved samtidig rhinitt.\n\nVed infeksjon i ører med ventilasjonsrør kan man avvente behandling i to dager. Dersom sekresjonen vedvarer vurderes hydrokortison, oksytetrasyklin og polymyksin B øredråper i kombinasjonspreparat. Ved manglende effekt av lokalbehandling henvises pasienten til spesialist i øre-nese-halssykdommer. Systemisk antibiotika vurderes i tillegg til lokalbehandling ved påvirket allmenntilstand, feber eller smerter"
+  },
+  {
+   "id": "00714113-783b-4953-bdfb-1773dd6fa46d",
+   "navn": "Sekretorisk otitt",
+   "kapittel": "Øvre luftveisinfeksjoner",
+   "sokeord": [],
+   "fagomrader": [
+    "luftveier"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/infeksjoner-i-ovre-luftveier/sekretorisk-otitt",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "Sekretorisk otitt bør ikke behandles med antibiotika.",
+   "anbefalinger": [],
+   "merknader": "**Annen behandling**\n\n-   Ved samtidig rhinitt: Avsvellende nesedråper kan brukes.\n-   Valsalvamanøveren forsøkes hos eldre barn, enten ved forsert utånding med lukket nese og munn, eller ved å blåse opp en ballong med ett av neseborene når munnen og det andre neseboret holdes lukket."
+  },
+  {
+   "id": "b03ad672-0de3-4408-950d-c424a2ab6f21",
+   "navn": "Akutt sinusitt",
+   "kapittel": "Øvre luftveisinfeksjoner",
+   "sokeord": [
+    "sinusitt",
+    "bihulebetennelse",
+    "bihuler",
+    "rhinosinusitt",
+    "nesesekresjon"
+   ],
+   "fagomrader": [
+    "luftveier"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/infeksjoner-i-ovre-luftveier/akutt-sinusitt",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "Pasienter med moderate symptomer og symptomvarighet under en uke bør ikke tilbys antibiotika.\n\nPasienter med moderate symptomer over en uke kan vurderes for en [Vent-og-se-resept (antibiotikaiallmennpraksis.no)](http://www.antibiotikaiallmennpraksis.no/index.php?action=showtopic&topic=DPDFvEqa), som kan hentes dersom ingen bedring innen ytterligere 3-5 dager.\nPasienter med uttalte symptomer og purulent nesesekresjon av mer enn en ukes varighet kan tilbys antibiotika.\n\nBarn med mistenkt etmoidalsinusitt bør innlegges raskt.",
+   "varighet": "5 døgn",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-e6a17cec-a5b4-4224-8254-93031347fb29",
+     "etikett": "Voksne",
+     "regimer": [
+      "Fenoksymetylpenicillin oral 1 g x 4"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-709e3b22-fdb3-499d-b534-d38af80a6889",
+     "etikett": "Barn",
+     "regimer": [
+      "Fenoksymetylpenicillin oral 15 mg/kg x 4"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-c6e02f5d-6645-4583-926e-a245b3cdf016",
+     "etikett": "Ved terapisvikt etter standardbehandling: voksne",
+     "regimer": [
+      "Amoksicillin oral 500 mg x 3"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-ebb73bb8-4e25-4292-adaf-ec44d9ccc20f",
+     "etikett": "Ved terapisvikt etter standardbehandling: barn",
+     "regimer": [
+      "Amoksicillin oral 10 mg/kg x 3"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-756a7e18-39e3-40f6-8bd4-1264d2c8567e",
+     "etikett": "Ved terapisvikt etter behandling med amoksicillin: voksne og barn > 12 år",
+     "regimer": [
+      "Doksysyklin oral 100 mg x 1"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-756a7e18-39e3-40f6-8bd4-1264d2c8567e~",
+     "etikett": "Ved penicillinallergi: voksne og barn > 35 kg",
+     "regimer": [
+      "Doksysyklin oral 100 mg x 1"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-3fcc2e95-6a9c-4189-b138-8a1859419933",
+     "etikett": "Ved penicillinallergi: barn 25-35 kg",
+     "regimer": [
+      "Erytromycin oral 250 mg x 2 - tabletter (erytromycinstearat)"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-bb9ab872-bf9d-4c55-a5fc-4c4a51874a37",
+     "etikett": "Ved penicillinallergi: barn < 25 kg",
+     "regimer": [
+      "Erytromycin oral 20 mg/kg x 2 - mikstur (etylsuksinat)"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-e6a17cec-a5b4-4224-8254-93031347fb29~",
+     "etikett": "Ved sannsynlig odontogent fokus: voksne",
+     "regimer": [
+      "Fenoksymetylpenicillin oral 1 g x 4",
+      "Metronidazol oral 400 mg x 3"
+     ],
+     "gruppe": "alternativ"
+    }
+   ],
+   "merknader": "**Annen behandling**\n\n-   Kortikosteroid nesespray kan forsøkes i inntil 14 dager:\n    -   ved akutt sinusitt med moderate symptomer\n    -   ved residiverende sinusitt, sammen med antibiotika\n-   Tilbys alle pasienter, uavhengig av om det gis antibiotika:\n    -   adekvat smertelindrende behandling\n    -   slimhinneavsvellende nesedråper\n    -   saltvannskylling"
+  },
+  {
+   "id": "dd48ee61-5a5f-4241-9e67-0b33a180a5f5",
+   "navn": "Streptokokkhalsinfeksjon og skarlagensfeber",
+   "kapittel": "Øvre luftveisinfeksjoner",
+   "sokeord": [
+    "halsbetennelse",
+    "tonsillitt",
+    "streptokokker",
+    "gas",
+    "skarlagensfeber",
+    "sår hals",
+    "halsinfeksjon",
+    "centor",
+    "strep a"
+   ],
+   "fagomrader": [
+    "luftveier"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/infeksjoner-i-ovre-luftveier/streptokokkhalsinfeksjon-og-skarlagensfeber",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "Pasienter med mild til moderat halsinfeksjon forårsaket av gruppe A-streptokokker (GAS) og asymptomatiske bærere av GAS bør ikke tilbys antibiotika.\n\nHos pasienter med moderat til alvorlig halsinfeksjon forårsaket av GAS bør antibiotika vurderes. Antibiotika bør tilbys hvis pasienten er systemisk påvirket eller har risiko for alvorlig sykdom.\n\nPasienter med skarlagensfeber bør tilbys antibiotika.\n\nHos voksne kan Centor-kriteriene brukes til å vurdere alvorlighetsgrad og nytte av hurtigtest, se «Praktisk».",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-a442fe29-00c6-4586-8d31-80b6936e75cb",
+     "etikett": "Voksne og barn > 40 kg",
+     "regimer": [
+      "Fenoksymetylpenicillin oral 660 mg x 4"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-810091b5-3383-4590-aa3a-a6c305ce4c4b",
+     "etikett": "Barn < 40 kg",
+     "regimer": [
+      "Fenoksymetylpenicillin oral 10 mg/kg x 4"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-67de0e14-b9d6-438d-9395-64d4542e3abc",
+     "etikett": "Ved penicillinallergi: voksne og barn > 35 kg",
+     "regimer": [
+      "Erytromycin oral 500 mg x 2 - tabletter (erytromycinstearat)"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-3fcc2e95-6a9c-4189-b138-8a1859419933",
+     "etikett": "Ved penicillinallergi: barn 25-35 kg",
+     "regimer": [
+      "Erytromycin oral 250 mg x 2 - tabletter (erytromycinstearat)"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-bb9ab872-bf9d-4c55-a5fc-4c4a51874a37",
+     "etikett": "Ved penicillinallergi: barn < 25 kg",
+     "regimer": [
+      "Erytromycin oral 20 mg/kg x 2 - mikstur (etylsuksinat)"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-0f0ede57-bfd4-4e04-9ca0-3c56f68da6f8",
+     "etikett": "Ved gjentatte residiv: voksne og barn > 12 år",
+     "regimer": [
+      "Klindamycin oral 150 mg x 4"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-d6361f1c-bb61-44bb-8e59-9c79b8c3a223",
+     "etikett": "Ved gjentatte residiv: barn 1 måned - 12 år",
+     "regimer": [
+      "Klindamycin oral 7 mg/kg x 3"
+     ],
+     "gruppe": "alternativ"
+    }
+   ],
+   "merknader": "**Antibiotikabehandling**\n\nAnbefalt behandlingsvarighet: 5 døgn. Inntil 10 døgns behandling vurderes ved første residiv eller hvis det anses viktig med bakteriologisk eradikering.\n\n**Annen behandling**\n\nSymptomlindrende behandling:\n\n-   Tilby smertestillende behandling. På grunn av bivirkningsprofil bør paracetamol være førstevalg."
+  },
+  {
+   "id": "c69ff697-5038-48d9-a486-1f39bf46ec08",
+   "navn": "Kikhoste",
+   "kapittel": "Øvre luftveisinfeksjoner",
+   "sokeord": [
+    "pertussis"
+   ],
+   "fagomrader": [
+    "luftveier",
+    "barn"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/infeksjoner-i-ovre-luftveier/kikhoste",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "### **Indikasjon for antibiotikabehandling**\n\nPasienter med påvist kikhoste og symptomvarighet mindre enn tre uker bør tilbys antibiotikabehandling.\n\nProfylaktisk antibiotikabehandling ved eksponering for kikhostebakterien gis til:\n\n-   Uvaksinerte eller delvis vaksinerte barn under to år.\n-   Husstandsmedlemmer til uvaksinerte eller delvis vaksinerte barn under to år.\n-   Pasienter med nedsatt immunforsvar eller alvorlig lungesykdom.\n\nProfylaktisk antibiotikabehandling er identisk med behandling for kikhoste angitt under.\n\nBarn < 3 måneder med mistenkt kikhoste bør innlegges i sykehus for overvåkning. Sykehusinnleggelse bør også vurderes hos barn i alderen 3-6 måneder eller ved kjent hjerte-/lungesykdom uansett alder.",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-08435614-eee2-4eb0-8f6e-5db4af52f7c7",
+     "etikett": "Voksne og barn > 40 kg",
+     "regimer": [
+      "Klaritromycin oral 500 mg x 2 i 7 døgn"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-64f8ecec-9d43-4b60-9a17-71a69cf72da4",
+     "etikett": "Barn 25-40 kg",
+     "regimer": [
+      "Erytromycin oral 250 mg x 2 i 10 døgn - tabletter (erytromycinstearat)"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-b96cff90-31c2-4f0a-a89c-986e5ec9f8ed",
+     "etikett": "Barn < 25 kg",
+     "regimer": [
+      "Erytromycin oral 20 mg/kg x 2 i 10 døgn - mikstur (etylsuksinat)"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-075abe37-c49b-4d35-bf83-fbb94d6b6325",
+     "etikett": "Voksne og barn > 40 kg: alternativ med erytromycin",
+     "regimer": [
+      "Erytromycin oral 500 mg x 4 i 10 døgn - tabletter"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-80aa5f2d-b1d5-4206-b25e-63977cfabe0d",
+     "etikett": "Voksne og barn > 40 kg: alternativ med azitromycin",
+     "regimer": [
+      "Azitromycin oral 500 mg x 1 i 3 døgn"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-80aa5f2d-b1d5-4206-b25e-63977cfabe0d~",
+     "etikett": "Barn 25-40 kg: alternativ med azitromycin",
+     "regimer": [
+      "Azitromycin oral 500 mg x 1 i 3 døgn"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-d70e5a19-2f76-49ce-9688-522aeb5eb9cc",
+     "etikett": "Barn < 25 kg: alternativ med azitromycin",
+     "regimer": [
+      "Azitromycin oral 10 mg/kg x 1 i 3 døgn"
+     ],
+     "gruppe": "alternativ"
+    }
+   ],
+   "merknader": "**Antibiotikabehandling**\n\nBehandlingsvarighet vil være avhengig av valgt legemiddel. Anbefalt behandlingsvarighet er oppgitt under de ulike behandlingsregimene.\n\n**Annen behandling**\n\n-   Rikelig væsketilførsel\n-   høyt hodeleie\n-   ved kraftige hosteanfall tas barnet opp av sengen for at ikke slimpropper skal tette bronkieavsnitt."
+  },
+  {
+   "id": "a99cf032-ef23-4c76-8e54-e0955bb981cd",
+   "navn": "Akutt bronkitt",
+   "kapittel": "Infeksjoner i nedre luftveier",
+   "sokeord": [
+    "bronkitt",
+    "hoste",
+    "luftveisinfeksjon",
+    "forkjølelse"
+   ],
+   "fagomrader": [
+    "luftveier"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/infeksjoner-i-nedre-luftveier/akutt-bronkitt",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "### **Indikasjon for antibiotikabehandling**\n\nPasienter med akutt bronkitt bør som regel ikke tilbys antibiotika.",
+   "anbefalinger": [],
+   "merknader": "**Annen behandling**\n\n-   Beta2-agonister har symptomatisk effekt ved bronkial obstruksjon.\n-   Ved langvarig hoste vurder utredning med spirometri da det kan dreie seg om bronkial obstruksjon (astma).\n-   Unngå aktiv og passiv røyking som kan forverre sykdommen."
+  },
+  {
+   "id": "a85ce4fe-0a16-4c86-a8ba-c256c048cda4",
+   "navn": "Kols-forverring",
+   "kapittel": "Infeksjoner i nedre luftveier",
+   "sokeord": [
+    "kols",
+    "kolsforverring",
+    "eksaserbasjon",
+    "purulens",
+    "obstruktiv lungesykdom"
+   ],
+   "fagomrader": [
+    "luftveier"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/infeksjoner-i-nedre-luftveier/forverring-eksaserbasjon-av-kronisk-obstruktiv-lungesykdom-kolskronisk-bronkitt-icpc-koder-r95r79",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "### **Indikasjon for antibiotikabehandling**\n\nKols-forverring uten purulens og uten CRP-stigning til > 40 mg/L bør følges opp uten antibiotika.\n\nPasienter med kols-forverring med purulens og/eller CRP-stigning bør tilbys antibiotika.\n\nFørstehåndspreparat er amoksicillin, men ved hyppige behandlingstrengende kols-forverringer bør det alterneres mellom amoksicillin, doksysyklin og klaritromycin.",
+   "varighet": "5 døgn",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-8150d70a-ad42-4c68-a268-3b59188f5f0a",
+     "etikett": "Standardbehandling",
+     "regimer": [
+      "Amoksicillin oral 750 mg x 3"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-2de67854-7aa6-4e01-9d52-db64d40e623e",
+     "etikett": "Ved penicillinallergi",
+     "regimer": [
+      "Doksysyklin oral 200 mg x 1 ladningsdose etterfulgt av Doksysyklin oral 100 mg x 1 - fra dag 2"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-333462e3-7969-4054-bbb3-274211e0a8ea",
+     "etikett": "Alternativ med klaritromycin",
+     "regimer": [
+      "Klaritromycin oral 250 mg x 2 - eller depottablett 500 mg x 1"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-2d95c525-d402-4f6d-941a-2e9d8336efbf",
+     "etikett": "Ved påvist Haemophilues influenzae med følsomhet for trimetoprim/sulfametoksazol",
+     "regimer": [
+      "Sulfametoksazol og trimetoprim oral 800/160 mg x 2"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-479b4bf6-4ee9-49cb-b92d-99e09c63dc26",
+     "etikett": "Ved høy risiko for behandlingssvikt og/eller ved påvist betalaktamaseproduserende Haemophilus influenzae",
+     "regimer": [
+      "Amoksicillin og klavulansyre oral 500/125 mg x 4"
+     ],
+     "gruppe": "alternativ"
+    }
+   ],
+   "merknader": "**Annen behandling**\n\n-   Tilbys alle, uavhengig av om det gis antibiotika:\n    -   Bronkodilatasjon:\n        -   kortidsvirkende beta2-agonist og/eller ipratropiumbromid i repeterte doser, spray på inhalasjonskammer foretrekkes.\n    -   Steroidbehandling:\n        -   perorale kortikosteroider (30 mg prednisolon/døgn i 5 dager) ved betydelig obstruktivitet og utilstrekkelig effekt av inhalasjonsbehandling (link kolsretningslinjen).\n    -   [Motivere til røykeslutt](https://www.helsedirektoratet.no/retningslinjer/roykeavvenning), og administrasjon av influensa- og pneumokokkvaksine, se [Influensavaksine - håndbok for helsepersonell](https://www.fhi.no/nettpub/vaksinasjonsveilederen-for-helsepersonell/vaksiner-mot-de-enkelte-sykdommene/influensavaksinasjon---veileder-for/) (fhi.no), [Personer i risikogruppene og helsepersonell anbefales den årlige influensavaksinen](https://www.fhi.no/sv/influensa/influensavaksine/influensavaksine-risikogrupper/) (fhi.no), [Pneumokokkvaksine til risikogrupper](https://www.fhi.no/sv/vaksine/voksenvaksinasjon/pneumokokkvaksinasjon-for-voksne/) (fhi.no).\n-   Virus er hyppige årsaker til kols-forverring, vurder antiviral behandling ved påvist influensa- eller koronavirusinfeksjon."
+  },
+  {
+   "id": "88c623dd-f6aa-4c02-ac05-8022fcae70c0",
+   "navn": "Pneumoni",
+   "kapittel": "Infeksjoner i nedre luftveier",
+   "sokeord": [
+    "pneumoni",
+    "lungebetennelse",
+    "crp",
+    "røntgen thorax",
+    "lungeinfeksjon"
+   ],
+   "fagomrader": [
+    "luftveier"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/infeksjoner-i-nedre-luftveier/pneumoni",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "### **Indikasjon for antibiotikabehandling**\n\nPasienter med klinisk mistanke om pneumoni bør behandles med antibiotika dersom det ikke er holdepunkter for viral etiologi.\n\nDiagnosen stilles på grunnlag av sykehistorie, klinisk undersøkelse, CRP-test og eventuelt røntgen thorax.\n\nInnleggelse bør vurderes ved alvorlig sykdom. Barn bør innlegges på sykehus ved alder < 6 måneder, eller ved dårlig allmenntilstand.",
+   "varighet": "5 døgn",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-e6a17cec-a5b4-4224-8254-93031347fb29",
+     "etikett": "Voksne",
+     "regimer": [
+      "Fenoksymetylpenicillin oral 1 g x 4"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-709e3b22-fdb3-499d-b534-d38af80a6889",
+     "etikett": "Barn",
+     "regimer": [
+      "Fenoksymetylpenicillin oral 15 mg/kg x 4"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-2de67854-7aa6-4e01-9d52-db64d40e623e",
+     "etikett": "Ved penicillinallergi: voksne",
+     "regimer": [
+      "Doksysyklin oral 200 mg x 1 ladningsdose etterfulgt av Doksysyklin oral 100 mg x 1 - fra dag 2"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-3fcc2e95-6a9c-4189-b138-8a1859419933",
+     "etikett": "Ved penicillinallergi: barn 25-35 kg",
+     "regimer": [
+      "Erytromycin oral 250 mg x 2 - tabletter (erytromycinstearat)"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-bb9ab872-bf9d-4c55-a5fc-4c4a51874a37",
+     "etikett": "Ved penicillinallergi: barn < 25 kg",
+     "regimer": [
+      "Erytromycin oral 20 mg/kg x 2 - mikstur (etylsuksinat)"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-67de0e14-b9d6-438d-9395-64d4542e3abc",
+     "etikett": "Ved penicillinallergi og kontraindikasjon mot tetrasyklin: voksne (inkludert gravide)",
+     "regimer": [
+      "Erytromycin oral 500 mg x 2 - tabletter (erytromycinstearat)"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-8150d70a-ad42-4c68-a268-3b59188f5f0a",
+     "etikett": "Ved kronisk obstruktiv lungesykdom (kols) eller svekket immunforsvar",
+     "regimer": [
+      "Amoksicillin oral 750 mg x 3"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-2d95c525-d402-4f6d-941a-2e9d8336efbf",
+     "etikett": "Ved funn av betalaktamaseproduserende Haemophilus influenzae følsom for trimetoprim/sulfametoksazol",
+     "regimer": [
+      "Sulfametoksazol og trimetoprim oral 800/160 mg x 2"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-479b4bf6-4ee9-49cb-b92d-99e09c63dc26",
+     "etikett": "Ved funn av betalaktamaseproduserende Haemophilus influenzae ikke følsom for trimetoprim/sulfametoksazol",
+     "regimer": [
+      "Amoksicillin og klavulansyre oral 500/125 mg x 4"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-2de67854-7aa6-4e01-9d52-db64d40e623e~",
+     "etikett": "Ved funn av betalaktamaseproduserende Haemophilus influenzae ikke følsom for trimetoprim/sulfametoksazol og penicillinallergi",
+     "regimer": [
+      "Doksysyklin oral 200 mg x 1 ladningsdose etterfulgt av Doksysyklin oral 100 mg x 1 - fra dag 2"
+     ],
+     "gruppe": "alternativ"
+    }
+   ],
+   "merknader": "**Annen behandling**\n\n-   Hostedempende medisin øker risiko for sekretstagnasjon, men kan forsøkes ved plagsom nattlig tørrhoste.\n-   Pasienten bør drikke rikelig.\n-   Ved holdepunkter for viral etiologi som influensa og koronavirus, vurder antiviral terapi hos pasienter med risiko for alvorlig forløp."
+  },
+  {
+   "id": "9f49f561-b782-4d0a-9e32-794e0c11e8b8",
+   "navn": "Atypisk pneumoni",
+   "kapittel": "Infeksjoner i nedre luftveier",
+   "sokeord": [
+    "atypisk pneumoni",
+    "mykoplasma",
+    "mycoplasma pneumoniae",
+    "chlamydia pneumoniae",
+    "nasofarynksprøve"
+   ],
+   "fagomrader": [
+    "luftveier"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/infeksjoner-i-nedre-luftveier/atypisk-pneumoni",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "Pasienter med påvist Mycoplasma pneumoniae eller Chlamydia pneumoniae i nasofarynksprøve, men uten mistenkt pneumoni, bør ikke tilbys antibiotikabehandling.\n\nPasienter med pneumoni forårsaket av Mycoplasma pneumoniae eller Chlamydia pneumoniae bør behandles med antibiotika. Ved klinisk sikker pneumoni og sterk mistanke om atypisk agens, startes behandling før prøvesvar foreligger.\n\nFor legionellapneumoni, se [Nasjonal faglig retningslinje for bruk antibiotika i sykehus](https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten).",
+   "varighet": "7 døgn",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-2de67854-7aa6-4e01-9d52-db64d40e623e",
+     "etikett": "Voksne og barn > 35 kg",
+     "regimer": [
+      "Doksysyklin oral 200 mg x 1 ladningsdose etterfulgt av Doksysyklin oral 100 mg x 1 - fra dag 2"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-3fcc2e95-6a9c-4189-b138-8a1859419933",
+     "etikett": "Barn 25-35 kg",
+     "regimer": [
+      "Erytromycin oral 250 mg x 2 - tabletter (erytromycinstearat)"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-bb9ab872-bf9d-4c55-a5fc-4c4a51874a37",
+     "etikett": "Barn < 25 kg",
+     "regimer": [
+      "Erytromycin oral 20 mg/kg x 2 - mikstur (etylsuksinat)"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-67de0e14-b9d6-438d-9395-64d4542e3abc",
+     "etikett": "Ved kontraindikasjoner mot tetrasykliner hos voksne",
+     "regimer": [
+      "Erytromycin oral 500 mg x 2 - tabletter (erytromycinstearat)"
+     ],
+     "gruppe": "alternativ"
+    }
+   ]
+  },
+  {
+   "id": "4f69ac4f-49fd-43dd-a10f-7168191ffd74",
+   "navn": "Pneumoni hos sykehjemspasienter",
+   "kapittel": "Infeksjoner i nedre luftveier",
+   "sokeord": [
+    "sykehjem",
+    "lungebetennelse sykehjem"
+   ],
+   "fagomrader": [
+    "luftveier",
+    "geriatri"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/infeksjoner-i-nedre-luftveier/pneumoni-hos-sykehjemspasienter",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "Ved pneumoni hos pasienter i sykehjem bør antibiotikabehandling vurderes.\n\nIgangsetting av antibiotikabehandling hos særlig svekkede pasienter krever gode etiske vurderinger. Se «Praktisk» for veiledning.\n\nAnbefalingen gjelder situasjoner der peroral behandling er mulig. Ved behov for parenteral behandling, se [doseringsforslag fra Antibiotikasenteret for primærmedisin (antibiotikaiallmennpraksis.no)](https://antibiotikaiallmennpraksis.no/index.php?action=topic&item=EZMjAYmK).",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-e6a17cec-a5b4-4224-8254-93031347fb29",
+     "etikett": "Standardbehandling",
+     "regimer": [
+      "Fenoksymetylpenicillin oral 1 g x 4"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-8150d70a-ad42-4c68-a268-3b59188f5f0a",
+     "etikett": "Førstevalg til pasienter med kronisk obstruktiv lungesykdom (kols)",
+     "regimer": [
+      "Amoksicillin oral 750 mg x 3"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-2de67854-7aa6-4e01-9d52-db64d40e623e",
+     "etikett": "Ved svelgevansker eller penicillinallergi: alternativ med doksysyklin",
+     "regimer": [
+      "Doksysyklin oral 200 mg x 1 ladningsdose etterfulgt av Doksysyklin oral 100 mg x 1 - fra dag 2"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-2920631b-ea02-4e6d-8c12-08728a29514d",
+     "etikett": "Ved penicillinallergi: alternativ med klaritromycin",
+     "regimer": [
+      "Klaritromycin oral 250 mg x 2"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-2d95c525-d402-4f6d-941a-2e9d8336efbf",
+     "etikett": "Ved pneumoni kort etter sykehusopphold eller påvist resistens mot øvrige alternativer",
+     "regimer": [
+      "Sulfametoksazol og trimetoprim oral 800/160 mg x 2"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-479b4bf6-4ee9-49cb-b92d-99e09c63dc26",
+     "etikett": "Ved pneumoni kort etter sykehusopphold eller påvist resistens mot øvrige alternativer: alternativ ved mer alvorlig sykdom",
+     "regimer": [
+      "Amoksicillin og klavulansyre oral 500/125 mg x 4"
+     ],
+     "gruppe": "alternativ"
+    }
+   ],
+   "merknader": "**Antibiotikabehandling**\n\nAnbefalt behandlingsvarighet ved ukomplisert forløp: 5 døgn."
+  },
+  {
+   "id": "8b38348b-dc36-4e99-bcea-5aee2854751f",
+   "navn": "Akutt gastroenteritt",
+   "kapittel": "Mage-tarm-infeksjoner",
+   "sokeord": [],
+   "fagomrader": [
+    "mage_tarm"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/mage-tarm-infeksjoner/akutt-gastroenteritt",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "Pasienter med akutt gastroenteritt bør som regel ikke behandles med antibiotika i primærhelsetjenesten, uavhengig av etiologi. Dette gjelder også turistdiare.\n\nVed følgende agens bør antibiotika vurderes:\n\n-   Giardiasis – [se egen anbefaling](https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/mage-tarm-infeksjoner/diar-forarsaket-av-antibiotika-behandling-icpc-kode-d11).\n-   Amøbiasis – konferer spesialist i infeksjonssykdommer, antibiotikabehandling bør skje i samråd med spesialist.\n-   Shigellose – konferer spesialist i infeksjonssykdommer, antibiotikabehandling bør skje i samråd med spesialist.\n\nVed dårlig allmenntilstand eller alvorlig sykdomsforløp, uansett agens, bør pasienten legges inn i sykehus.",
+   "anbefalinger": [],
+   "merknader": "**Annen behandling**\n\n-   Væsketilførsel\n    -   det er viktig å opprettholde god væsketilførsel og fortsatt matinntak\n    -   peroral væsketilførsel er like effektivt som intravenøs væsketilførsel, gjerne i form av glukose og elektrolytt-mikstur.\n-   Probiotika\n    -   reduserer varighet av diaré, og kan være et nyttig supplement til rehydrering, men det mangler retningslinjer for dosering eller valg av type probiotikum.\n-   Hos både voksne og barn\n    -   unngå antiemetika som symptomatisk behandling av akutt gastroenteritt i primærhelsetjenesten\n    -   unngå motilitetshemmende legemidler, som for eksempel loperamid, selv om de kan forkorte sykdomsforløpet, da de kan forlenge varigheten av sykdommen ved at mikroben blir værende lenger i tarmen. Dette er derfor spesielt uheldig ved alvorlige sykdomsforløp, feber eller blodig diare.\n-   Gi smittevernråd, inkludert god håndhygiene, for å begrense smittespredning."
+  },
+  {
+   "id": "7cccc26d-8d15-41c4-a866-2cd843f578fb",
+   "navn": "Giardiasis",
+   "kapittel": "Mage-tarm-infeksjoner",
+   "sokeord": [],
+   "fagomrader": [
+    "mage_tarm"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/mage-tarm-infeksjoner/diar-forarsaket-av-antibiotika-behandling-icpc-kode-d11",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "Pasienter med påvist akutt giardiasis bør behandles med antibiotika i primærhelsetjenesten.\n\nVed residiv eller terapisvikt: Konferer spesialist i infeksjonssykdommer.",
+   "varighet": "5 døgn",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-5d6a8813-8908-4abd-8fb7-34d2686793bc",
+     "etikett": "Voksne",
+     "regimer": [
+      "Metronidazol oral 500 mg x 3"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-f9cd2328-02ef-4694-b902-90b92d2d7b18",
+     "etikett": "Barn",
+     "regimer": [
+      "Metronidazol oral 6,7 mg/kg x 3"
+     ],
+     "gruppe": "standard"
+    }
+   ],
+   "merknader": "**Annen behandling**\n\n#### Væsketilførsel\n\n-   Viktig å opprettholde god væsketilførsel og fortsatt matinntak.\n-   Peroral væsketilførsel er like effektivt som intravenøs væsketilførsel, gjerne i form av glukose og elektrolytt-mikstur."
+  },
+  {
+   "id": "60549f32-1d1c-4d0f-9b08-be452541b7c4",
+   "navn": "Antibiotikaassosiert diaré",
+   "kapittel": "Mage-tarm-infeksjoner",
+   "sokeord": [],
+   "fagomrader": [
+    "mage_tarm"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/mage-tarm-infeksjoner/antibiotikaassosiert-diare",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "Ved mistanke om antibiotikaassosiert diaré bør utløsende antibiotikum seponeres. Sykdommen er da ofte selvbegrensende.\n\nPasienter med vedvarende moderat til alvorlig diaré og påvist Clostridioides difficile med mer enn 10 tømninger i døgnet anbefales antibiotikabehandling.\n\nPasienter med alvorlig sykdomsforløp og/eller mistenkt pseudomembranøs colitt innlegges.",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-5d6a8813-8908-4abd-8fb7-34d2686793bc",
+     "etikett": "Standardbehandling",
+     "regimer": [
+      "Metronidazol oral 500 mg x 3"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-aefa296e-3de1-40d7-a965-80bb1ac29313",
+     "etikett": "Ved første residiv",
+     "regimer": [
+      "Vankomycin oral 125 mg x 4"
+     ],
+     "gruppe": "alternativ"
+    }
+   ],
+   "merknader": "**Antibiotikabehandling**\n\nAntibiotikabehandlingen gjelder kun voksne.\n\nAnbefalt behandlingsvarighet: 10 døgn.\n\n**Annen behandling**\n\n-   Seponer utløsende antibiotikum.\n-   Fecesinstillasjon i regi av spesialisthelsetjenesten kan være aktuelt ved residiv."
+  },
+  {
+   "id": "c272e1ab-8c94-4bfb-8aed-388218f0700f",
+   "navn": "Dyspepsi og Helicobacter pylori-infeksjon",
+   "kapittel": "Mage-tarm-infeksjoner",
+   "sokeord": [
+    "helicobacter",
+    "magesår",
+    "h pylori"
+   ],
+   "fagomrader": [
+    "mage_tarm"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/mage-tarm-infeksjoner/dyspepsi-og-helicobacter-pylori-infeksjon",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "Pasienter med dyspepsi og positiv Helicobacter pylori-test bør behandles med antibiotika kun dersom det samtidig foreligger verifisert ulcus duodeni/ventriculi eller økt risiko for ulcus-/ventrikkelkreft.\n\nUtredning, behandling og oppfølging av pasienter med behov for behandling av H. pyloriinfeksjon bør foregå i samråd med spesialist i gastroenterologi.\n\nFor antibiotikabehandling og eradikeringsregimer, se [Nasjonale retningslinjer for antibiotikabruk i spesialisthelsetjenesten](https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten).",
+   "anbefalinger": [],
+   "merknader": "**Annen behandling**\n\n-   Syresekresjonshemmer\n    -   kan forsøkes i påvente av gastroskopi for å lindre smerter\n    -   protonpumpehemmere seponeres senest 14 dager før gastroskopi for å unngå falske negative Helicobacter pylori-tester.\n-   Gi råd om å unngå faktorer som kan forverre symptomene: tobakk, alkohol og NSAID."
+  },
+  {
+   "id": "98f0a3cc-0f7e-471c-a230-b3193133957c",
+   "navn": "Divertikulitt",
+   "kapittel": "Mage-tarm-infeksjoner",
+   "sokeord": [],
+   "fagomrader": [
+    "mage_tarm"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/mage-tarm-infeksjoner/divertikulitt",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "Pasienter med akutt ukomplisert divertikulitt bør ikke tilbys antibiotika i primærhelsetjenesten.\n\nPasienter med redusert allmenntilstand eller komplisert divertikulitt innlegges sykehus, konferer eventuelt med spesialist.",
+   "anbefalinger": [],
+   "merknader": "**Annen behandling**\n\n-   Flytende eller lett føde.\n-   Adekvat væskeinntak.\n-   Smertelindrende, f.eks. paracetamol.\n    -   Sterke smertestillende midler unngås da de kan både senke motiliteten og maskere perforasjon."
+  },
+  {
+   "id": "b9e4511d-7e90-4127-a6b8-7a9f135f296a",
+   "navn": "Akutte odontogene infeksjoner",
+   "kapittel": "Tannhelse",
+   "sokeord": [],
+   "fagomrader": [
+    "tannhelse"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/tannhelse/akutte-odontogene-infeksjoner",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "Rask behandling bør etterstrebes. Ved akutte odontogene infeksjoner **uten** systemiske symptomer er antibiotika **ikke** indisert. Behandlingen for dette er drenasje av puss, se «Annen behandling».\n\nVed akutte odontogene infeksjoner **med** systemiske symptomer bør det gis antibiotika i tillegg til drenasje. Så snart som mulig saneres infeksjonsfoci.\n\nVed tegn på alvorlig infeksjon bør pasienten umiddelbart henvises til oral kirurg/kjevekirurg for behandling på sykehus.",
+   "varighet": "5 døgn",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-e6a17cec-a5b4-4224-8254-93031347fb29",
+     "etikett": "Voksne",
+     "regimer": [
+      "Fenoksymetylpenicillin oral 1 g x 4"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-709e3b22-fdb3-499d-b534-d38af80a6889",
+     "etikett": "Barn",
+     "regimer": [
+      "Fenoksymetylpenicillin oral 15 mg/kg x 4"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-e6a17cec-a5b4-4224-8254-93031347fb29~",
+     "etikett": "Ved terapisvikt eller risiko for spredning: voksne",
+     "regimer": [
+      "Fenoksymetylpenicillin oral 1 g x 4",
+      "Metronidazol oral 400 mg x 3"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-709e3b22-fdb3-499d-b534-d38af80a6889~",
+     "etikett": "Ved terapisvikt eller risiko for spredning: barn",
+     "regimer": [
+      "Fenoksymetylpenicillin oral 15 mg/kg x 4",
+      "Metronidazol oral 7,5 mg/kg x 3"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-cfa4af93-8145-444d-9ba3-aa2d722ad09d",
+     "etikett": "Ved penicillinallergi: voksne",
+     "regimer": [
+      "Klindamycin oral 150 mg x 3 - kan økes til 300 mg x 3 ved terapisvikt"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-85d700c1-be92-4568-b133-186b113fba48",
+     "etikett": "Ved penicillinallergi: barn",
+     "regimer": [
+      "Klindamycin oral 5 mg/kg x 3"
+     ],
+     "gruppe": "alternativ"
+    }
+   ],
+   "merknader": "**Annen behandling**\n\n-   Lokal infeksjon behandles kun lokalt.\n-   I all infeksjonsbehandling inngår sanering av infeksjonsfoci ved behandling av forårsakende tann for å unngå tilbakevendende infeksjoner.\n-   Når puss foreligger foretas incisjon og tømming av puss. I enkelte tilfeller kan det være ønskelig å legge inn dren i 1-2 dager.\n-   Smertestillende legemidler er et viktig komponent i behandlingen.\n    -   Hos barn og unge; se kapittel 3 i [Nasjonal faglig retningslinje for tannhelsetjenester barn og unge 0-20 år, del 2](https://www.helsedirektoratet.no/retningslinjer/tannhelsetjenester-til-barn-og-unge-0-20-ar-del-2-horingsutkast)."
+  },
+  {
+   "id": "19220088-2ffd-443c-92ee-7b8ac286ed4a",
+   "navn": "Marginal periodontitt og periimplantitt",
+   "kapittel": "Tannhelse",
+   "sokeord": [],
+   "fagomrader": [
+    "tannhelse"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/tannhelse/marginal-periodontitt-og-periimplantitt",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "Antibiotika er som hovedregel ikke indisert ved periodontale infeksjoner og periimplantitt.\n\nAntibiotikabehandling ved marginal periodontitt er kun aktuelt ved\n\n-   Manglende effekt av systematisk mekanisk rengjøring (depurasjon) under tannkjøttet.\n-   Aggressive former.\n-   Underliggende systemisk sykdom.\n\nAntibiotika brukes da som tilleggsbehandling til mekanisk rengjøring, og baseres på mikrobiologisk diagnostikk som omfatter identifikasjon og resistensbestemmelse, se «Supplerende undersøkelser» under Praktisk.\n\nVed abscesser følges [anbefaling for Akutte odontogene infeksjoner](https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/tannhelse/akutte-odontogene-infeksjoner).",
+   "varighet": "7 døgn",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-17eb9647-c996-4409-8bf2-432cf8b70a17",
+     "etikett": "Standardbehandling",
+     "regimer": [
+      "Amoksicillin oral 250 mg x 3",
+      "Metronidazol oral 400 mg x 3"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-4cfe11d0-2558-4ab1-8da1-ad2a4746e20a",
+     "etikett": "Ved penicillinallergi",
+     "regimer": [
+      "Klindamycin oral 150 mg x 3"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-dbc79a2c-882b-4f0e-9aed-8fad1919bd80",
+     "etikett": "Ved penicillinallergi og terapisvikt",
+     "regimer": [
+      "Klindamycin oral 300 mg x 3"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-003b6513-70c4-4780-af92-dd9acb780481",
+     "etikett": "Ved infeksjon med enterobakterier med resistens mot amoksicillin",
+     "regimer": [
+      "Ciprofloksacin oral 500 mg x 2",
+      "Metronidazol oral 400 mg x 3"
+     ],
+     "gruppe": "alternativ"
+    }
+   ]
+  },
+  {
+   "id": "9ff19f4b-b1c2-4888-b8a6-54cbbf1543bf",
+   "navn": "Antibiotikaprofylakse i tannhelsetjenesten",
+   "kapittel": "Tannhelse",
+   "sokeord": [],
+   "fagomrader": [
+    "tannhelse"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/tannhelse/antibiotikaprofylakse-i-tannhelsetjenesten",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "Antibiotikaprofylakse ordineres for å forebygge infeksjon.\n\nAntibiotikaprofylakse før inngrep i munnhulen kan være aktuelt\n\n-   Hos pasienter med stor risiko for postoperativ infeksjon, se \"Risikopasient\" under Praktisk.\n-   Ved inngrep som medfører stor risiko for postoperativ infeksjon, se \"Risikoinngrep\" under Praktisk.\n-   Ved inngrep som involverer kjevebeinet hos pasienter med risiko for osteonekrose, se under Praktisk.\n-   Ved replantering av eksartikulert tann",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-7027b3ae-8ed4-4722-b85b-451a77fa9067",
+     "etikett": "Voksne og barn > 40 kg",
+     "regimer": [
+      "Amoksicillin oral 2 g x 1"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-cecc7548-3ee2-4bae-8a34-309dd059ee18",
+     "etikett": "Barn < 40 kg",
+     "regimer": [
+      "Amoksicillin oral 50 mg/kg x 1"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-f64d5850-8dc7-4f09-9d66-c24a6267c34e",
+     "etikett": "Ved penicillinallergi: voksne",
+     "regimer": [
+      "Klindamycin oral 600 mg x 1"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-cefceeb7-61a7-42d2-930b-30186430d6fa",
+     "etikett": "Ved penicillinallergi: barn",
+     "regimer": [
+      "Klindamycin oral 20 mg/kg x 1"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-44639072-750d-4dac-aec9-d043e0f0edd1",
+     "etikett": "Ved intravenøs administrasjon: voksne",
+     "regimer": [
+      "Benzylpenicillin iv 1.2 g x 1"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-46ef5bed-4761-4481-bea0-ac5d37a4bbdf",
+     "etikett": "Ved intravenøs administrasjon og penicillinallergi: voksne",
+     "regimer": [
+      "Klindamycin iv 600 mg x 1"
+     ],
+     "gruppe": "alternativ"
+    }
+   ],
+   "merknader": "**Antibiotikaprofylakse**\n\nAntibiotikaprofylakse gis som engangsdose 1 time før inngrep ved peroral administrasjon, eller 30 minutter før inngrep ved intravenøs administrasjon. Ved lang operasjonstid kan profylaksen forlenges, men ikke utover operasjonsdagen."
+  },
+  {
+   "id": "e9f00979-b855-4652-b4a0-3e5ba0f653aa",
+   "navn": "Akutt cystitt hos ikke-gravid kvinne uten kompliserende forhold",
+   "kapittel": "Urinveisinfeksjoner",
+   "sokeord": [
+    "cystitt",
+    "blærekatarr",
+    "urinveisinfeksjon",
+    "uvi",
+    "svie ved vannlating",
+    "dysuri"
+   ],
+   "fagomrader": [
+    "urinveier"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/urinveisinfeksjoner/akutt-cystitt-hos-ikke-gravid-kvinne-uten-kompliserende-forhold",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "Pasienter med milde til moderate symptomer og som aksepterer å avvente antibiotikabehandling kan få råd om egenbehandling, se Annen behandling. [Vent-og-se-resept kan tilbys (antibiotikaiallmennpraksis.no)](http://www.antibiotikaiallmennpraksis.no/index.php?action=showtopic&topic=DPDFvEqa).\n\nAndre pasienter kan tilbys antibiotikabehandling straks.",
+   "varighet": "3 døgn",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-9b007bdc-0a57-4991-8891-a42c576d0975",
+     "etikett": "Alternativ med nitrofurantoin",
+     "regimer": [
+      "Nitrofurantoin oral 50 mg x 3"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-18718c4f-8542-4e55-8aa0-e1f1e9b15683",
+     "etikett": "Alternativ med pivmecillinam",
+     "regimer": [
+      "Pivmecillinam oral 200 mg x 3"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-2f8a76ac-1cba-41f1-833f-40c874a86a59",
+     "etikett": "Alternativ med trimetoprim",
+     "regimer": [
+      "Trimetoprim oral 160 mg x 2"
+     ],
+     "gruppe": "standard"
+    }
+   ],
+   "merknader": "**Annen behandling**\n\nEgenbehandling\n\n-   Rikelig væskeinntak, late vannet ved behov, tilstrebe full tømming av urinblæren ved vannlating.\n-   Smertelindrende behandling med paracet eller ibuprofen.\n\nForebyggende behandling\n\n-   Lokal østrogenbehandling kan forebygge UVI hos postmenopausale kvinner.\n-   Metenaminhippurat:\n    -   kan forsøkes ved hyppig residiverende infeksjoner hvor man ikke kommer til mål med øvrige forebyggende tiltak\n    -   ikke virksomt ved permanent kateter\n    -   vurder indikasjon strengt før behandlingsforsøk;\n        -   seponer dersom ikke dokumentert færre infeksjoner etter oppstart.\n-   Antibiotikaprofylakse:\n    -   kun aktuelt i sjeldne tilfeller ved manglende effekt av annen forebyggende behandling\n    -   fordeler ved antibiotikaprofylakse må vurderes nøye i forhold til risiko for bivirkninger og seleksjon av resistente mikrober\n    -   velg andre midler enn de som brukes til behandling."
+  },
+  {
+   "id": "661f17e4-aa34-40b1-84db-3f9668508700",
+   "navn": "Akutt cystitt hos menn, gravide og kvinner med kompliserende forhold",
+   "kapittel": "Urinveisinfeksjoner",
+   "sokeord": [
+    "cystitt gravid",
+    "cystitt mann",
+    "urinveisinfeksjon gravid",
+    "komplisert uvi"
+   ],
+   "fagomrader": [
+    "urinveier",
+    "svangerskap"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/urinveisinfeksjoner/akutt-cystitt-hos-menn-gravide-og-kvinner-med-kompliserende-forhold",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "Ved akutt cystitt hos menn, gravide og kvinner med kompliserende forhold som gir økt risiko for alvorlig forløp av urinveisinfeksjon (se «Praktisk») bør pasienten tilbys antibiotikabehandling.\n\nVed feber og mistanke om prostatitt hos menn: behandles som prostatitt, [se egen anbefaling](https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/urinveisinfeksjoner/akutt-prostatitt).\n\nUrinprøve til dyrkning og resistensbestemmelse tas før oppstart av antibiotisk behandling. Behandlingen justeres mot resistensfunn.",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-9b007bdc-0a57-4991-8891-a42c576d0975",
+     "etikett": "Alternativ med nitrofurantoin",
+     "regimer": [
+      "Nitrofurantoin oral 50 mg x 3"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-18718c4f-8542-4e55-8aa0-e1f1e9b15683",
+     "etikett": "Alternativ med pivmecillinam",
+     "regimer": [
+      "Pivmecillinam oral 200 mg x 3"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-2f8a76ac-1cba-41f1-833f-40c874a86a59",
+     "etikett": "Alternativ med trimetoprim",
+     "regimer": [
+      "Trimetoprim oral 160 mg x 2"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-17eb9647-c996-4409-8bf2-432cf8b70a17",
+     "etikett": "Ved resistens mot førstevalg og følsomhet for ampicillin",
+     "regimer": [
+      "Amoksicillin oral 250 mg x 3"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-d653f7ed-94ad-4fa9-968c-e796654890db",
+     "etikett": "Ved resistens mot førstevalg og ampicillin, og følsomhet for ciprofloksacin",
+     "regimer": [
+      "Ciprofloksacin oral 250 mg x 2"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-8b8421bc-82b3-4f85-8dc4-7814bc4f2dfb",
+     "etikett": "Ved funn av ESBL-produserende bakterier følsomme for mecillinam",
+     "regimer": [
+      "Pivmecillinam oral 400 mg x 3"
+     ],
+     "gruppe": "alternativ"
+    }
+   ],
+   "merknader": "**Antibiotikabehandling**\n\nAnbefalt behandlingsvarighet: 5 døgn.\nHos gravide gjelder egne forsiktighetsregler, se Spesielle hensyn.\n\n**Annen behandling**\n\nEgenbehandling\n\n-   Rikelig væskeinntak, late vannet ved behov, tilstrebe full tømming av urinblæren ved vannlating.\n-   Smertelindrende behandling med paracet eller ibuprofen.\n\nForebyggende tiltak\n\n-   Lokal østrogenbehandling kan ha en forebyggende effekt hos eldre kvinner.\n-   Metenaminhippurat\n    -   kan forsøkes ved hyppig residiverende infeksjoner der øvrige forebyggende tiltak ikke har effekt\n    -   kan ha en viss effekt i forebyggingen av residiverende cystitt hos pasienter uten nyre/urinveisanomalier eller nevropatisk blære\n    -   ikke virksomt ved permanent kateter\n    -   vurder indikasjon før behandlingsforsøk; seponer dersom ikke dokumentert færre infeksjoner etter oppstart.\n-   Antibiotikaprofylakse\n    -   kun aktuelt i sjeldne tilfeller ved manglende effekt av annen forebyggende behandling\n    -   fordeler ved antibiotikaprofylakse må vurderes nøye i forhold til risiko for bivirkninger og seleksjon av resistente mikrober\n    -   velg andre midler enn de som brukes til behandling."
+  },
+  {
+   "id": "ffd36d18-9f48-46e3-bcf7-dad937f42956",
+   "navn": "Akutt cystitt hos barn",
+   "kapittel": "Urinveisinfeksjoner",
+   "sokeord": [
+    "uvi barn",
+    "urinveisinfeksjon barn"
+   ],
+   "fagomrader": [
+    "urinveier",
+    "barn"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/urinveisinfeksjoner/asymptomatisk-bakteriuri-icpc-koder-u71-cystitturinveisinfeksjon-ika-w84-svangerskap-hoyrisiko",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "Akutt cystitt hos barn bør behandles med antibiotika.\n\nUrinprøve til dyrkning og resistensbestemmelse tas før oppstart av antibiotika. Behandlingen justeres mot resistensfunn.\n\nBarn med mistenkt UVI og lav alder (< 3-6 måneder) og/eller nedsatt allmenntilstand, innlegges sykehus.",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-c6c09bc8-31cf-4c67-9a63-d52e92fbbddc",
+     "etikett": "Alternativ med nitrofurantoin",
+     "regimer": [
+      "Nitrofurantoin oral 1,5 mg/kg x 2"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-4bf7dff7-4375-4ff7-8146-f15f37819b6c",
+     "etikett": "Alternativ med pivmecillinam",
+     "regimer": [
+      "Pivmecillinam oral 7,5 mg/kg x 3"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-dda19c3e-2906-4ab4-96a9-98dfbf1efbbd",
+     "etikett": "Ved påvist resistens mot førstevalgene og følsomhet for amoksicillin/klavulansyre",
+     "regimer": [
+      "Amoksicillin og klavulansyre oral 10-15 mg/kg x 3"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-8624dbef-b4b9-4dea-8222-85409f04a567",
+     "etikett": "Ved påvist følsomhet for trimetoprim",
+     "regimer": [
+      "Trimetoprim oral 3 mg/kg x 2"
+     ],
+     "gruppe": "alternativ"
+    }
+   ],
+   "merknader": "**Antibiotikabehandling**\n\nBehandlingsvarighet angitt her gjelder infeksjon med ukomplisert forløp. Lengre behandlingstid kan være nødvendig ved alvorlig eller komplisert forløp.\n\nAnbefalt behandlingsvarighet: 5 døgn.\n\n**Annen behandling**\n\nEgenbehandling\n\n-   Rikelig væskeinntak, unngå å holde seg og tilstrebe full blæretømning ved vannlatning.\n\nForebygging med legemidler\n\n-   Kan være aktuelt hos barn med residiverende cystitter, misdannelser eller inkontinens, men dette vurderes i spesialisthelsetjenesten."
+  },
+  {
+   "id": "79109078-c5c4-4b52-9ac1-f41e9235886e",
+   "navn": "Akutt cystitt hos sykehjemspasienter",
+   "kapittel": "Urinveisinfeksjoner",
+   "sokeord": [
+    "sykehjem",
+    "uvi sykehjem"
+   ],
+   "fagomrader": [
+    "urinveier",
+    "geriatri"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/urinveisinfeksjoner/akutt-cystitt-hos-sykehjemspasienter",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "Pasienter med akutt cystitt basert på symptomer fra urinveiene, kan tilbys antibiotikabehandling.\n\nAsymptomatisk bakteriuri (ABU) har høy forekomst blant sykehjemspasienter, hos kvinner opptil 50 %. ABU skal ikke behandles med antibiotika. Diagnosen cystitt hos eldre skrøpelige pasienter er først og fremst en klinisk diagnose, men kan være vanskelig, spesielt hos dem med kognitiv svikt. Funn ved urinundersøkelser er ikke alene indikasjon for behandling.\n\nUrinprøve til dyrkning og resistensbestemmelse tas før oppstart av antibiotika. Behandlingen justeres etter resistensfunn.\n\nBehandlingsvarighet baseres på alvorlighet og behandlingsrespons.",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-18718c4f-8542-4e55-8aa0-e1f1e9b15683",
+     "etikett": "Alternativ med pivmecillinam",
+     "regimer": [
+      "Pivmecillinam oral 200 mg x 3"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-9b007bdc-0a57-4991-8891-a42c576d0975",
+     "etikett": "Alternativ med nitrofurantoin",
+     "regimer": [
+      "Nitrofurantoin oral 50 mg x 3"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-2f8a76ac-1cba-41f1-833f-40c874a86a59",
+     "etikett": "Alternativ med trimetoprim",
+     "regimer": [
+      "Trimetoprim oral 160 mg x 2"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-c6e02f5d-6645-4583-926e-a245b3cdf016",
+     "etikett": "Alternativ ved følsomhet for ampicillin",
+     "regimer": [
+      "Amoksicillin oral 500 mg x 3"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-d653f7ed-94ad-4fa9-968c-e796654890db",
+     "etikett": "Ved resistens mot førstevalg og ampicillin, og følsomhet for ciprofloksacin",
+     "regimer": [
+      "Ciprofloksacin oral 250 mg x 2"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-8b8421bc-82b3-4f85-8dc4-7814bc4f2dfb",
+     "etikett": "Ved funn av ESBL-produserende bakterier følsomme for mecillinam",
+     "regimer": [
+      "Pivmecillinam oral 400 mg x 3"
+     ],
+     "gruppe": "alternativ"
+    }
+   ],
+   "merknader": "**Antibiotikabehandling**\n\nAnbefalt behandlingsvarighet for kvinner: 3-5 døgn.\n\nAnbefalt behandlingsvarighet for menn: 5-7 døgn.\n\n**Annen behandling**\n\nForebyggende behandling\n\n-   For eldre kvinner med residiverende UVI:\n    -   vurder lokal substitusjonsbehandling med lavpotent østrogen.\n-   Metenaminhippurat\n    -   kan forsøkes ved residiverende cystitt, effekt må evalueres etter 3-6 måneder\n    -   ikke virksomt ved permanent kateter"
+  },
+  {
+   "id": "3c8e8eb8-fd4f-474b-9ea6-e88bec98369a",
+   "navn": "Pyelonefritt",
+   "kapittel": "Urinveisinfeksjoner",
+   "sokeord": [
+    "pyelonefritt",
+    "nyrebekkenbetennelse",
+    "flankesmerter",
+    "øvre urinveisinfeksjon"
+   ],
+   "fagomrader": [
+    "urinveier"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/urinveisinfeksjoner/pyelonefritt",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "Pasienter med pyelonefritt bør behandles med antibiotika.\nUrinprøve til bakteriologisk undersøkelse og resistensbestemmelse tas før oppstart av antibiotika. Behandlingen justeres mot resistensfunn.\n\nEnkelte pasientgrupper bør behandles på sykehus, se under Praktisk.\n\nAnbefalingen gjelder situasjoner der peroral behandling er mulig. Ved behov for parenteral behandling, se doseringsforslag fra [Antibiotikasenteret for primærmedisin (antibiotikaiallmennpraksis.no)](https://antibiotikaiallmennpraksis.no/index.php?action=topic&item=EZMjAYmK).",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-2d95c525-d402-4f6d-941a-2e9d8336efbf",
+     "etikett": "Voksne og barn > 40 kg: alternativ med trimetoprim-sulfametoksazol",
+     "regimer": [
+      "Sulfametoksazol og trimetoprim oral 800/160 mg x 2"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-8b8421bc-82b3-4f85-8dc4-7814bc4f2dfb",
+     "etikett": "Voksne og barn > 40 kg: alternativ med pivmecillinam",
+     "regimer": [
+      "Pivmecillinam oral 400 mg x 3"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-03686c2d-8971-46d8-8f31-b904261fa81b",
+     "etikett": "Barn < 40 kg: alternativ med pivmecillinam",
+     "regimer": [
+      "Pivmecillinam oral 15 mg/kg x 3 - kan knuses og blandes i mat"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-c23cb633-535b-43bd-849f-da264572736e",
+     "etikett": "Barn < 40 kg: alternativ med amoksicillin-klavulansyre",
+     "regimer": [
+      "Amoksicillin og klavulansyre oral 15-20 mg/kg x 3"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-003b6513-70c4-4780-af92-dd9acb780481",
+     "etikett": "Ved allergi eller påvist resistens mot begge førstevalgene hos voksne",
+     "regimer": [
+      "Ciprofloksacin oral 500 mg x 2"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-1a02b175-5eff-446c-898a-97fd5cd47c63",
+     "etikett": "Ved påvist følsomhet for trimetoprim-sulfametoksazol hos barn < 20 kg",
+     "regimer": [
+      "Sulfametoksazol og trimetoprim oral 20/4 mg/kg x 2 - mikstur, dette tilsvarer 0,5 ml/kg x 2"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-7723c5f4-761a-41e1-a8de-0db1baba33ce",
+     "etikett": "Ved påvist følsomhet for trimetoprim-sulfametoksazol hos barn 20 – 40 kg",
+     "regimer": [
+      "Sulfametoksazol og trimetoprim oral 400/80 mg x 2"
+     ],
+     "gruppe": "alternativ"
+    }
+   ],
+   "merknader": "**Antibiotikabehandling**\n\nBehandlingsvarighet angitt her gjelder infeksjon med ukomplisert forløp. Lengre behandlingsvarighet kan være nødvendig ved alvorlig eller komplisert forløp.\n\nAnbefalt behandlingsvarighet: 7 døgn.\n\n**Annen behandling**\n\n-   Rikelig væskeinntak, late vannet ved behov, tilstrebe full tømming av urinblæren ved vannlating.\n-   Smertelindrende behandling med paracet eller ibuprofen.\n-   Kvalmestillende kan forsøkes."
+  },
+  {
+   "id": "edcd1aae-123e-49cd-ae52-45ab04b85793",
+   "navn": "Asymptomatisk bakteriuri",
+   "kapittel": "Urinveisinfeksjoner",
+   "sokeord": [],
+   "fagomrader": [
+    "urinveier"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/urinveisinfeksjoner/asymptomatisk-bakteriuri",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "Ikke-gravide pasienter bør hverken screenes eller behandles for asymptomatisk bakteriuri.\n\nGravide med økt risiko for urinveisinfeksjon screenes for asymptomatisk bakteriuri ved første svangerskapskontroll, se «Praktisk». Ved påvist asymptomatisk bakteriuri tilbys antibiotika etter resistensbestemmelse, behandling som ved [cystitt hos gravide](https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/urinveisinfeksjoner/akutt-cystitt-hos-menn-gravide-og-kvinner-med-kompliserende-forhold).",
+   "anbefalinger": []
+  },
+  {
+   "id": "34c50d2b-0dac-4ecf-8e43-a777292df233",
+   "navn": "Akutt bakteriell prostatitt",
+   "kapittel": "Urinveisinfeksjoner",
+   "sokeord": [
+    "prostatabetennelse"
+   ],
+   "fagomrader": [
+    "urinveier"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/urinveisinfeksjoner/akutt-prostatitt",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "Pasienter med akutt infeksjon i prostata bør behandles med antibiotika.\n\nFør oppstart av behandling tas diagnostiske prøver, se «Praktisk». Behandlingen tilpasses når prøvesvar foreligger.\n\nStandardbehandling er forbeholdt pasienter med god allmenntilstand. Ved høy feber, nedsatt allmenntilstand, og/eller urinretensjon bør man konferere med relevant spesialist og eventuelt legge inn pasienten på sykehus.",
+   "varighet": "14 døgn",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-2d95c525-d402-4f6d-941a-2e9d8336efbf",
+     "etikett": "Standardbehandling",
+     "regimer": [
+      "Sulfametoksazol og trimetoprim oral 800/160 mg x 2"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-003b6513-70c4-4780-af92-dd9acb780481",
+     "etikett": "Ved allergi mot, resistens mot eller behandlingssvikt ved trimetoprim-sulfametoksazol",
+     "regimer": [
+      "Ciprofloksacin oral 500 mg x 2"
+     ],
+     "gruppe": "alternativ"
+    }
+   ]
+  },
+  {
+   "id": "f19b0df1-2d70-4527-a22c-d771172e8a4b",
+   "navn": "Uretritt/cervisitt med ukjent agens",
+   "kapittel": "Genitale infeksjoner",
+   "sokeord": [],
+   "fagomrader": [
+    "urinveier"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/genitale-infeksjoner/uretritt-cervisitt-med-ukjent-agens",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "Ved moderate symptomer avventes antibiotikabehandling til prøvesvar foreligger.\n\nVed uttalte plager med påvist purulent eller mukopurulent utflod fra uretra/cervix bør antibiotikabehandlingen tilbys før prøvesvar foreligger.\n\nVed positivt prøvesvar på [klamydia](https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/genitale-infeksjoner/genital-klamydiainfeksjon-icpc-koder-x92u72), [gonorè](https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/genitale-infeksjoner/gonor-icpc-koder-x71-og-y71) eller [Mycoplasma genitalium](https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/genitale-infeksjoner/mykoplasmainfeksjon-icpc-kode-u72x85) følges egne anbefalinger.\n\nVed residiverende uretritt og negativt prøvesvar på klamydia, gonorè og Mycoplasma genitalium hos menn rekvireres prøve på Ureaplasma urealyticum. Ved positivt prøvesvar og uttalte symptomer kan antibiotikabehandling vurderes, se eget behandlingsalternativ.",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-8d35c1f7-9ba6-4267-b4eb-4c62223ca01f",
+     "etikett": "Standardbehandling",
+     "regimer": [
+      "Doksysyklin oral 100 mg x 2"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-bc8fb6db-a862-49bb-9a99-7156a2a45544",
+     "etikett": "Ved graviditet eller kontraindikasjoner mot doksysyklin/tetracykliner",
+     "regimer": [
+      "Azitromycin oral 500 mg x 1 ladningsdose etterfulgt av Azitromycin oral 250 mg x 1 - fra dag 2, i 5 døgn totalt"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-08435614-eee2-4eb0-8f6e-5db4af52f7c7",
+     "etikett": "Ved residiverende, behandlingstrengende uretritt og påvist Ureaplasma urealyticum hos menn",
+     "regimer": [
+      "Klaritromycin oral 500 mg x 2 i 7 døgn"
+     ],
+     "gruppe": "alternativ"
+    }
+   ],
+   "merknader": "**Antibiotikabehandling**\n\nBehandlingsvarighet vil være avhengig av valgt legemiddel.\n\nAnbefalt behandlingsvarighet ved bruk av standardbehandling: 7 døgn.\nBehandlingsvarighet for andre alternativer, se under \"Behandlingsalternativer\"."
+  },
+  {
+   "id": "4b56bcee-8c7e-49e4-8409-4ec891898e8f",
+   "navn": "Bekkeninfeksjon",
+   "kapittel": "Genitale infeksjoner",
+   "sokeord": [],
+   "fagomrader": [
+    "urinveier"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/genitale-infeksjoner/bekkeninfeksjon",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "### **Indikasjon for antibiotikabehandling**\n\nBekkeninfeksjon bør behandles med antibiotika straks diagnostiske prøver for Chlamydia trachomatis, Mycoplasma genitalium og Neisseria gonorrhoeae er tatt.\n\nVed positivt prøvesvar endres eventuelt behandlingen, se Behandlingsalternativer.\n\nGravide, ammende og kvinner post partum innlegges sykehus for behandling.",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-8d35c1f7-9ba6-4267-b4eb-4c62223ca01f",
+     "etikett": "Standardbehandling",
+     "regimer": [
+      "Doksysyklin oral 100 mg x 2",
+      "Metronidazol oral 500 mg x 2"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-8d35c1f7-9ba6-4267-b4eb-4c62223ca01f~",
+     "etikett": "Ved mistenkt eller påvist gonore",
+     "regimer": [
+      "Doksysyklin oral 100 mg x 2",
+      "Metronidazol oral 500 mg x 2",
+      "Ceftriakson intramuskulært 1 g - som engangsdose (tilsettes xylocain)"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-af6fb935-7915-4b76-a387-cda0d3a5c777",
+     "etikett": "Ved påvist Mycoplasma genitalium",
+     "regimer": [
+      "Moksifloksacin oral 400 mg x 1"
+     ],
+     "gruppe": "alternativ"
+    }
+   ],
+   "merknader": "**Antibiotikabehandling**\n\nAnbefalt behandlingsvarighet: 14 døgn.\n\n**OBS**: Se \"Praktisk\" for informasjon om bruk av moksifloksacin.\n\nFor prosedyre for intramuskulær administrasjon av ceftriakson, se [eHåndboken (ehandboken.ous-hf.no).](http://ehandboken.ous-hf.no)"
+  },
+  {
+   "id": "645394de-4a1a-4a3c-b16b-8d0d663f5635",
+   "navn": "Bakteriell vaginose",
+   "kapittel": "Genitale infeksjoner",
+   "sokeord": [],
+   "fagomrader": [
+    "urinveier"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/genitale-infeksjoner/bakteriell-vaginose-icpc-kode-vulvittvaginitt-x-84",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "Pasienter med symptomgivende bakteriell vaginose bør tilbys **antiseptisk lokalbehandling** (dekvalin).\n\nVed manglende effekt av antiseptisk behandling kan antibiotika tilbys.",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-8989a7a8-29f0-485f-89a0-e1a8867f3e69",
+     "etikett": "Standardbehandling",
+     "regimer": [
+      "Dekvalin - produkt 10 mg x 1 i 6 døgn - vaginaltabletter"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-ae3f7401-140e-41d4-b3a0-cdcc92a0868c",
+     "etikett": "Alternativ med metronidazol - lokalbehandling",
+     "regimer": [
+      "Metronidazol vaginal x 1 i 5 døgn - 1 dose vaginalgel hver kveld"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-9549cfaa-4878-49e7-b22a-2e59fb94fe92",
+     "etikett": "Alternativ med metronidazol - systemisk behandling",
+     "regimer": [
+      "Metronidazol oral 400-500 mg x 2 i 7 døgn"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-38a4e7e9-71e2-4096-a7bf-f0e89f738c7a",
+     "etikett": "Ved terapisvikt, residiv eller aerob vaginitt",
+     "regimer": [
+      "Klindamycin vaginal 100 mg x 1 - vagitorie, i 3 døgn, kan forlenges til 6 døgn"
+     ],
+     "gruppe": "alternativ"
+    }
+   ],
+   "merknader": "**Behandling**\n\nBehandlingsvarighet vil være avhengig av valgt legemiddel. Anbefalt behandlingsvarighet er oppgitt under de ulike behandlingsregimene.\n\n**Annen behandling**\n\nLokal behandling med humane laktobaciller (Lactobacillus gasseri og Lactobacillus rhamnosus) kan mulig begrense residiv."
+  },
+  {
+   "id": "1a6a0eef-77a3-48f0-94ea-72725742bb4f",
+   "navn": "Epididymitt",
+   "kapittel": "Genitale infeksjoner",
+   "sokeord": [],
+   "fagomrader": [
+    "urinveier"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/genitale-infeksjoner/epididymitt",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "Akutt epididymitt bør behandles med antibiotika.\n\nFør oppstart av behandling tas diagnostiske prøver, se «Praktisk».",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-8d35c1f7-9ba6-4267-b4eb-4c62223ca01f",
+     "etikett": "Ved sannsynlighet for seksuelt overførbar infeksjon",
+     "regimer": [
+      "Doksysyklin oral 100 mg x 2"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-2d95c525-d402-4f6d-941a-2e9d8336efbf",
+     "etikett": "Ved lav sannsynlighet for seksuelt overførbar infeksjon",
+     "regimer": [
+      "Sulfametoksazol og trimetoprim oral 800/160 mg x 2"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-8d35c1f7-9ba6-4267-b4eb-4c62223ca01f~",
+     "etikett": "Ved mistenkt eller påvist gonoré",
+     "regimer": [
+      "Doksysyklin oral 100 mg x 2",
+      "Ceftriakson intramuskulært 1 g - som engangsdose (tilsettes xylocain)"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-af6fb935-7915-4b76-a387-cda0d3a5c777",
+     "etikett": "Ved påvist Mycoplasma genitalium",
+     "regimer": [
+      "Moksifloksacin oral 400 mg x 1"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-003b6513-70c4-4780-af92-dd9acb780481",
+     "etikett": "Ved lav sannsynlighet for seksuelt overførbar infeksjon og allergi mot, resistens mot eller behandlingssvikt ved sulfametoksazol og trimetoprim",
+     "regimer": [
+      "Ciprofloksacin oral 500 mg x 2"
+     ],
+     "gruppe": "alternativ"
+    }
+   ],
+   "merknader": "**Antibiotikabehandling**\n\nAnbefalt behandlingsvarighet: 10 døgn.\nAnbefalt behandlingsvarighet ved påvist Mycoplasma genitalium: 14 døgn.\n\n**OBS**: Se \"Praktisk\" for informasjon om bruk av moksifloksacin.\n\n**Annen behandling**\n\n-   NSAID gitt i tillegg til antibiotika er rapportert å være effektivt som symptomlindrende behandling og er foreslått å kunne redusere risiko for sterilitet.\n-   Sengeleie, analgetika og kalde omslag kan lindre symptomene. Evt. suspensorium som stabiliserer/løfter testiklene."
+  },
+  {
+   "id": "cce57fef-791e-4cb6-be57-377a1d8bbc83",
+   "navn": "Genital klamydiainfeksjon",
+   "kapittel": "Genitale infeksjoner",
+   "sokeord": [
+    "klamydia",
+    "chlamydia",
+    "chlamydia trachomatis",
+    "soi",
+    "seksuelt overførbar",
+    "uretritt"
+   ],
+   "fagomrader": [
+    "urinveier"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/genitale-infeksjoner/genital-klamydiainfeksjon-icpc-koder-x92u72",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "Pasienter med påvist genital klamydiainfeksjon bør tilbys antibiotika.\n\nPartnere siste 6 måneder bør tilbys undersøkelse, prøvetaking og behandling ved egen infeksjon, se Praktisk.\n\nDenne anbefalingen gjelder **ukomplisert** genital klamydiainfeksjon. Ved lymfogranuloma venereum, se Behandlingsalternativer. Se egne anbefalinger for [bekkeninfeksjon](https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/genitale-infeksjoner/bekkeninfeksjon) eller [epididymitt](https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/genitale-infeksjoner/epididymitt).",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-387cbb6f-ce32-497f-8f5a-e064704ac323",
+     "etikett": "Standardbehandling",
+     "regimer": [
+      "Doksysyklin oral 100 mg x 2 i 7 døgn"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-34faa8c9-24e6-4472-b5cd-a1ddd834da1b",
+     "etikett": "Ved kontraindikasjon mot tetracykliner",
+     "regimer": [
+      "Azitromycin oral 1 g x 1 - som engangsdose"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-5220cd2f-5f0f-47f3-8136-7651eceabb5f",
+     "etikett": "Ved lymfogranuloma venereum",
+     "regimer": [
+      "Doksysyklin oral 100 mg x 2 i 21 døgn"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-34faa8c9-24e6-4472-b5cd-a1ddd834da1b~",
+     "etikett": "Ved graviditet og amming: alternativ med azitromycin",
+     "regimer": [
+      "Azitromycin oral 1 g x 1 - som engangsdose"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-6549d44e-28a7-41c1-a6c8-3dc53b5b711e",
+     "etikett": "Ved graviditet og amming: alternativ med amoksicillin",
+     "regimer": [
+      "Amoksicillin oral 500 mg x 3 i 7 døgn"
+     ],
+     "gruppe": "alternativ"
+    }
+   ],
+   "merknader": "**Antibiotikabehandling**\n\nAnbefalt behandlingsvarighet er oppgitt under de ulike behandlingsregimene. Ved samtidig mykoplasma eller gonoré: se «Praktisk»."
+  },
+  {
+   "id": "176fc5dd-ce5e-4f12-8c6c-de03044eb1ec",
+   "navn": "Genital mykoplasmainfeksjon",
+   "kapittel": "Genitale infeksjoner",
+   "sokeord": [
+    "mycoplasma genitalium",
+    "genital mykoplasma",
+    "makrolidresistens",
+    "moksifloksacin"
+   ],
+   "fagomrader": [
+    "urinveier"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/genitale-infeksjoner/mykoplasmainfeksjon-icpc-kode-u72x85",
+   "sistFagligOppdatert": "2024-06-27T15:00",
+   "indikasjon": "Asymptomatiske pasienter bør ikke testes for Mycoplasma genitalium (MG), med visse unntak (se Praktisk).\n\nPasienter med påvist Mykoplasma genitalium etter indisert prøvetaking, bør tilbys antibiotikabehandling. Faste seksualpartnere bør tilbys test og behandles hvis de tester positivt.\n\nDenne anbefalingen gjelder ukomplisert genital mykoplasmainfeksjon. Se egne anbefalinger for hhv. [bekkeninfeksjon](https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/genitale-infeksjoner/bekkeninfeksjon) og [epididymitt](https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/genitale-infeksjoner/epididymitt).",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-bc8fb6db-a862-49bb-9a99-7156a2a45544",
+     "etikett": "Standardbehandling",
+     "regimer": [
+      "Azitromycin oral 500 mg x 1 ladningsdose etterfulgt av Azitromycin oral 250 mg x 1 - fra dag 2, i 5 døgn totalt"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-36261748-3ee4-469d-8daf-f8de6bb4fd30",
+     "etikett": "Ved påvist makrolidresistens",
+     "regimer": [
+      "Moksifloksacin oral 400 mg x 1 i 7 døgn"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-bc8fb6db-a862-49bb-9a99-7156a2a45544~",
+     "etikett": "Ved graviditet og amming",
+     "regimer": [
+      "Azitromycin oral 500 mg x 1 ladningsdose etterfulgt av Azitromycin oral 250 mg x 1 - fra dag 2, i 5 døgn totalt"
+     ],
+     "gruppe": "alternativ"
+    }
+   ],
+   "merknader": "**Antibiotikabehandling**\n\nStandardbehandling gjelder makrolidsensitiv MG. Ved samtidig klamydia eller gonoré: se «Praktisk».\n\n**OBS**: Se \"Praktisk\" for informasjon om bruk av moksifloksacin."
+  },
+  {
+   "id": "be58ed5f-36d0-4cf9-9efe-3c9d199d7f27",
+   "navn": "Gonoré",
+   "kapittel": "Genitale infeksjoner",
+   "sokeord": [],
+   "fagomrader": [
+    "urinveier"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/genitale-infeksjoner/gonor-icpc-koder-x71-og-y71",
+   "sistFagligOppdatert": "2025-02-14T14:00",
+   "indikasjon": "Pasienter med mistenkt eller påvist gonoréinfeksjon bør behandles med antibiotika så snart prøver til diagnostikk (PCR) og resistensbestemmelse (dyrkning) er sikret.\n\nPasient bør følges opp og partnere bør tilbys undersøkelse, prøvetaking og behandling, se Praktisk.\n\nDenne anbefalingen gjelder ukomplisert gonoréinfeksjon. Ved kompliserte tilfeller, se egen anbefaling for [bekkeninfeksjon](https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/genitale-infeksjoner/bekkeninfeksjon) eller [epididymitt](https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/genitale-infeksjoner/epididymitt).\n\nKonferer øyelege umiddelbart ved mulig gonokokkinfeksjon i øyet.",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-a8cb17a4-c39c-4c1f-8c2a-d58fb329a039",
+     "etikett": "Standardbehandling",
+     "regimer": [
+      "Ceftriakson intramuskulært 1 g - som engangsdose (tilsettes xylocain)"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-23370caa-0067-408c-84f0-2df552c9fe6c",
+     "etikett": "Ved kjent ciprofloksacinfølsomhet etter resistensbestemmelse",
+     "regimer": [
+      "Ciprofloksacin oral 500 mg - som engangsdose"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-a8cb17a4-c39c-4c1f-8c2a-d58fb329a039~",
+     "etikett": "Ved graviditet og amming",
+     "regimer": [
+      "Ceftriakson intramuskulært 1 g - som engangsdose (tilsettes xylocain)"
+     ],
+     "gruppe": "alternativ"
+    }
+   ],
+   "merknader": "**Antibiotikabehandling**\n\nGrunnet smertefull injeksjon skal ceftriakson tilsettes xylocain; se prosedyre for intramuskulær administrasjon av ceftriakson, [eHåndboken (ehandboken.ous-hf.no).](https://ehandboken.ous-hf.no/document/9743)\n\nAnbefalt behandlingsvarighet: engangsdose. Ved samtidig mykoplasma eller klamydia: se «Praktisk»."
+  },
+  {
+   "id": "fee47e72-98f6-4d0a-b7fc-c223c3186830",
+   "navn": "Trichomoniasis",
+   "kapittel": "Genitale infeksjoner",
+   "sokeord": [],
+   "fagomrader": [
+    "urinveier"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/genitale-infeksjoner/trichomoniasis",
+   "sistFagligOppdatert": "2021-11-16T00:00",
+   "indikasjon": "Pasienter med påvist trichomoniasinfeksjon og deres partnere bør tilbys antibiotikabehandling.",
+   "varighet": "7 døgn",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-4463a0dc-b109-4560-ae92-c81e47c7afc2",
+     "etikett": "Standardbehandling",
+     "regimer": [
+      "Metronidazol oral 500 mg x 2"
+     ],
+     "gruppe": "standard"
+    }
+   ]
+  },
+  {
+   "id": "0e19eb32-f1f5-49d6-8bc7-90d7734f25e1",
+   "navn": "Syfilis",
+   "kapittel": "Genitale infeksjoner",
+   "sokeord": [],
+   "fagomrader": [
+    "urinveier"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/genitale-infeksjoner/syfilis",
+   "sistFagligOppdatert": "2022-09-07T00:00",
+   "indikasjon": "Pasienter med positiv syfilisserologi henvises umiddelbart til sykehus for behandling og oppfølging hos relevant spesialist. Partnere henvises også for oppfølging og behandling, uavhengig av prøvesvar.\n\nDiagnostiserende lege starter smitteverntiltak og tester for andre seksuelt overførbare infeksjoner, se Praktisk.",
+   "anbefalinger": []
+  },
+  {
+   "id": "08a9e109-32f2-49e2-b53c-7bfc615b33df",
+   "navn": "Impetigo",
+   "kapittel": "Hud- og bløtdelsinfeksjoner",
+   "sokeord": [
+    "impetigo",
+    "brennkopper",
+    "sårskorper",
+    "gule skorper"
+   ],
+   "fagomrader": [
+    "hud",
+    "barn"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/hud-og-blotdelsinfeksjoner/impetigo",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "Ved liten til moderat affeksjon av impetigo, det vil seie avgrensa til ein anatomisk region, bør pasienten ikkje tilbydast systemisk antibiotika men behandlast med lokale middel, sjå «Annen behandling» under.\n\nPasientar med større og meir utbreidde impetigolesjonar i fleire anatomiske regionar, pasientar med bulløs impetigo og pasientar med terapisvikt av behandling med lokale middel, bør tilbydast systemisk antibiotika i tillegg til lokale middel.\n\n**Flukloksacillin mikstur** er nylig kommet på markedet og er et gunstig alternativ for barn < 20 kg som ikke kan svelge tabletter. Dosering er 10 mg/kg x 4.\n\n(alternativet med flukloksacillin vil bli lagt til i listen nedenfor snarlig, men oppdatering av nettsiden er noe forsinket pga. teknisk utvikling og sommerferieavvikling)",
+   "varighet": "7 døgn",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-03e5edac-ea86-4df5-adbc-1124543e731a",
+     "etikett": "Vaksne og barn > 40 kg",
+     "regimer": [
+      "Dikloksacillin oral 500 mg x 3"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-28cdb8e3-996a-4362-aa28-79172ca26239",
+     "etikett": "Barn 20-40 kg",
+     "regimer": [
+      "Dikloksacillin oral 250 mg x 3"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-1394dd96-7862-443b-b5e6-afd81c9119c5",
+     "etikett": "Barn < 20 kg",
+     "regimer": [
+      "Klindamycin oral 5 mg/kg x 3 - mikstur"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-0f0ede57-bfd4-4e04-9ca0-3c56f68da6f8",
+     "etikett": "Ved penicillinallergi eller terapisvikt: vaksne",
+     "regimer": [
+      "Klindamycin oral 150 mg x 4"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-1394dd96-7862-443b-b5e6-afd81c9119c5~",
+     "etikett": "Ved penicillinallergi: barn < 30 kg",
+     "regimer": [
+      "Klindamycin oral 5 mg/kg x 3 - mikstur"
+     ],
+     "gruppe": "alternativ"
+    }
+   ],
+   "merknader": "**Annen behandling**\n\nVed liten affeksjon – få og små lesjonar i éin anatomisk region:\n\n-   Fjerning av skorper ved vask av lesjonane med såpe og vatn to gonger dagleg\n-   Eventuelt klorheksidinvask av lesjonane til større barn og vaksne\n-   Tildekking av lesjonane med tørre kompressar\n\nVed moderat affeksjon – fleire lesjonar avgrensa til éin anatomisk region:\n\n-   Som ved liten affeksjon, og i tillegg hydrogenperoksidkrem\n\nVed utbreidd affeksjon – flere lesjonar i flere anatomiske regionar, eventuelt bulløs impetigo:\n\n-   Som for moderat affeksjon, og i tillegg antibiotika per os, sjå over."
+  },
+  {
+   "id": "800f8240-1b1d-447d-a44b-4fef24f10dd0",
+   "navn": "Infisert eksem",
+   "kapittel": "Hud- og bløtdelsinfeksjoner",
+   "sokeord": [],
+   "fagomrader": [
+    "hud"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/hud-og-blotdelsinfeksjoner/infisert-eksem",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "Infisert eksem kan i stor grad behandles uten systemisk antibiotika, se «Annen behandling» for lokalbehandling.\n\nPasienter med utbredt og tydelig infisert eksem og samtidig påvirket allmenntilstand bør tilbys antibiotikabehandling.\n\nVed kliniske funn forenlig med [erysipelas](https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/hud-og-blotdelsinfeksjoner/erysipelas) eller [cellulitt](https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/hud-og-blotdelsinfeksjoner/cellulitt), se egne anbefalinger.\n\n**Flukloksacillin mikstur** er nylig kommet på markedet og er et gunstig alternativ for barn < 20 kg som ikke kan svelge tabletter. Dosering er 10 mg/kg x 4.\n\n(alternativet med flukloksacillin vil bli lagt til i listen nedenfor snarlig, men oppdatering av nettsiden er noe forsinket pga. teknisk utvikling og sommerferieavvikling)",
+   "varighet": "7 døgn",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-d15e3475-320e-435e-b472-efe55d628ccb",
+     "etikett": "Voksne",
+     "regimer": [
+      "Dikloksacillin oral 500 mg x 4"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-be1308b9-e95d-47a0-b979-886b559a5996",
+     "etikett": "Barn 20-40 kg",
+     "regimer": [
+      "Dikloksacillin oral 250 mg x 4"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-1394dd96-7862-443b-b5e6-afd81c9119c5",
+     "etikett": "Barn < 20 kg",
+     "regimer": [
+      "Klindamycin oral 5 mg/kg x 3 - mikstur"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-0f0ede57-bfd4-4e04-9ca0-3c56f68da6f8",
+     "etikett": "Ved penicillinallergi: voksne",
+     "regimer": [
+      "Klindamycin oral 150 mg x 4"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-1394dd96-7862-443b-b5e6-afd81c9119c5~",
+     "etikett": "Ved penicillinallergi: barn 1 mnd - 12 år",
+     "regimer": [
+      "Klindamycin oral 5 mg/kg x 3 - mikstur"
+     ],
+     "gruppe": "alternativ"
+    }
+   ],
+   "merknader": "**Annen behandling**\n\n#### Generelt\n\n-   Lokalt steroid brukes på eksemet også under antibiotikakur\n\n-   Behandle tørr hud med fet, parfymefri fuktighetskrem flere ganger daglig.\n\n#### Lokalbehandling ved lokalisert infisert eksem\n\n-   Forsøk gruppe 3 steroid med kliokinol krem x 2 (alternativt gruppe 3 steroid i kombinasjon med antiseptikumkrem) i 1-2 uker, deretter overgang til kun topikalt steroid. Ved infisert eksem i ansikt eller hudfolder kan gruppe 1-2 steroidkrem kombinert med antiseptikumkrem (for eksempel hydrogenperoksid) benyttes x 2 i 1-2 uker.\n-   Kaliumpermanganat bad/lokalbad/omslag kan være et alternativ i korte perioder initialt, se [Oslo universitetssykehus eHåndbok (ehandboken.ous-hf.no)](https://ehandboken.ous-hf.no/document/16733)."
+  },
+  {
+   "id": "35992c75-9ab5-4734-8352-436386b709d6",
+   "navn": "Erysipelas",
+   "kapittel": "Hud- og bløtdelsinfeksjoner",
+   "sokeord": [
+    "erysipelas",
+    "rosen",
+    "hudinfeksjon",
+    "erysipelas legg"
+   ],
+   "fagomrader": [
+    "hud"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/hud-og-blotdelsinfeksjoner/erysipelas",
+   "sistFagligOppdatert": "2023-09-28T00:00",
+   "indikasjon": "Pasienter med erysipelas bør behandles med antibiotika.\n\nPasienter med erysipelas i ansiktet bør innlegges sykehus for behandling.\n\nHovedanbefalingen angitt her gjelder ukompliserte tilfeller der peroral behandling er mulig. Ved behov for parenteral behandling, se doseringsforslag fra Antibiotikasenteret for primærmedisin ([lenke](https://antibiotikaiallmennpraksis.no/index.php?action=topic&item=EZMjAYmK)).",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-e6a17cec-a5b4-4224-8254-93031347fb29",
+     "etikett": "Voksne og barn > 40 kg",
+     "regimer": [
+      "Fenoksymetylpenicillin oral 1 g x 4"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-810091b5-3383-4590-aa3a-a6c305ce4c4b",
+     "etikett": "Barn < 40 kg",
+     "regimer": [
+      "Fenoksymetylpenicillin oral 10 mg/kg x 4"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-05b17204-c635-444a-ad43-1f387ddcc9aa",
+     "etikett": "Ved penicillinallergi: alternativ med klindamycin",
+     "regimer": [
+      "Klindamycin oral 300 mg x 2"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-67de0e14-b9d6-438d-9395-64d4542e3abc",
+     "etikett": "Ved penicillinallergi: alternativ med erytromycin",
+     "regimer": [
+      "Erytromycin oral 500 mg x 2 - tabletter (erytromycinstearat)"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-1394dd96-7862-443b-b5e6-afd81c9119c5",
+     "etikett": "Ved penicillinallergi: barn < 30 kg",
+     "regimer": [
+      "Klindamycin oral 5 mg/kg x 3 - mikstur"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-4cfe11d0-2558-4ab1-8da1-ad2a4746e20a",
+     "etikett": "Ved penicillinallergi: barn > 30 kg",
+     "regimer": [
+      "Klindamycin oral 150 mg x 3"
+     ],
+     "gruppe": "alternativ"
+    }
+   ],
+   "merknader": "**Antibiotikabehandling**\n\nAnbefalt behandlingsvarighet: 5 døgn.\n\nLengre behandlingsvarighet, inntil 14 døgn, kan være nødvendig ved alvorligere tilfeller, manglende behandlingsrespons eller immunsvikt.\n\n**Annen behandling**\n\n-   Elevasjon, særlig ved erysipelas i underekstremitet\n-   Immobilisering\n-   Behandling av lymfødem eller andre predisponerende faktorer"
+  },
+  {
+   "id": "85609f5d-cbf4-4f65-b939-d6236332273f",
+   "navn": "Cellulitt",
+   "kapittel": "Hud- og bløtdelsinfeksjoner",
+   "sokeord": [],
+   "fagomrader": [
+    "hud"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/hud-og-blotdelsinfeksjoner/cellulitt",
+   "sistFagligOppdatert": "2023-09-28T00:00",
+   "indikasjon": "Pasienter med cellulitt bør behandles med antibiotika.\n\nAnbefalingen angitt her gjelder ukompliserte tilfeller der peroral behandling er mulig.\n\nVed behov for parenteral behandling, se doseringsforslag fra Antibiotikasenteret for primærmedisin ([lenke](https://antibiotikaiallmennpraksis.no/index.php?action=topic&item=EZMjAYmK)).",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-d15e3475-320e-435e-b472-efe55d628ccb",
+     "etikett": "Voksne og barn > 40 kg",
+     "regimer": [
+      "Dikloksacillin oral 500 mg x 4"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-be1308b9-e95d-47a0-b979-886b559a5996",
+     "etikett": "Barn 20-40 kg",
+     "regimer": [
+      "Dikloksacillin oral 250 mg x 4"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-1394dd96-7862-443b-b5e6-afd81c9119c5",
+     "etikett": "Barn < 20 kg",
+     "regimer": [
+      "Klindamycin oral 5 mg/kg x 3 - mikstur"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-05b17204-c635-444a-ad43-1f387ddcc9aa",
+     "etikett": "Ved penicillinallergi for voksne og barn > 30 kg: alternativ med klindamycin",
+     "regimer": [
+      "Klindamycin oral 300 mg x 2"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-67de0e14-b9d6-438d-9395-64d4542e3abc",
+     "etikett": "Ved penicillinallergi for voksne og barn > 30 kg: alternativ med erytromycin",
+     "regimer": [
+      "Erytromycin oral 500 mg x 2 - tabletter (erytromycinstearat)"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-1394dd96-7862-443b-b5e6-afd81c9119c5~",
+     "etikett": "Ved penicillinallergi: barn < 30 kg",
+     "regimer": [
+      "Klindamycin oral 5 mg/kg x 3 - mikstur"
+     ],
+     "gruppe": "alternativ"
+    }
+   ],
+   "merknader": "**Antibiotikabehandling**\n\nAnbefalt behandlingsvarighet: 5 døgn.\n\nDoseøkning eller lengre behandlingsvarighet, inntil 14 dager, kan være nødvendig ved alvorligere tilfeller, manglende behandlingsrespons eller immunsvikt.\n\n**Annen behandling**\n\n-   Elevasjon\n-   Immobilisering\n-   Behandling av lymfødem eller andre predisponerende faktorer\n-   Drenasje av eventuelle abscesser"
+  },
+  {
+   "id": "a650807c-a74f-425e-aa04-1ec6bc317c4e",
+   "navn": "Follikulitt, furunkel og karbunkel",
+   "kapittel": "Hud- og bløtdelsinfeksjoner",
+   "sokeord": [],
+   "fagomrader": [
+    "hud"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/hud-og-blotdelsinfeksjoner/follikulitt-furunkel-og-karbunkel",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "Pasientar med follikulitt, furunkel eller karbunkel som ikkje er allmennpåverka, behandlast med lokale tiltak aleine utan systemisk antibiotikum, sjå «Annan behandling».\n\nPasientar med furunkel eller karbunkel og allmennpåverknad, og pasientar med furunkulose med fleire element, bør behandlast med systemisk antibiotikum i tillegg til lokale tiltak.\n\n**Flukloksacillin mikstur** er nylig kommet på markedet og er et gunstig alternativ for barn < 20 kg som ikke kan svelge tabletter. Dosering er 10 mg/kg x 4.\n\n(alternativet med flukloksacillin vil bli lagt til i listen nedenfor snarlig, men oppdatering av nettsiden er noe forsinket pga. teknisk utvikling og sommerferieavvikling)",
+   "varighet": "7 døgn",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-d15e3475-320e-435e-b472-efe55d628ccb",
+     "etikett": "Vaksne og barn > 40 kg",
+     "regimer": [
+      "Dikloksacillin oral 500 mg x 4"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-28cdb8e3-996a-4362-aa28-79172ca26239",
+     "etikett": "Barn 20-40 kg",
+     "regimer": [
+      "Dikloksacillin oral 250 mg x 3"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-1394dd96-7862-443b-b5e6-afd81c9119c5",
+     "etikett": "Barn < 20 kg",
+     "regimer": [
+      "Klindamycin oral 5 mg/kg x 3 - mikstur"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-dbc79a2c-882b-4f0e-9aed-8fad1919bd80",
+     "etikett": "Ved penicillinallergi",
+     "regimer": [
+      "Klindamycin oral 300 mg x 3"
+     ],
+     "gruppe": "alternativ"
+    }
+   ],
+   "merknader": "**Annen behandling**\n\nFollikulitt:\n\n-   Forsiktig vask av lesjonane med såpe og vatn og/eller klorheksidin eller cetylpyridin\n\nFurunkel/karbunkel:\n\n-   Enkeltståande abscess behandlast med incisjon utan antibiotika\n-   Desinfiserande kaliumpermanganat-bad kan vera nyttig\n-   Omslag med varme kompressar kan lindra symptom og påskunda spontan drenasje og remisjon i ukompliserte tilfelle"
+  },
+  {
+   "id": "09551f03-d12e-4261-b754-719d8d4ea0a1",
+   "navn": "Akne",
+   "kapittel": "Hud- og bløtdelsinfeksjoner",
+   "sokeord": [],
+   "fagomrader": [
+    "hud"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/hud-og-blotdelsinfeksjoner/akne",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "Pasienter med mild akne og komedoakne bør ikke behandles med systemisk antibiotika, se «Annen behandling».\n\nPasienter med moderat akne kan tilbys systemisk antibiotikabehandling i maksimalt 3 måneder, og alltid i kombinasjon med lokalbehandling - se «Annen behandling». Ved manglende effekt etter 3 måneder eller ved arrdannende akne bør det vurderes oppstart av isotretinoin.\n\nPasienter med utbredt, kraftig inflammatorisk akne konfereres med eller henvises hudlege. Ved lang ventetid kan pasientene tilbys systemisk antibiotikabehandling i kombinasjon med lokalbehandling i påvente av tilbud i spesialisthelsetjenesten.\n\nFulminant akne er en øyeblikkelig hjelp-tilstand.\n\nBehandlingsanbefalingen gjelder voksne og barn > 12 år. Ved moderat til alvorlig akne hos barn under 12 år eller hos gravide eller ammende med behov for systemisk behandling, bør hudlege konfereres for behandlingsstrategi.",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-75e378a0-eb55-4707-8ff5-ae3ce8878124",
+     "etikett": "Alternativ med lymesyklin",
+     "regimer": [
+      "Lymesyklin oral 300 mg x 1 - kan doseres x 2 ved mer uttalt akne"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-949e66db-16ef-4232-9770-c2d3db69a5ca",
+     "etikett": "Alternativ med doksysyklin",
+     "regimer": [
+      "Doksysyklin oral 100 mg x 1 - kan doseres x 2 ved mer uttalt akne"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-67de0e14-b9d6-438d-9395-64d4542e3abc",
+     "etikett": "Ved kontraindikasjon mot tetrasykliner",
+     "regimer": [
+      "Erytromycin oral 500 mg x 2 - tabletter (erytromycinstearat)"
+     ],
+     "gruppe": "alternativ"
+    }
+   ],
+   "merknader": "**Antibiotikabehandling**\n\nAnbefalt behandlingsvarighet: inntil markert bedring, maksimalt 3 måneder\n\n**Annen behandling**\n\n#### Lokalbehandling\n\n-   Lokalt retinoid, som regel i kombinasjon med benzoylperoksid, er grunnlaget for all lokal aknebehandling.\n    -   Kombineres med eventuell peroral antibiotikabehandling\n    -   Fortsettes etter eventuell peroral antibiotikabehandling er avsluttet for å forebygge residiv.\n    -   Påføres på kveldstid. Hudirritasjon ved lokalbehandling er vanlig: rødme, skjelling, brenning, svie. Begynn for eksempel påsmøring to dager pr. uke og trapp opp til den applikasjonsfrekvensen som tåles før plagsom irritasjon. Krem- eller emulsjonformulering er best egnet ved tørr hud og gelformulering best ved uttalt seboré.\n    -   Gjør pasienten oppmerksom på at middelets effekt er å redusere utvikling av komedoner og at det dermed vil ta noe tid før effekten er merkbar.\n-   For pasienter som ikke tolererer retinoid, for eksempel gravide, kan azelain gel/krem forsøkes.\n\n#### Generelt\n\n-   P-piller med både østrogen og progesteron kan ha gunstig effekt på mild og moderat akne hos kvinner, og er særlig aktuelt ved samtidig prevensjonsbehov.\n-   Ved vask av akneaffisert hud holdes preparatene så milde som mulig. Bruk gjerne kun vann til ansiktsvask, eventuelt forsiktig bruk av mild såpe. Våtservietter som inneholder alkohol eller aceton unngås.\n-   Kosmetika kan brukes dagtid sammen med de fleste typer lokalbehandling, som påføres kveldstid.\n-   Kostfaktorer har ut fra dagens kunnskap mindre betydning for akne. Høyt inntak av melkeprodukter inkludert mysebasert proteintilskudd kan forverre tilstanden hos enkelte."
+  },
+  {
+   "id": "09b94c34-963e-481e-9c1d-9cb1ae2c9b2f",
+   "navn": "Hidradenitis suppurativa (HS)",
+   "kapittel": "Hud- og bløtdelsinfeksjoner",
+   "sokeord": [],
+   "fagomrader": [
+    "hud"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/hud-og-blotdelsinfeksjoner/hidradenitis-suppurativa-hs",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "Pasienter med mild hidradenitis suppurativa - Hurley stadium 1 eller mild stadium 2, bør tilbys lokaltvirkende antibiotika i perioder ved oppbluss, se «Behandlingsalternativer».\n\nSe «Praktisk» for informasjon om stadieinndelinger.\n\nPasienter med moderat HS - utbredt Hurley stadium 1 eller mild stadium 2, bør tilbys systemisk antibiotikabehandling ved oppbluss, se «Antibiotikabehandling». Behandlingen kan gjerne skje i samråd med dermatolog. De ulike preparatene er likeverdige.\n\nPasienter med tilbakevendende moderat og mer alvorlig HS henvises dermatolog og plastikkirurg for behandling. I påvente av time kan pasienten tilbys systemisk antibiotikabehandling.\n\nGravide og ammende: Konferer med dermatolog.",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-b646a2e1-570d-48e9-941a-df5a0388de53",
+     "etikett": "Alternativ med tetrasyklin",
+     "regimer": [
+      "Tetrasyklin oral 500 mg x 2"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-e920b6ab-ad61-4130-8ea2-eae28935ec96",
+     "etikett": "Alternativ med lymesyklin",
+     "regimer": [
+      "Lymesyklin oral 300 mg x 2"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-8d35c1f7-9ba6-4267-b4eb-4c62223ca01f",
+     "etikett": "Alternativ med doksysyklin",
+     "regimer": [
+      "Doksysyklin oral 100 mg x 2"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-f0350546-9293-4612-8dc5-d421a7e9ca0a",
+     "etikett": "Ved hidradenitis suppurativa Hurley stadium 1 eller mild stadium 2 med oppbluss",
+     "regimer": [
+      "Klindamycin kutan x 2 - liniment"
+     ],
+     "gruppe": "alternativ"
+    }
+   ],
+   "merknader": "**Antibiotikabehandling**\n\nAnbefalt behandlingsvarighet: 3-4 måneder, avhengig av behandlingsrespons\n\n**Annen behandling**\n\n-   Unngå faktorer som forverrer sykdommen; friksjon mot hud (stramme klær), irriterende deodoranter og epilering.\n-   HS-pasienter som røyker motiveres til røykeslutt og overvektige motiveres til vektreduksjon.\n-   Ved manglende respons kan det være aktuelt med kirurgi eller systemisk immundempende behandling i regi av spesialist.\n-   For flere råd se Norsk forening for dermatologi og venerologi (NFDV) sin [veileder for behandling av hidradenitis suppurativa i Norge (legeforeningen.no)](https://www.legeforeningen.no/contentassets/352dec04d9e24d948aab5d4154c957b2/veilederhs.pdf)."
+  },
+  {
+   "id": "cc50be50-a1ee-4476-b66b-8da838514471",
+   "navn": "Diabetisk fotsår",
+   "kapittel": "Hud- og bløtdelsinfeksjoner",
+   "sokeord": [],
+   "fagomrader": [
+    "hud"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/hud-og-blotdelsinfeksjoner/diabetisk-fotsar",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "Diabetisk fotsår uten klinisk infeksjon bør ikke behandles med antibiotika.\n\nPasienter med infeksjon i et diabetisk fotsår bør behandles med antibiotika. Behandling bør skje i samråd med /etter konferering med spesialisthelsetjenesten. Bakteriologisk prøve til dyrkning og resistensbestemmelse tas før oppstart antibiotika, og behandling justeres mot resistensfunn.\n\nPasienten innlegges i sykehus ved betydelig iskemi eller ved raskt progredierende eller omfattende infeksjon.\n\nStandardbehandling gjelder mild overfladisk, ikke nylig antibiotikabehandlet infeksjon.",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-d15e3475-320e-435e-b472-efe55d628ccb",
+     "etikett": "Standardbehandling",
+     "regimer": [
+      "Dikloksacillin oral 500 mg x 4"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-2d95c525-d402-4f6d-941a-2e9d8336efbf",
+     "etikett": "Ved mild overfladisk infeksjon og penicillinallergi eller nylig antibiotikabehandlet sår",
+     "regimer": [
+      "Sulfametoksazol og trimetoprim oral 800/160 mg x 2"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-479b4bf6-4ee9-49cb-b92d-99e09c63dc26",
+     "etikett": "Ved dyp moderat infeksjon",
+     "regimer": [
+      "Amoksicillin og klavulansyre oral 500/125 mg x 4"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-2d95c525-d402-4f6d-941a-2e9d8336efbf~",
+     "etikett": "Ved dyp moderat infeksjon og penicillinallergi: alternativ med trimetoprim/sulfametoksazol",
+     "regimer": [
+      "Sulfametoksazol og trimetoprim oral 800/160 mg x 2"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-05b17204-c635-444a-ad43-1f387ddcc9aa",
+     "etikett": "Ved dyp moderat infeksjon og penicillinallergi: alternativ med klindamycin og ciprofloksacin",
+     "regimer": [
+      "Klindamycin oral 300 mg x 2",
+      "Ciprofloksacin oral 500 mg x 2"
+     ],
+     "gruppe": "alternativ"
+    }
+   ],
+   "merknader": "**Antibiotikabehandling**\n\nVarighet av antibiotikabehandling tilpasses alvorlighetsgrad av infeksjonen: 1-2 uker for lette infeksjoner, 2-4 uker for moderat til alvorlige infeksjoner."
+  },
+  {
+   "id": "8b0dbd6e-fe5d-467f-9724-e920e90cbe5d",
+   "navn": "Bittskader og infeksjon",
+   "kapittel": "Hud- og bløtdelsinfeksjoner",
+   "sokeord": [
+    "bitt",
+    "bittskade",
+    "hundebitt",
+    "kattebitt",
+    "menneskebitt",
+    "bittsår"
+   ],
+   "fagomrader": [
+    "hud"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/hud-og-blotdelsinfeksjoner/bittskader-og-infeksjon",
+   "sistFagligOppdatert": "2026-07-05T15:00",
+   "indikasjon": "Pasienter med overfladiske bittskader bør ikke gis profylaktisk antibiotikabehandling.\n\nPasienter med dyp bittskade (gjennom hele dermis) og pasienter med middels dyp bittskade (ned i dermis) men med høy risiko for sårinfeksjon (se «Praktisk»), bør gis profylaktisk antibiotikabehandling.\n\nPasienter med infeksjon i bittsår bør behandles med antibiotika.\n\nInfeksjon med rikelig puss og abscessdannelse etter bitt av hund/katt behandles som ved menneskebitt.",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-e6a17cec-a5b4-4224-8254-93031347fb29",
+     "etikett": "Ved bitt av hund/katt - voksne",
+     "regimer": [
+      "Fenoksymetylpenicillin oral 1 g x 4"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-709e3b22-fdb3-499d-b534-d38af80a6889",
+     "etikett": "Ved bitt av hund/katt - barn",
+     "regimer": [
+      "Fenoksymetylpenicillin oral 15 mg/kg x 4"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-e6a17cec-a5b4-4224-8254-93031347fb29~",
+     "etikett": "Ved bitt av menneske - voksne og barn > 40 kg",
+     "regimer": [
+      "Fenoksymetylpenicillin oral 1 g x 4",
+      "Dikloksacillin oral 500 mg x 4"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-709e3b22-fdb3-499d-b534-d38af80a6889~",
+     "etikett": "Ved bitt av menneske - barn > 20 kg",
+     "regimer": [
+      "Fenoksymetylpenicillin oral 15 mg/kg x 4",
+      "Dikloksacillin oral 250 mg x 4"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-93b6c69b-fee0-439f-8252-68e0b0c5cf98",
+     "etikett": "Ved bitt av menneske - barn < 20 kg",
+     "regimer": [
+      "Amoksicillin og klavulansyre oral 20/2,85 mg/kg x 3 - mikstur"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-2d95c525-d402-4f6d-941a-2e9d8336efbf",
+     "etikett": "Ved infeksjon og penicillinallergi eller manglende terapirespons: voksne",
+     "regimer": [
+      "Sulfametoksazol og trimetoprim oral 800/160 mg x 2"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-7723c5f4-761a-41e1-a8de-0db1baba33ce",
+     "etikett": "Ved infeksjon og penicillinallergi eller manglende terapirespons: barn 20 – 40 kg",
+     "regimer": [
+      "Sulfametoksazol og trimetoprim oral 400/80 mg x 2"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-1a02b175-5eff-446c-898a-97fd5cd47c63",
+     "etikett": "Ved infeksjon og penicillinallergi eller manglende terapirespons: barn < 20 kg",
+     "regimer": [
+      "Sulfametoksazol og trimetoprim oral 20/4 mg/kg x 2 - mikstur, dette tilsvarer 0,5 ml/kg x 2"
+     ],
+     "gruppe": "alternativ"
+    }
+   ],
+   "merknader": "**Antibiotikabehandling**\n\nAnbefalt behandlingsvarighet ved profylaktisk antibiotikabehandling: 3 døgn.\nAnbefalt behandlingsvarighet ved behandling av infeksjon i bittsår: 7 døgn.\n\n**Annen behandling**\n\nSårstell\n\n-   Rengjør hudoverflaten med såpe og vann, og spyl dypere sår og underliggende vev med isotont saltvann eller springvann.\n-   Revisjon/fjerning av dødt vev utføres ved alle bittskader.\n-   Eksplorer såret grundig for å utelukke skade på dypere strukturer og fjern eventuelle fremmedlegemer. Sår på hånd kan være dypere enn antatt fordi lagene forskyver seg med bevegelse av fingre og håndledd\n\nSuturering\n\n-   Bittsår på hender eller føtter må aldri primærsutureres.\n-   Bittsår i ansikt kan primærsutureres opp mot ett døgn etter skaden, med samtidig antibiotikaprofylakse.\n-   Bittsår på andre steder kan primærsutureres hvis såret er under 8-12 timer gammelt.\n-   Bruk enkle avbrutte ikke-resorberbare suturer som kan fjernes.\n\nVaksine/profylakse\n\n-   Gi boosterdose tetanustoksoid hvis det er mer enn fem år siden siste vaksinasjon.\n-   Vurder rabies-profylakse etter hundebitt i områder med kjent forekomst av rabies.\n-   Vurder posteksponeringsprofylakse mot hepatitt B og HIV ved menneskebitt av person i risikogruppe.\n\nImmobilisering og høyt leie av skadet ekstremitet"
+  },
+  {
+   "id": "8992ce92-6469-463e-bf89-e031cb9768c0",
+   "navn": "Brannskader og infeksjon",
+   "kapittel": "Hud- og bløtdelsinfeksjoner",
+   "sokeord": [],
+   "fagomrader": [
+    "hud"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/hud-og-blotdelsinfeksjoner/brannskader-og-infeksjon",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "Brannskader bør ikke behandles profylaktisk med antibiotika utenfor sykehus.\n\nVed infeksjon i brannskade og upåvirket allmenntilstand, tilbys lokalbehandling, se «Annen behandling».\n\nPasienter med alvorlig brannskade (se «Praktisk») og pasienter med infeksjon i brannskade og feber eller påvirket allmenntilstand innlegges sykehus.",
+   "anbefalinger": [],
+   "merknader": "**Annen behandling**\n\nAkuttbehandling av brannskade:\n\n-   Nedkjøling av skaden direkte etter uhellet: Bruk lunkent rennende vann (12-18 °C) i minst 20 minutter.\n-   Smertebehandling etter behov.\n\nLokalbehandling av brannskade:\n\n-   Løs hud og tynnhudete blemmer fjernes og såret vaskes med sterilt saltvann.\n-   1\\. grads og overflatisk 2. grads forbrenning behandles med salvekompresser eller annen ikke-heftende bandasje.\n-   Dyp 2. grads forbrenning bør vanligvis vurderes av kirurg. Ved ubetydelig utbredelse kan skaden dekkes med sølvholdige bandasjer eller antimikrobiell lokalbehandling etter at forbrenningsgraden er avklart.\n-   Ved sekresjon dekkes eksempelvis med polyuretanplate og senere eventuelt kolloidplate i tillegg.\n\nLokalbehandling av infeksjon i brannskade:\n\n-   Ved påvist infeksjon i brannskader dypere enn 1. grad, benyttes lokal sølvsulfadiazinkrem eller sølvholdige bandasjer sammen med hyppige sårskift.\n\nBoosterdose av tetanus- og difterivaksine gis ved 2. og 3. grads forbrenning hvis det er mer enn fem år siden siste vaksine.\n\nSe [Legevakthåndboken](https://www.lvh.no/skader/termiske-skader/brannskader)for utfyllende råd."
+  },
+  {
+   "id": "cf3e21a7-3a73-49a7-b770-8dfc2bd7f43b",
+   "navn": "Rosacea",
+   "kapittel": "Hud- og bløtdelsinfeksjoner",
+   "sokeord": [],
+   "fagomrader": [
+    "hud"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/hud-og-blotdelsinfeksjoner/rosacea",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "Pasienter med mild til middels grad av papulopustuløs rosacea, og pasienter med mild okulær rosacea, behandles med lokalbehandling uten systemisk antibiotika, se «Annen behandling».\n\nVed middels grad av papulopustuløs rosacea kan systemisk antibiotikabehandling tilbys dersom lokalbehandling alene ikke gir god nok effekt eller gir markert hudirritasjon.\n\nVed uttalt grad av papulopustuløs eller okulær rosacea tilbys systemisk antibiotika i tillegg til lokalbehandling.\n\nVed graviditet/amming: Konferer spesialist ved behov for systemisk behandling.\n\nBehandlingsanbefalingene gjelder voksne. Standardbehandlingen, lavdose doksysyklin, bør forsøkes før fulldose. Se «Behandlingsalternativer» for fulldosealternativer.",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-19c9f181-ce39-4a24-970b-54ff6a2dbbd3",
+     "etikett": "Standardbehandling",
+     "regimer": [
+      "Doksysyklin oral 40 mg x 1"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-7683d8eb-4b68-4896-a16c-7073a3d6d54a",
+     "etikett": "Fulldose systemisk behandling: alternativ med doksysyklin",
+     "regimer": [
+      "Doksysyklin oral 100 mg x 1 - kan doseres x 2 ved mer uttalt sykdom"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-6f2e02b6-585b-45b1-af27-8f5985189dfd",
+     "etikett": "Fulldose systemisk behandling: alternativ med lymesyklin",
+     "regimer": [
+      "Lymesyklin oral 300 mg x 1 - kan doseres x 2 ved mer uttalt sykdom"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-1da37154-decf-41b7-af70-9e70efee765d",
+     "etikett": "Ved graviditet og amming: alternativ med azelainsyre",
+     "regimer": [
+      "Azelainsyre kutan x 2 - gel/krem - trappes opp til x 2"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-dd081d19-3bbe-478f-9425-0f22314cef62",
+     "etikett": "Ved graviditet og amming: alternativ med metronidazol",
+     "regimer": [
+      "Metronidazol kutan x 2 - krem"
+     ],
+     "gruppe": "alternativ"
+    }
+   ],
+   "merknader": "**Antibiotikabehandling**\n\nAnbefalt behandlingsvarighet: inntil markert bedring, ofte 6-12 uker\n\n**Annen behandling**\n\n#### Okulær rosacea - lokalbehandling\n\n-   Lokalbehandling benyttes alene ved mild til middels uttalt sykdom, og som tilleggsbehandling til peroral antibiotika ved mer uttalt sykdom:\n\n    -   Oksytetrasyklin polymyksin B øyesalve 2 ganger daglig – kan dobles ved mer uttalt klinikk.\n\n#### **Papulopustuløs rosacea – lokalbehandling**\n\n-   Lokalbehandling benyttes alene ved mild til middels uttalt sykdom, som tilleggsbehandling til peroral antibiotika og som vedlikeholdsbehandling etter seponert antibiotika:\n    -   Ivermektin krem 1 x daglig – inntil fire måneders behandling, da evt. overgang til azelain\n        eller\n    -   azelain krem/gel inntil x 2 daglig etter opptrapping fra 2 kvelder per uke\n        eller\n    -   metronidazolkrem 2 x daglig – inntil fire måneders behandling.\n\n#### **Erytemato-telangiektatisk rosacea**\n\n-   Lokalbehandling med antiinflammatoriske midler eller antibiotika har liten plass i håndtering av denne formen for rosacea.\n-   Brimonidin gel x 1 kan ha dempende effekt på erytemet, men ikke alle har nytte av dette.\n-   Henvises hudlege ved uttalte plager.\n\n#### Fymatøs rosacea\n\n-   Behandles i spesialisthelsetjenesten.\n\n#### Symptomatisk behandling\n\n-   Seponér lokale kortikosteroider gradvis, for å hindre oppbluss av rosacea.\n-   Ved flushing, seponér hvis mulig vasodilaterende medikament som kalsium-antagonist og opiater.\n-   Gelformulering kan oppleves som mer hudirriterende enn kremer.\n\n#### Forebyggende behandling\n\nAnbefal pasienten å\n\n-   unngå alkohol, store temperatursvingninger, sterkt krydder.\n-   bruke solkrem med høy faktor med både UVA/UVB beskyttelse, gjerne med fysisk filter.\n-   unngå lokalt irriterende produkter som kosmetikk, våtservietter og annet."
+  },
+  {
+   "id": "2f7bbba8-d80f-4811-9fca-26474e562239",
+   "navn": "Infisert venøst leggsår",
+   "kapittel": "Hud- og bløtdelsinfeksjoner",
+   "sokeord": [],
+   "fagomrader": [
+    "hud"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/hud-og-blotdelsinfeksjoner/infisert-venost-leggsar",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "Kroniske venøse leggsår er alltid kolonisert med bakterier. Normal kolonisering i sår uten infeksjonstegn skal ikke behandles med antibiotika. Kompresjonsbehandling og sårstell er den primære behandling.\n\nPasienter med venøst leggsår behandles med systemisk antibiotika ved\n\n-   Betydelige lokale infeksjonstegn.\n-   Systemiske infeksjonstegn som feber eller redusert allmenntilstand.\n-   Oppvekst av beta-hemolytiske streptokokker gruppe A (GAS) i dyrkningsprøve fra sår.\n\nPrøve til dyrkning og resistensbestemmelse tas før oppstart av antibiotika, og behandlingen justeres ved behov etter prøvesvar.",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-d15e3475-320e-435e-b472-efe55d628ccb",
+     "etikett": "Standardbehandling",
+     "regimer": [
+      "Dikloksacillin oral 500 mg x 4"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-a442fe29-00c6-4586-8d31-80b6936e75cb",
+     "etikett": "Ved betahemolytiske streptokokker gruppe A i dyrkningsprøve, renkultur",
+     "regimer": [
+      "Fenoksymetylpenicillin oral 660 mg x 4"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-05b17204-c635-444a-ad43-1f387ddcc9aa",
+     "etikett": "Ved penicillinallergi",
+     "regimer": [
+      "Klindamycin oral 300 mg x 2"
+     ],
+     "gruppe": "alternativ"
+    }
+   ],
+   "merknader": "**Antibiotikabehandling**\n\nAnbefalt behandlingsvarighet med dikloksacillin eller klindamycin: 7 døgn.\nAnbefalt behandlingsvarighet med fenoksymetylpenicillin: 5 døgn.\n\nDoseøkning eller lengre behandlingsvarighet, inntil 14 døgn, kan være nødvendig ved alvorligere tilfeller, manglende behandlingsrespons eller immunsvikt.\n\n**Annen behandling**\n\n-   For sårstell ved venøse leggsår, se [prosedyrehåndboken ved Oslo Universitetssykehus (ehandboken.ous-hf.no)](https://ehandboken.ous-hf.no/document/758).\n-   Kaliumpermanganat-bad eller omslag kan være aktuelt for opptørking av væskende sår eller staseeksem, se [Oslo Universitetssykehus ehåndbok for fremgangsmåte (ehandboken.ous-hf.no)](https://ehandboken.ous-hf.no/document/16733).\n-   Omslag med eddiksyre 0,25 % kan være aktuelt ved sår som er uttalt koloniserte med gram-negative bakterier, for eksempel Pseudomonas."
+  },
+  {
+   "id": "b77f7d33-9526-49fd-8cff-b09f79e65ead",
+   "navn": "Mastitt",
+   "kapittel": "Hud- og bløtdelsinfeksjoner",
+   "sokeord": [
+    "brystbetennelse",
+    "amming"
+   ],
+   "fagomrader": [
+    "hud",
+    "svangerskap"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/hud-og-blotdelsinfeksjoner/mastitt",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "Ved god allmenntilstand og temperatur < 38,5°C bør støttende behandling (se \"annen behandling\") forsøkes og antibiotika avventes. Kvinnen kan tilbys [vent-og-se-resept (antibiotikaiallmennpraksis.no)](http://www.antibiotikaiallmennpraksis.no/index.php?action=showtopic&topic=DPDFvEqa) som benyttes ved forverring eller manglende bedring i løpet av 12-24 timer.\n\nVed nedsatt allmenntilstand, systemiske symptomer og kliniske funn som tyder på sikker infeksjon, bør antibiotikabehandling starte med en gang ved siden av støttende behandling.",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-d15e3475-320e-435e-b472-efe55d628ccb",
+     "etikett": "Standardbehandling",
+     "regimer": [
+      "Dikloksacillin oral 500 mg x 4"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-ec319f58-2e4c-4a09-be19-f8668613bdfa",
+     "etikett": "Ved alvorlig infeksjon",
+     "regimer": [
+      "Dikloksacillin oral 1 g x 4"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-c6740ce0-0f3e-437c-a4cb-8e5ddc6376c5",
+     "etikett": "Ved penicillinallergi: alternativ med klindamycin",
+     "regimer": [
+      "Klindamycin oral 300 mg x 4"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-f4b4e984-a324-465a-8be4-f0318af14478",
+     "etikett": "Ved penicillinallergi (ikke straksallergi/alvorlig senreaksjon): alternativ med cefaleksin",
+     "regimer": [
+      "Cefaleksin oral 500 mg x 4"
+     ],
+     "gruppe": "alternativ"
+    }
+   ],
+   "merknader": "**Antibiotikabehandling**\n\nAnbefalt behandlingsvarighet: 10 døgn.\nAnbefalt behandlingsvarighet ved residiv av mastitt: 10-14 døgn.\n\nVed alvorlig infeksjon kan dosen reduseres til normaldosering etter oppnådd behandlingseffekt, vanligvis 3-6 døgn.\n\n**Annen behandling**\n\n-   Brystet tømmes etter barnets behov\n    -   Tilby barnet brystet og sikre godt sugetak. Brystet skal ikke tømmes for mer melk enn det barnet har behov for.\n    -   Barnets diing tømmer brystet best. Ved problemer med sugetak kan man forsøke å håndmelke ut litt melk før barnet legges til for å oppnå litt mykere bryst.\n    -   Hevelse og smerte kan reduseres ved kjølige omslag (10-20 minutter) mellom amminger. Noen opplever lettere utdrivning ved varme på brystet umiddelbart før barnet legges til.\n    -   Ved sterke smerter under amming, kan kvinnen håndmelke eller pumpe ut melken som så gis til barnet.\n    -   Oksytocin nesespray letter tømmingen ved dårlig melkeutdriving, f.eks. pga smerter og stress. Dosering: 1 spray i ett nesebor 5 minutter før amming.\n    -   Amming er trygt under antibiotikabehandling.\n-   Smertestillende\n    -   kan bidra til å lette melkeutdrivingen.\n    -   Ibuprofen og paracetamol er trygt å bruke under amming.\n    -   Behandle gjerne med begge midler i kombinasjon i terapeutiske doser, for eksempel 400 mg ibuprofen og 1g paracetamol opptil x 4\n-   Hvile og avlastning.\n-   Sprekker eller sår på brystknoppene vaskes daglig med vann.\n-   Sår kan smøres med en salve med lanolin (100% ullfett) og/eller dekkes med en tynn skumbandasje.\n-   Ved mistanke om sårinfeksjon på brystknopp eller kolonisering i sår på brystknopp, kan man behandle med en antibakteriell krem lokalt."
+  },
+  {
+   "id": "e75a033e-f2dc-4463-83c1-3f248fa57379",
+   "navn": "Inflammert aterom",
+   "kapittel": "Hud- og bløtdelsinfeksjoner",
+   "sokeord": [],
+   "fagomrader": [
+    "hud"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/hud-og-blotdelsinfeksjoner/inflammert-aterom",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "Pasientar med inflammert aterom bør ikkje behandlast med antibiotika.",
+   "anbefalinger": [],
+   "merknader": "**Annen behandling**\n\n-   Behandlast med incisjon når det har tilkome abscessutvikling med fluktuasjon\n-   Residiverande, inflammerte aterom bør eksiderast i roleg fase"
+  },
+  {
+   "id": "936c2187-1e21-455c-bb2e-e67ae5884fd3",
+   "navn": "Paronyki",
+   "kapittel": "Hud- og bløtdelsinfeksjoner",
+   "sokeord": [],
+   "fagomrader": [
+    "hud"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/hud-og-blotdelsinfeksjoner/paronyki",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "Paronyki bør ikkje behandlast med antibiotika.",
+   "anbefalinger": [],
+   "merknader": "**Annen behandling**\n\n-   Enkle chirurgia minor-prosedyrer i lokalanestesi kurerer tilstandane enkelt og effektivt\n-   I dei fleste tilfelle er det nok å klyppa/fjerna den nærmaste neglelista i ei breidde på 3-4 millimeter\n-   I enkelte tilfelle er incisjon av neglevold eller neglebasis nødvendig\n-   Fjerning av heile neglen er sjeldan nødvendig."
+  },
+  {
+   "id": "90e1986f-94c9-4912-9ced-7615fd5ced24",
+   "navn": "Sårinfeksjon",
+   "kapittel": "Hud- og bløtdelsinfeksjoner",
+   "sokeord": [],
+   "fagomrader": [
+    "hud"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/hud-og-blotdelsinfeksjoner/sarinfeksjon",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "Pasienter med lettgradig sårinfeksjon (se «Praktisk») behandles med lokale tiltak uten antibiotika, se «Annen behandling».\n\nUtbredt lokal sårinfeksjon eller sårinfeksjon med påvirket allmenntilstand, bør behandles med systemisk antibiotika.\n\nVed infisert sår i munnhulen, se «Behandlingsalternativer» under. Ved infeksjon i [bittsår](https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/hud-og-blotdelsinfeksjoner/bittskader-og-infeksjon) og infeksjon i [brannsår](https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/hud-og-blotdelsinfeksjoner/brannskader-og-infeksjon), se egne anbefalinger.\n\n**Flukloksacillin mikstur** er nylig kommet på markedet og er et gunstig alternativ for barn < 20 kg som ikke kan svelge tabletter. Dosering er 10 mg/kg x 4.\n\n(alternativet med flukloksacillin vil bli lagt til i listen nedenfor snarlig, men oppdatering av nettsiden er noe forsinket pga. teknisk utvikling og sommerferieavvikling)",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-d15e3475-320e-435e-b472-efe55d628ccb",
+     "etikett": "Voksne og barn > 40 kg",
+     "regimer": [
+      "Dikloksacillin oral 500 mg x 4"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-be1308b9-e95d-47a0-b979-886b559a5996",
+     "etikett": "Barn 20-40 kg",
+     "regimer": [
+      "Dikloksacillin oral 250 mg x 4"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-1394dd96-7862-443b-b5e6-afd81c9119c5",
+     "etikett": "Barn < 20 kg",
+     "regimer": [
+      "Klindamycin oral 5 mg/kg x 3 - mikstur"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-0f0ede57-bfd4-4e04-9ca0-3c56f68da6f8",
+     "etikett": "Ved penicillinallergi: voksne og barn > 30 kg",
+     "regimer": [
+      "Klindamycin oral 150 mg x 4"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-1394dd96-7862-443b-b5e6-afd81c9119c5~",
+     "etikett": "Ved penicillinallergi: barn < 30 kg",
+     "regimer": [
+      "Klindamycin oral 5 mg/kg x 3 - mikstur"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-a442fe29-00c6-4586-8d31-80b6936e75cb",
+     "etikett": "Ved sårinfeksjon i munnhule: voksne",
+     "regimer": [
+      "Fenoksymetylpenicillin oral 660 mg x 4"
+     ],
+     "gruppe": "alternativ"
+    }
+   ],
+   "merknader": "**Antibiotikabehandling**\n\nAnbefalt behandlingsvarighet ved sårinfeksjon i munnhule: 7 døgn.\nAnbefalt behandlingsvarighet ved øvrige sårinfeksjoner: 5 døgn.\n\n**Annen behandling**\n\n-   Fjern bandasje og kirurgisk tape\n-   Fjern eventuelle overfladiske suturer\n-   Eksplorer såret for fremmedlegemer, pusslommer eller skader inn i dypere strukturer som bein, ledd, sener, arterier, nerver\n-   Fjern ev. fremmedlegemer og devitalisert vev\n-   Rens og spyl såret med rikelig isotont saltvann eller springvann. Desinfiserende væsker, slik som klorheksidin, brukes ikke til rensing og rengjøring i selve såret, men kan brukes på huden rundt såret for desinfeksjon\n-   Lukning av såret eller sekundær tilheling vurderes når infeksjonen er borte.\n-   «Bomskudd» bør incideres da de ofte gir dypere abscesser som ikke alltid gir fluktuasjon på overflaten."
+  },
+  {
+   "id": "f6a1bec1-1195-4164-9535-09c021a43ed2",
+   "navn": "Antibiotikaprofylakse ved traumatiske sår og småkirurgi",
+   "kapittel": "Hud- og bløtdelsinfeksjoner",
+   "sokeord": [],
+   "fagomrader": [
+    "hud"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/hud-og-blotdelsinfeksjoner/antibiotikaprofylakse-ved-traumatiske-sar-og-smakirurgi",
+   "sistFagligOppdatert": "2021-11-16T00:00",
+   "indikasjon": "Rutinemessig antibiotikaprofylakse ved ukompliserte sår anbefales ikke.\n\nVed småkirurgi hos personer med nedsatt immunforsvar kan antibiotikaprofylakse overveies dersom infeksjonsrisiko vurderes som spesielt stor.\n\nVed traumatiske sårskader med økt risiko for infeksjon kan antibiotikaprofylakse overveies ut fra en totalvurdering av risikofaktorene (se «Praktisk»). Også ved sårskader med affeksjon av bein, ledd eller sener bør antibiotikaprofylakse overveies.",
+   "varighet": "2 døgn",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-d15e3475-320e-435e-b472-efe55d628ccb",
+     "etikett": "Voksne og barn > 40 kg",
+     "regimer": [
+      "Dikloksacillin oral 500 mg x 4"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-be1308b9-e95d-47a0-b979-886b559a5996",
+     "etikett": "Barn 20-40 kg",
+     "regimer": [
+      "Dikloksacillin oral 250 mg x 4"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-1394dd96-7862-443b-b5e6-afd81c9119c5",
+     "etikett": "Barn < 20 kg",
+     "regimer": [
+      "Klindamycin oral 5 mg/kg x 3 - mikstur"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-0f0ede57-bfd4-4e04-9ca0-3c56f68da6f8",
+     "etikett": "Ved penicillinallergi: voksne og barn > 30 kg",
+     "regimer": [
+      "Klindamycin oral 150 mg x 4"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-1394dd96-7862-443b-b5e6-afd81c9119c5~",
+     "etikett": "Ved penicillinallergi: barn < 30 kg",
+     "regimer": [
+      "Klindamycin oral 5 mg/kg x 3 - mikstur"
+     ],
+     "gruppe": "alternativ"
+    }
+   ],
+   "merknader": "**Annen behandling**\n\n-   Eksplorer såret grundig med tanke på affeksjon av dypere strukturer som bein, sener og nerver.\n-   Vurder distal status ved ekstremitetsskader, inkludert fingre og tær, for å påvise eventuell nerve-, sene- og/eller arterieskade.\n-   Fjern fremmedlegemer og devitalisert vev.\n-   Før sårlukning, rens og spyl rikelig med isotont saltvann eller springvann.\n    -   Desinfiserende væsker, slik som klorheksidin, brukes **ikke** til rensing og rengjøring i selve såret, men kan brukes på huden rundt såret for desinfeksjon.\n-   Såret lukkes så snart det er praktisk mulig med suturer, agraffer eller sårlim.\n    -   Munnhule: større sårskader (over 2 cm) lukkes med sutur, bruk gjerne resorberbar tråd.\n    -   Det er ingen absolutt tidsgrense for når en avstår fra sårlukking, beslutning tas ut ifra en samlet vurdering av risikofaktorer for infeksjon.\n    -   Vurder forsinket primærsutur, eventuelt sekundær tilheling ved sår med høy infeksjonsrisiko.\n-   Tetanusprofylakse gis etter gjeldende retningslinjer, se [FHIs vaksinasjonsveileder](https://www.fhi.no/nettpub/vaksinasjonsveilederen-for-helsepersonell/vaksiner-mot-de-enkelte-sykdommene/tetanusvaksinasjon-stivkrampe-og-te/#bruk-av-tetanusvaksine-og-tetanusimmunglobulinved-saarskader).\n-   Bruk sterile nål, tråd og instrumenter ved sårlukkingen. Bruk av sterile eller rene hansker og andre hygienetiltak som hullduk eller munnbind vurderes i hvert enkelt tilfelle ut fra total infeksjonsrisiko."
+  },
+  {
+   "id": "69be96f4-f994-4ecb-a822-bf69c3a5c737",
+   "navn": "Sepsis",
+   "kapittel": "Andre infeksjoner",
+   "sokeord": [
+    "sepsis",
+    "septisk",
+    "blodforgiftning",
+    "news2",
+    "alvorlig infeksjon",
+    "prehospital antibiotika"
+   ],
+   "fagomrader": [
+    "akutt"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/andre-infeksjoner/sepsis",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "Ved mistanke om sepsis bør pasienten legges inn på sykehus umiddelbart.\n\nOppstart av antibiotika bør iverksettes når transport til sykehus vil forsinke oppstart av behandling med mer enn 60 minutter og det foreligger alvorlig klinikk (for eksempel systolisk BT < 90 mmHg eller NEWS2 ≥ 7).\n\nFor pasienter hvor det mistenkes sepsis men som ikke er i ovennevnte kategori, kan beslutning om å starte antibiotika prehospitalt tas i felleskap med sykehuslege.\n\nVed klinisk mistanke om meningokokkmeningitt, følg i tillegg [anbefalingen om Bakteriell meningitt](https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/andre-infeksjoner/bakteriell-meningitt).",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-1fd8523c-6bc0-45c3-8e51-8166350eaf4f",
+     "etikett": "Voksne og barn > 12 år",
+     "regimer": [
+      "Benzylpenicillin iv 3 g - som engangsdose",
+      "Gentamicin iv 6-7 mg/kg - som engangsdose"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-2b1e8d7f-5813-493f-bd1e-2cf9bf58a497",
+     "etikett": "Barn < 12 år",
+     "regimer": [
+      "Cefotaksim iv 50 mg/kg - som engangsdose"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-02b11361-3edc-468d-adc9-cb5f260be0c4",
+     "etikett": "Voksne og barn > 12 år: alternativ med cefotaksim",
+     "regimer": [
+      "Cefotaksim iv 2 g - som engangsdose"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-16206d88-3a03-4fd0-86f1-a371646c406a",
+     "etikett": "Barn < 12 år: alternativ med benzylpenicillin + gentamicin",
+     "regimer": [
+      "Benzylpenicillin iv 50 mg/kg - som engangsdose",
+      "Gentamicin intramuskulært 5 mg/kg - som engangsdose"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-d2dd3cc7-328e-4d95-8f89-1f95249a4c3e",
+     "etikett": "Ved allergi mot penicillin/cefalosporiner: voksne og barn",
+     "regimer": [
+      "Gentamicin intramuskulært 5 mg/kg - som engangsdose"
+     ],
+     "gruppe": "alternativ"
+    }
+   ],
+   "merknader": "**Antibiotikabehandling**\n\nAntibiotika administreres fortrinnsvis intravenøst. Om dette ikke er mulig kan samme doser gis intramuskulært.\n\nCeftriakson kan erstatte cefotaksim. Dosering og administrasjon er lik.\n\n**OBS:** Det anbefales ikke gentamicin ved fulminant flerorgansvikt eller kronisk nyresvikt.\n\n**Annen behandling**\n\n-   Ingen tiltak må forsinke transport til sykehus\n-   Hvis mulig uten å forsinke transport:\n    -   Oksygen: Målområde for SpO2 er 92-96%, ved KOLS 88-92 %.\n    -   Legg inn venekanyle\n    -   Ta blodkulturer forut for oppstart av antibiotika:\n        -   1 aerob flaske og 1 anaerob flaske\n    -   Ved systolisk blodtrykk < 90 mmHg gis intravenøst væskestøt, for eksempel Ringeracetat\n        -   Voksne: 500 ml over 15-30 minutter\n        -   Barn: 20 ml/kg over 15-30 minutter"
+  },
+  {
+   "id": "1023e549-8b48-4df1-89dd-53ab03d76e21",
+   "navn": "Bakteriell meningitt",
+   "kapittel": "Andre infeksjoner",
+   "sokeord": [
+    "meningitt",
+    "hjernehinnebetennelse",
+    "meningokokk",
+    "nakkestivhet",
+    "petekkier"
+   ],
+   "fagomrader": [
+    "akutt",
+    "nevrologi"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/andre-infeksjoner/bakteriell-meningitt",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "Ved mistanke om bakteriell meningitt bør pasienten legges inn på sykehus umiddelbart.\n\nDersom transport til sykehuset tar mer enn 30 minutter, bør antibiotikabehandling startes før/under transport. Ved kjent anafylaksi mot penicilliner eller cefalosporiner utsettes antibiotikabehandling til ankomst sykehus.\n\nFor profylaktisk behandling av nærkontakter til pasienter med meningokokkmeningitt, se [Smittevernhåndboka (fhi.no)](https://www.fhi.no/nettpub/smittevernveilederen/sykdommer-a-a/meningokokksykdom---veileder-for-he/?term=meningokokk&h=1#tiltak-ved-enkelttilfelle-eller-utbrudd).",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-1fd8523c-6bc0-45c3-8e51-8166350eaf4f",
+     "etikett": "Voksne og barn > 12 år",
+     "regimer": [
+      "Benzylpenicillin iv 3 g - som engangsdose"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-16206d88-3a03-4fd0-86f1-a371646c406a",
+     "etikett": "Barn < 12 år",
+     "regimer": [
+      "Benzylpenicillin iv 50 mg/kg - som engangsdose"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-02b11361-3edc-468d-adc9-cb5f260be0c4",
+     "etikett": "Ved penicillinallergi, ikke straksallergi, eller ved klinisk mistanke om septisk meningitt: voksne og barn > 12 år",
+     "regimer": [
+      "Cefotaksim iv 2 g - som engangsdose"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-e955c58f-773e-4666-aa54-ea328a603aff",
+     "etikett": "Ved penicillinallergi, ikke straksallergi, eller ved klinisk mistanke om septisk meningitt: barn < 12 år",
+     "regimer": [
+      "Cefotaksim iv 100 mg/kg - som engangsdose"
+     ],
+     "gruppe": "alternativ"
+    }
+   ],
+   "merknader": "**Antibiotikabehandling**\n\nAntibiotikabehandlingen kan gis enten intravenøst eller intramuskulært, dosering er lik.\n\nCeftriakson kan erstatte cefotaksim, dosering og administrasjon er lik.\n\n**Annen behandling**\n\n-   Ingen tiltak må forsinke transport til sykehus\n-   Hvis mulig uten å forsinke transport:\n    -   ta blodkulturer forut for oppstart av antibiotika: 1 aerob flaske og eventuelt 1 anaerob flaske\n    -   legg inn venekanyle.\n-   Kortikosteroider:\n    -   Om forventet transporttid til sykehus **er mer enn** 4 timer: Dexametason 0,15 mg/kg (maks 10 mg) i.v. Behandling startes helst før antibiotika og ikke senere enn 4 timer etter at antibiotikabehandling er startet."
+  },
+  {
+   "id": "34316126-8d88-41f3-8ed0-91db40b83705",
+   "navn": "Borreliose – erytema migrans",
+   "kapittel": "Andre infeksjoner",
+   "sokeord": [
+    "borreliose",
+    "erytema migrans",
+    "flåttbitt",
+    "flått",
+    "borrelia",
+    "lyme",
+    "skogflått"
+   ],
+   "fagomrader": [
+    "hud"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/andre-infeksjoner/borreliose--erytema-migrans",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "Pasienter med flåttbitt bør ikke få antibiotika profylaktisk.\n\nPasienter med erytema migrans bør behandles med antibiotika. Diagnosen stilles på bakgrunn av kliniske funn og anamnese.\n\nAnbefalingen gjelder solitær erytema migrans. Ved mistanke om multiple erytema migrans, borrelialymfocytom, borreliaartritt, acrodermatitis chronicum atroficans (ACA), nevro- eller kardial borreliose, se [egen anbefaling om \"Borreliose - andre manifestasjoner](https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/andre-infeksjoner/borreliose--andre-manifestasjoner)\".",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-62bb7dc3-d55e-4a47-b1c4-d4b895cae5b0",
+     "etikett": "Voksne og barn > 40 kg",
+     "regimer": [
+      "Fenoksymetylpenicillin oral 1 g x 4 i 10 døgn"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-6c64fdaf-21e3-4ccc-8ec0-ab7f69ea967c",
+     "etikett": "Barn < 40 kg",
+     "regimer": [
+      "Fenoksymetylpenicillin oral 20 mg/kg x 4 i 10 døgn"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-9f505abf-c85b-4ba3-926b-eb7bdaac480c",
+     "etikett": "Ved penicillinallergi: voksne og barn > 40 kg",
+     "regimer": [
+      "Doksysyklin oral 200 mg x 1 i 10 døgn"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-ce484252-622a-42d9-9aa9-feb5e48b015a",
+     "etikett": "Ved penicillinallergi: barn < 40 kg",
+     "regimer": [
+      "Azitromycin oral 20 mg/kg x 1 ladningsdose etterfulgt av Azitromycin oral 10 mg/kg x 1 - fra dag 2, totalt 5 døgn. Mikstur"
+     ],
+     "gruppe": "alternativ"
+    }
+   ],
+   "merknader": "**Antibiotikabehandling**\n\nFor anbefalt behandlingsvarighet, se under hvert behandlingsregime\n\n**Annen behandling**\n\nVed flåttbitt:\n\n-   Fjern flåtten, vask bittstedet med såpe, legg eventuelt på sårsalve - forebygger ikke borreliose, men kan hindre andre hudinfeksjoner via bittstedet. For flere råd, se [Flåttsenteret (flåttsenteret.no](https://xn--flttsenteret-ucb.no/2020/07/hjelp-jeg-er-bitt-av-flatt/))."
+  },
+  {
+   "id": "65f4a277-538a-4e57-afa0-b3f58e51d627",
+   "navn": "Borreliose – andre manifestasjoner",
+   "kapittel": "Andre infeksjoner",
+   "sokeord": [
+    "nevroborreliose",
+    "facialisparese",
+    "borrelia",
+    "flått"
+   ],
+   "fagomrader": [
+    "nevrologi"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/andre-infeksjoner/borreliose--andre-manifestasjoner",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "Pasienter med flåttbitt bør ikke få antibiotika profylaktisk.\n\nVed mistanke om nevro- eller kardial borreliose bør det raskt konfereres med eller henvises til spesialisthelsetjenesten.\n\nPasienter med multiple erytema migrans, borrelialymfocytom, borreliaartritt eller acrodermatitis chronicum atroficans (ACA) bør behandles med antibiotika. Ved borreliaartritt bør pasienten raskt henvises revmatolog.",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-43ac76ec-2af2-4e3e-b40c-2fa4600b04e3",
+     "etikett": "Voksne",
+     "regimer": [
+      "Doksysyklin oral 200 mg x 1"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-598fdce8-5ac5-4594-9dba-8c7475731cd5",
+     "etikett": "Barn > 8 år",
+     "regimer": [
+      "Doksysyklin oral 4 mg/kg x 1"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-a160471f-9646-47cf-b0ee-95227e57cbdc",
+     "etikett": "Barn < 8 år",
+     "regimer": [
+      "Amoksicillin oral 15 mg/kg x 3"
+     ],
+     "gruppe": "standard"
+    },
+    {
+     "id": "0006-0048-c6e02f5d-6645-4583-926e-a245b3cdf016",
+     "etikett": "Ved graviditet eller amming",
+     "regimer": [
+      "Amoksicillin oral 500 mg x 3"
+     ],
+     "gruppe": "alternativ"
+    }
+   ],
+   "merknader": "**Antibiotikabehandling**\n\nAnbefalt behandlingsvarighet ved multiple erytema migrans og borrelialymfocytom: 14 døgn.\nAnbefalt behandlingsvarighet ved borreliaartritt og acrodermatitis chronicum atroficans: 21 døgn.\n\n**Annen behandling**\n\nVed flåttbitt:\n\n-   Fjern flåtten, vask bittstedet med såpe, eventuelt legg på sårsalve – dette forebygger ikke borreliose, men kan hindre andre hudinfeksjoner via bittstedet. For flere råd, se [Flåttsenteret (flåttsenteret.no)](https://xn--flttsenteret-ucb.no/2020/07/hjelp-jeg-er-bitt-av-flatt/)."
+  },
+  {
+   "id": "b1b59904-e76d-4de0-8e5c-899e2513b009",
+   "navn": "MRSA",
+   "kapittel": "Andre infeksjoner",
+   "sokeord": [
+    "resistente stafylokokker"
+   ],
+   "fagomrader": [
+    "hud"
+   ],
+   "url": "https://www.helsedirektoratet.no/retningslinjer/antibiotika-i-primaerhelsetjenesten/andre-infeksjoner/mrsa",
+   "sistFagligOppdatert": "2026-06-30T15:00",
+   "indikasjon": "Påvisning av MRSA (meticillinresistente *Staphylococcus aureus*) er i seg selv ikke indikasjon for behandling med antibiotika. Ved MRSA-infeksjoner bør en følge vanlige prinsipper for antibiotikabehandling, det vil si på klinisk indikasjon. Sanering kan være aktuelt, se Folkehelseinstituttets [MRSA-veileder (fhi.no)](https://www.fhi.no/publ/eldre/mrsa-veilederen/).\n\nVed behandlingskrevende infeksjon med påvist MRSA i dyrkningsprøve fra infeksjonsfokus, velges antibiotika i henhold til resistensbestemmelse og nasjonale/lokale resistensforhold. Her omtales behandlingsalternativene for ukompliserte MRSA-infeksjoner i hud- og bløtvev hos voksne og barn > 40 kg. For aktuelle medikamentregimer, se «Behandlingsalternativer».\n\nVed kompliserte MRSA-infeksjoner bør infeksjonsmedisiner konsulteres.",
+   "anbefalinger": [
+    {
+     "id": "0006-0048-2d95c525-d402-4f6d-941a-2e9d8336efbf",
+     "etikett": "1. valg: alternativ med trimetoprim/sulfametoksazol",
+     "regimer": [
+      "Sulfametoksazol og trimetoprim oral 800/160 mg x 2"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-dbc79a2c-882b-4f0e-9aed-8fad1919bd80",
+     "etikett": "2. valg: alternativ med klindamycin",
+     "regimer": [
+      "Klindamycin oral 300 mg x 3"
+     ],
+     "gruppe": "alternativ"
+    },
+    {
+     "id": "0006-0048-43ac76ec-2af2-4e3e-b40c-2fa4600b04e3",
+     "etikett": "3. valg: alternativ med tetrasyklin",
+     "regimer": [
+      "Doksysyklin oral 200 mg x 1"
+     ],
+     "gruppe": "alternativ"
+    }
+   ],
+   "merknader": "**Antibiotikabehandling**\n\nAnbefalt behandlingsvarighet som ved de ulike kliniske tilstander forårsaket av meticillinfølsomme stafylokokker\n\n**Annen behandling**\n\nEventuelle abscesser dreneres. Ved vellykket drenasje er ofte systemisk antibiotikabehandling unødvendig, også ved MRSA-infeksjon."
+  }
+ ],
+ "hentetAt": "2026-10-09T18:00:39.814Z"
+}

@@ -1,12 +1,15 @@
 "use client"
 
+import ReactMarkdown, { type Components } from "react-markdown"
+import remarkGfm from "remark-gfm"
 import { AlertTriangle, Check, ExternalLink, Info } from "lucide-react"
 import type { Anbefaling, Retningslinje, Tilstand } from "@/lib/verktoy/typer"
 import {
+  HENTING_ADVARSEL_DAGER,
   INGEN_BEHANDLING,
-  VERIFISERING_ADVARSEL_DAGER,
   anbefalingTilTekst,
-  dagerSidenVerifisert,
+  dagerSidenHentet,
+  norskDato,
 } from "@/lib/verktoy/retningslinje"
 
 interface Props {
@@ -16,10 +19,42 @@ interface Props {
   onVelg: (id: string) => void
 }
 
-function norskDato(iso: string): string {
-  const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return iso
-  return d.toLocaleDateString("nb-NO", { day: "2-digit", month: "2-digit", year: "numeric" })
+/**
+ * Kildens tekst, konvertert fra HTML til Markdown på serveren. react-markdown
+ * rendrer aldri rå HTML, og lenker åpnes i ny fane.
+ */
+const MD: Components = {
+  h1: (p) => <h5 className="text-sm font-semibold text-slate-800 mt-3 mb-1" {...p} />,
+  h2: (p) => <h5 className="text-sm font-semibold text-slate-800 mt-3 mb-1" {...p} />,
+  h3: (p) => <h5 className="text-sm font-semibold text-slate-800 mt-3 mb-1" {...p} />,
+  h4: (p) => <h5 className="text-sm font-semibold text-slate-800 mt-3 mb-1" {...p} />,
+  h5: (p) => <h5 className="text-sm font-semibold text-slate-800 mt-3 mb-1" {...p} />,
+  h6: (p) => <h5 className="text-sm font-semibold text-slate-800 mt-3 mb-1" {...p} />,
+  p: (p) => <p className="text-sm text-slate-700 leading-relaxed my-1.5" {...p} />,
+  ul: (p) => <ul className="list-disc pl-5 space-y-1 text-sm text-slate-700 my-1.5" {...p} />,
+  ol: (p) => <ol className="list-decimal pl-5 space-y-1 text-sm text-slate-700 my-1.5" {...p} />,
+  li: (p) => <li className="leading-relaxed" {...p} />,
+  a: ({ href, children }) => (
+    <a href={href} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+      {children}
+    </a>
+  ),
+  strong: (p) => <strong className="font-semibold text-slate-800" {...p} />,
+  table: (p) => (
+    <div className="overflow-x-auto my-2">
+      <table className="w-full text-sm border border-slate-200" {...p} />
+    </div>
+  ),
+  th: (p) => <th className="px-2 py-1 text-left font-medium border-b border-slate-200" {...p} />,
+  td: (p) => <td className="px-2 py-1 align-top border-t border-slate-100" {...p} />,
+}
+
+function KildeTekst({ children }: { children: string }) {
+  return (
+    <ReactMarkdown remarkPlugins={[remarkGfm]} components={MD}>
+      {children}
+    </ReactMarkdown>
+  )
 }
 
 function AnbefalingRad({
@@ -67,12 +102,20 @@ function AnbefalingRad({
 export function RetningslinjeVisning({ retningslinje, tilstand, valgte, onVelg }: Props) {
   const standard = tilstand.anbefalinger.filter((a) => a.gruppe === "standard")
   const alternativer = tilstand.anbefalinger.filter((a) => a.gruppe === "alternativ")
-  const dager = dagerSidenVerifisert(tilstand)
-  const foreldet = dager > VERIFISERING_ADVARSEL_DAGER
+  const dager = dagerSidenHentet(retningslinje)
+  const foreldet = dager > HENTING_ADVARSEL_DAGER
   const ingenValgt = valgte.includes(INGEN_BEHANDLING)
 
   return (
     <div className="space-y-5">
+      {/*
+        Kildeangivelse etter vilkårene for Helsedirektoratets innhold (NLOD):
+        tydelig, i samme størrelse som innholdet og rett ved det
+      */}
+      <p className="text-sm text-slate-700">
+        Kilde: {retningslinje.kilde.navn} — {retningslinje.langtNavn}
+      </p>
+
       {/* Ferskhet og kilde */}
       <div
         className={`rounded-lg border px-3 py-2.5 space-y-1.5 ${
@@ -88,10 +131,10 @@ export function RetningslinjeVisning({ retningslinje, tilstand, valgte, onVelg }
           <div className="flex-1 min-w-0 text-xs">
             <p className={foreldet ? "text-amber-800" : "text-slate-600"}>
               {foreldet
-                ? `Innholdet her ble sist sammenholdt med kilden ${norskDato(tilstand.sistVerifisert)} — sjekk kilden før du følger anbefalingen.`
-                : `Sammenholdt med kilden ${norskDato(tilstand.sistVerifisert)}.`}
-              {tilstand.kildeOppdatert &&
-                ` Kilden var da sist oppdatert ${norskDato(tilstand.kildeOppdatert)}.`}
+                ? `Innholdet ble sist hentet fra Helsedirektoratet ${norskDato(retningslinje.hentetAt)} og kan være utdatert — sjekk kilden før du følger anbefalingen.`
+                : `Hentet fra Helsedirektoratet ${norskDato(retningslinje.hentetAt)}.`}
+              {norskDato(tilstand.sistFagligOppdatert) &&
+                ` Sist faglig oppdatert ${norskDato(tilstand.sistFagligOppdatert)}.`}
             </p>
           </div>
         </div>
@@ -102,24 +145,17 @@ export function RetningslinjeVisning({ retningslinje, tilstand, valgte, onVelg }
           className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 hover:underline"
         >
           <ExternalLink className="w-3 h-3" />
-          Åpne kapitlet hos {retningslinje.kilde.navn}
+          Åpne hos Helsedirektoratet
         </a>
       </div>
 
       {/* Indikasjon */}
-      {tilstand.indikasjon.length > 0 && (
-        <div className="space-y-2">
+      {tilstand.indikasjon && (
+        <div className="space-y-1">
           <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
             Indikasjon for antibiotikabehandling
           </h4>
-          <ul className="space-y-1.5">
-            {tilstand.indikasjon.map((punkt, i) => (
-              <li key={i} className="flex gap-2 text-sm text-slate-700 leading-relaxed">
-                <span className="text-slate-300 shrink-0 select-none">•</span>
-                <span>{punkt}</span>
-              </li>
-            ))}
-          </ul>
+          <KildeTekst>{tilstand.indikasjon}</KildeTekst>
         </div>
       )}
 
@@ -187,26 +223,12 @@ export function RetningslinjeVisning({ retningslinje, tilstand, valgte, onVelg }
         </button>
       </div>
 
-      {tilstand.utvalg && (
-        <p className="text-xs text-amber-700">
-          Kun et utvalg av kildens behandlingslinjer er gjengitt her. Se kapitlet hos kilden
-          for fullstendig liste.
-        </p>
-      )}
-
-      {tilstand.merknader && tilstand.merknader.length > 0 && (
-        <div className="space-y-2">
+      {tilstand.merknader && (
+        <div className="space-y-1">
           <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
             Annen behandling og merknader
           </h4>
-          <ul className="space-y-1.5">
-            {tilstand.merknader.map((m, i) => (
-              <li key={i} className="flex gap-2 text-sm text-slate-700 leading-relaxed">
-                <span className="text-slate-300 shrink-0 select-none">•</span>
-                <span>{m}</span>
-              </li>
-            ))}
-          </ul>
+          <KildeTekst>{tilstand.merknader}</KildeTekst>
         </div>
       )}
     </div>

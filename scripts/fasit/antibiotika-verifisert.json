@@ -1,0 +1,1312 @@
+{
+ "kilde": "Manuelt sammenholdt med Helsedirektoratets retningslinje 2026-08-20 (revisjon 2026-06-30)",
+ "tilstander": {
+  "akutt-mediaotitt": {
+   "navn": "Akutt mediaotitt",
+   "gammelId": "akutt-mediaotitt",
+   "fagomrader": [
+    "luftveier",
+    "barn"
+   ],
+   "sokeord": [
+    "otitt",
+    "mediaotitt",
+    "mellomørebetennelse",
+    "ørebetennelse",
+    "øreverk",
+    "øresmerter",
+    "otitis media"
+   ],
+   "linjer": [
+    {
+     "etikett": "Voksne og barn > 40 kg",
+     "gruppe": "standard",
+     "preparater": [
+      "Fenoksymetylpenicillin"
+     ],
+     "doser": [
+      "1 g x 4"
+     ]
+    },
+    {
+     "etikett": "Barn < 40 kg",
+     "gruppe": "standard",
+     "preparater": [
+      "Fenoksymetylpenicillin"
+     ],
+     "doser": [
+      "10 mg/kg x 4"
+     ]
+    },
+    {
+     "etikett": "Ved hyppige og residiverende tilfeller: voksne og barn > 40 kg",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Amoksicillin"
+     ],
+     "doser": [
+      "500 mg x 3"
+     ]
+    },
+    {
+     "etikett": "Ved hyppige og residiverende tilfeller: barn < 40 kg",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Amoksicillin"
+     ],
+     "doser": [
+      "10 mg/kg x 3"
+     ]
+    },
+    {
+     "etikett": "Ved terapisvikt: voksne og barn > 40 kg",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Amoksicillin og klavulansyre"
+     ],
+     "doser": [
+      "500/125 mg x 3"
+     ]
+    },
+    {
+     "etikett": "Ved terapisvikt: barn < 40 kg",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Amoksicillin og klavulansyre"
+     ],
+     "doser": [
+      "15/2,1 mg/kg x 2"
+     ]
+    },
+    {
+     "etikett": "Ved penicillinallergi: voksne og barn > 35 kg",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Erytromycin"
+     ],
+     "doser": [
+      "500 mg x 2"
+     ]
+    },
+    {
+     "etikett": "Ved penicillinallergi: barn 25–35 kg",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Erytromycin"
+     ],
+     "doser": [
+      "250 mg x 2"
+     ]
+    },
+    {
+     "etikett": "Ved penicillinallergi: barn < 25 kg",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Erytromycin"
+     ],
+     "doser": [
+      "20 mg/kg x 2"
+     ]
+    }
+   ]
+  },
+  "akutt-sinusitt": {
+   "navn": "Akutt sinusitt",
+   "gammelId": "akutt-sinusitt",
+   "fagomrader": [
+    "luftveier"
+   ],
+   "sokeord": [
+    "sinusitt",
+    "bihulebetennelse",
+    "bihuler",
+    "rhinosinusitt",
+    "nesesekresjon"
+   ],
+   "linjer": [
+    {
+     "etikett": "Voksne",
+     "gruppe": "standard",
+     "preparater": [
+      "Fenoksymetylpenicillin"
+     ],
+     "doser": [
+      "1 g x 4"
+     ]
+    },
+    {
+     "etikett": "Barn",
+     "gruppe": "standard",
+     "preparater": [
+      "Fenoksymetylpenicillin"
+     ],
+     "doser": [
+      "15 mg/kg x 4"
+     ]
+    },
+    {
+     "etikett": "Ved terapisvikt etter standardbehandling: voksne",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Amoksicillin"
+     ],
+     "doser": [
+      "500 mg x 3"
+     ]
+    },
+    {
+     "etikett": "Ved terapisvikt etter standardbehandling: barn",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Amoksicillin"
+     ],
+     "doser": [
+      "10 mg/kg x 3"
+     ]
+    },
+    {
+     "etikett": "Ved terapisvikt etter behandling med amoksicillin: voksne og barn > 12 år",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Doksysyklin"
+     ],
+     "doser": [
+      "100 mg x 1"
+     ]
+    },
+    {
+     "etikett": "Ved penicillinallergi: voksne og barn > 35 kg",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Doksysyklin"
+     ],
+     "doser": [
+      "100 mg x 1"
+     ]
+    },
+    {
+     "etikett": "Ved penicillinallergi: barn 25–35 kg",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Erytromycin"
+     ],
+     "doser": [
+      "250 mg x 2"
+     ]
+    },
+    {
+     "etikett": "Ved penicillinallergi: barn < 25 kg",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Erytromycin"
+     ],
+     "doser": [
+      "20 mg/kg x 2"
+     ]
+    },
+    {
+     "etikett": "Ved sannsynlig odontogent fokus: voksne",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Fenoksymetylpenicillin",
+      "Metronidazol"
+     ],
+     "doser": [
+      "1 g x 4",
+      "400 mg x 3"
+     ]
+    }
+   ]
+  },
+  "streptokokkhalsinfeksjon-og-skarlagensfeber": {
+   "navn": "Streptokokkhalsinfeksjon og skarlagensfeber",
+   "gammelId": "streptokokkhalsinfeksjon",
+   "fagomrader": [
+    "luftveier"
+   ],
+   "sokeord": [
+    "halsbetennelse",
+    "tonsillitt",
+    "streptokokker",
+    "gas",
+    "skarlagensfeber",
+    "sår hals",
+    "halsinfeksjon",
+    "centor",
+    "strep a"
+   ],
+   "linjer": [
+    {
+     "etikett": "Voksne og barn > 40 kg",
+     "gruppe": "standard",
+     "preparater": [
+      "Fenoksymetylpenicillin"
+     ],
+     "doser": [
+      "660 mg x 4"
+     ]
+    },
+    {
+     "etikett": "Barn < 40 kg",
+     "gruppe": "standard",
+     "preparater": [
+      "Fenoksymetylpenicillin"
+     ],
+     "doser": [
+      "10 mg/kg x 4"
+     ]
+    },
+    {
+     "etikett": "Ved penicillinallergi: voksne og barn > 35 kg",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Erytromycin"
+     ],
+     "doser": [
+      "500 mg x 2"
+     ]
+    },
+    {
+     "etikett": "Ved penicillinallergi: barn 25–35 kg",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Erytromycin"
+     ],
+     "doser": [
+      "250 mg x 2"
+     ]
+    },
+    {
+     "etikett": "Ved penicillinallergi: barn < 25 kg",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Erytromycin"
+     ],
+     "doser": [
+      "20 mg/kg x 2"
+     ]
+    },
+    {
+     "etikett": "Ved gjentatte residiv: voksne og barn > 12 år",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Klindamycin"
+     ],
+     "doser": [
+      "150 mg x 4"
+     ]
+    },
+    {
+     "etikett": "Ved gjentatte residiv: barn 1 måned – 12 år",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Klindamycin"
+     ],
+     "doser": [
+      "7 mg/kg x 3"
+     ]
+    }
+   ]
+  },
+  "akutt-bronkitt": {
+   "navn": "Akutt bronkitt",
+   "gammelId": "akutt-bronkitt",
+   "fagomrader": [
+    "luftveier"
+   ],
+   "sokeord": [
+    "bronkitt",
+    "hoste",
+    "luftveisinfeksjon",
+    "forkjølelse"
+   ],
+   "linjer": []
+  },
+  "pneumoni": {
+   "navn": "Pneumoni",
+   "gammelId": "pneumoni",
+   "fagomrader": [
+    "luftveier"
+   ],
+   "sokeord": [
+    "pneumoni",
+    "lungebetennelse",
+    "crp",
+    "røntgen thorax",
+    "lungeinfeksjon"
+   ],
+   "linjer": [
+    {
+     "etikett": "Voksne",
+     "gruppe": "standard",
+     "preparater": [
+      "Fenoksymetylpenicillin"
+     ],
+     "doser": [
+      "1 g x 4"
+     ]
+    },
+    {
+     "etikett": "Barn",
+     "gruppe": "standard",
+     "preparater": [
+      "Fenoksymetylpenicillin"
+     ],
+     "doser": [
+      "15 mg/kg x 4"
+     ]
+    },
+    {
+     "etikett": "Ved penicillinallergi: voksne",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Doksysyklin"
+     ],
+     "doser": [
+      "200 mg x 1 som ladningsdose, deretter 100 mg x 1 fra dag 2"
+     ]
+    },
+    {
+     "etikett": "Ved penicillinallergi: barn 25–35 kg",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Erytromycin"
+     ],
+     "doser": [
+      "250 mg x 2"
+     ]
+    },
+    {
+     "etikett": "Ved penicillinallergi: barn < 25 kg",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Erytromycin"
+     ],
+     "doser": [
+      "20 mg/kg x 2"
+     ]
+    },
+    {
+     "etikett": "Ved penicillinallergi og kontraindikasjon mot tetrasyklin: voksne (inkludert gravide)",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Erytromycin"
+     ],
+     "doser": [
+      "500 mg x 2"
+     ]
+    },
+    {
+     "etikett": "Ved kronisk obstruktiv lungesykdom (kols) eller svekket immunforsvar",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Amoksicillin"
+     ],
+     "doser": [
+      "750 mg x 3"
+     ]
+    },
+    {
+     "etikett": "Ved funn av betalaktamaseproduserende Haemophilus influenzae følsom for trimetoprim/sulfametoksazol",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Sulfametoksazol og trimetoprim"
+     ],
+     "doser": [
+      "800/160 mg x 2"
+     ]
+    },
+    {
+     "etikett": "Ved funn av betalaktamaseproduserende Haemophilus influenzae ikke følsom for trimetoprim/sulfametoksazol",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Amoksicillin og klavulansyre"
+     ],
+     "doser": [
+      "500/125 mg x 4"
+     ]
+    },
+    {
+     "etikett": "Ved funn av betalaktamaseproduserende Haemophilus influenzae ikke følsom for trimetoprim/sulfametoksazol, og penicillinallergi",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Doksysyklin"
+     ],
+     "doser": [
+      "200 mg x 1 som ladningsdose, deretter 100 mg x 1 fra dag 2"
+     ]
+    }
+   ]
+  },
+  "atypisk-pneumoni": {
+   "navn": "Atypisk pneumoni",
+   "gammelId": "atypisk-pneumoni",
+   "fagomrader": [
+    "luftveier"
+   ],
+   "sokeord": [
+    "atypisk pneumoni",
+    "mykoplasma",
+    "mycoplasma pneumoniae",
+    "chlamydia pneumoniae",
+    "nasofarynksprøve"
+   ],
+   "linjer": [
+    {
+     "etikett": "Voksne og barn > 35 kg",
+     "gruppe": "standard",
+     "preparater": [
+      "Doksysyklin"
+     ],
+     "doser": [
+      "200 mg x 1 som ladningsdose, deretter 100 mg x 1 fra dag 2"
+     ]
+    },
+    {
+     "etikett": "Barn 25–35 kg",
+     "gruppe": "standard",
+     "preparater": [
+      "Erytromycin"
+     ],
+     "doser": [
+      "250 mg x 2"
+     ]
+    },
+    {
+     "etikett": "Barn < 25 kg",
+     "gruppe": "standard",
+     "preparater": [
+      "Erytromycin"
+     ],
+     "doser": [
+      "20 mg/kg x 2"
+     ]
+    },
+    {
+     "etikett": "Ved kontraindikasjoner mot tetrasykliner hos voksne",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Erytromycin"
+     ],
+     "doser": [
+      "500 mg x 2"
+     ]
+    }
+   ]
+  },
+  "forverring-eksaserbasjon-av-kronisk-obstruktiv-lungesykdom-kolskronisk-bronkitt-icpc-koder-r95r79": {
+   "navn": "Kols-forverring",
+   "gammelId": "kols-forverring",
+   "fagomrader": [
+    "luftveier"
+   ],
+   "sokeord": [
+    "kols",
+    "kolsforverring",
+    "eksaserbasjon",
+    "purulens",
+    "obstruktiv lungesykdom"
+   ],
+   "linjer": [
+    {
+     "etikett": "Standardbehandling",
+     "gruppe": "standard",
+     "preparater": [
+      "Amoksicillin"
+     ],
+     "doser": [
+      "750 mg x 3"
+     ]
+    },
+    {
+     "etikett": "Ved penicillinallergi",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Doksysyklin"
+     ],
+     "doser": [
+      "200 mg x 1 som ladningsdose, deretter 100 mg x 1 fra dag 2"
+     ]
+    },
+    {
+     "etikett": "Alternativ med klaritromycin",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Klaritromycin"
+     ],
+     "doser": [
+      "250 mg x 2"
+     ]
+    },
+    {
+     "etikett": "Ved påvist Haemophilus influenzae med følsomhet for trimetoprim/sulfametoksazol",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Sulfametoksazol og trimetoprim"
+     ],
+     "doser": [
+      "800/160 mg x 2"
+     ]
+    },
+    {
+     "etikett": "Ved høy risiko for behandlingssvikt og/eller påvist betalaktamaseproduserende Haemophilus influenzae",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Amoksicillin og klavulansyre"
+     ],
+     "doser": [
+      "500/125 mg x 4"
+     ]
+    }
+   ]
+  },
+  "akutt-cystitt-hos-ikke-gravid-kvinne-uten-kompliserende-forhold": {
+   "navn": "Akutt cystitt hos ikke-gravid kvinne uten kompliserende forhold",
+   "gammelId": "cystitt-kvinne",
+   "fagomrader": [
+    "urinveier"
+   ],
+   "sokeord": [
+    "cystitt",
+    "blærekatarr",
+    "urinveisinfeksjon",
+    "uvi",
+    "svie ved vannlating",
+    "dysuri"
+   ],
+   "linjer": [
+    {
+     "etikett": "Alternativ med nitrofurantoin",
+     "gruppe": "standard",
+     "preparater": [
+      "Nitrofurantoin"
+     ],
+     "doser": [
+      "50 mg x 3"
+     ]
+    },
+    {
+     "etikett": "Alternativ med pivmecillinam",
+     "gruppe": "standard",
+     "preparater": [
+      "Pivmecillinam"
+     ],
+     "doser": [
+      "200 mg x 3"
+     ]
+    },
+    {
+     "etikett": "Alternativ med trimetoprim",
+     "gruppe": "standard",
+     "preparater": [
+      "Trimetoprim"
+     ],
+     "doser": [
+      "160 mg x 2"
+     ]
+    }
+   ]
+  },
+  "akutt-cystitt-hos-menn-gravide-og-kvinner-med-kompliserende-forhold": {
+   "navn": "Akutt cystitt hos menn, gravide og kvinner med kompliserende forhold",
+   "gammelId": "cystitt-komplisert",
+   "fagomrader": [
+    "urinveier",
+    "svangerskap"
+   ],
+   "sokeord": [
+    "cystitt gravid",
+    "cystitt mann",
+    "urinveisinfeksjon gravid",
+    "komplisert uvi"
+   ],
+   "linjer": [
+    {
+     "etikett": "Alternativ med nitrofurantoin",
+     "gruppe": "standard",
+     "preparater": [
+      "Nitrofurantoin"
+     ],
+     "doser": [
+      "50 mg x 3"
+     ]
+    },
+    {
+     "etikett": "Alternativ med pivmecillinam",
+     "gruppe": "standard",
+     "preparater": [
+      "Pivmecillinam"
+     ],
+     "doser": [
+      "200 mg x 3"
+     ]
+    },
+    {
+     "etikett": "Alternativ med trimetoprim",
+     "gruppe": "standard",
+     "preparater": [
+      "Trimetoprim"
+     ],
+     "doser": [
+      "160 mg x 2"
+     ]
+    },
+    {
+     "etikett": "Ved resistens mot førstevalg og følsomhet for ampicillin",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Amoksicillin"
+     ],
+     "doser": [
+      "250 mg x 3"
+     ]
+    },
+    {
+     "etikett": "Ved resistens mot førstevalg og ampicillin, og følsomhet for ciprofloksacin",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Ciprofloksacin"
+     ],
+     "doser": [
+      "250 mg x 2"
+     ]
+    },
+    {
+     "etikett": "Ved funn av ESBL-produserende bakterier følsomme for mecillinam",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Pivmecillinam"
+     ],
+     "doser": [
+      "400 mg x 3"
+     ]
+    }
+   ]
+  },
+  "pyelonefritt": {
+   "navn": "Pyelonefritt",
+   "gammelId": "pyelonefritt",
+   "fagomrader": [
+    "urinveier"
+   ],
+   "sokeord": [
+    "pyelonefritt",
+    "nyrebekkenbetennelse",
+    "flankesmerter",
+    "øvre urinveisinfeksjon"
+   ],
+   "linjer": [
+    {
+     "etikett": "Voksne og barn > 40 kg: alternativ med trimetoprim-sulfametoksazol",
+     "gruppe": "standard",
+     "preparater": [
+      "Sulfametoksazol og trimetoprim"
+     ],
+     "doser": [
+      "800/160 mg x 2"
+     ]
+    },
+    {
+     "etikett": "Voksne og barn > 40 kg: alternativ med pivmecillinam",
+     "gruppe": "standard",
+     "preparater": [
+      "Pivmecillinam"
+     ],
+     "doser": [
+      "400 mg x 3"
+     ]
+    },
+    {
+     "etikett": "Barn < 40 kg: alternativ med pivmecillinam",
+     "gruppe": "standard",
+     "preparater": [
+      "Pivmecillinam"
+     ],
+     "doser": [
+      "15 mg/kg x 3"
+     ]
+    },
+    {
+     "etikett": "Barn < 40 kg: alternativ med amoksicillin-klavulansyre",
+     "gruppe": "standard",
+     "preparater": [
+      "Amoksicillin og klavulansyre"
+     ],
+     "doser": [
+      "15–20 mg/kg x 3"
+     ]
+    },
+    {
+     "etikett": "Ved allergi eller påvist resistens mot begge førstevalgene hos voksne",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Ciprofloksacin"
+     ],
+     "doser": [
+      "500 mg x 2"
+     ]
+    },
+    {
+     "etikett": "Ved påvist følsomhet for trimetoprim-sulfametoksazol hos barn < 20 kg",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Sulfametoksazol og trimetoprim"
+     ],
+     "doser": [
+      "20/4 mg/kg x 2"
+     ]
+    },
+    {
+     "etikett": "Ved påvist følsomhet for trimetoprim-sulfametoksazol hos barn 20–40 kg",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Sulfametoksazol og trimetoprim"
+     ],
+     "doser": [
+      "400/80 mg x 2"
+     ]
+    }
+   ]
+  },
+  "impetigo": {
+   "navn": "Impetigo",
+   "gammelId": "impetigo",
+   "fagomrader": [
+    "hud",
+    "barn"
+   ],
+   "sokeord": [
+    "impetigo",
+    "brennkopper",
+    "sårskorper",
+    "gule skorper"
+   ],
+   "linjer": [
+    {
+     "etikett": "Voksne og barn > 40 kg",
+     "gruppe": "standard",
+     "preparater": [
+      "Dikloksacillin"
+     ],
+     "doser": [
+      "500 mg x 3"
+     ]
+    },
+    {
+     "etikett": "Barn 20–40 kg",
+     "gruppe": "standard",
+     "preparater": [
+      "Dikloksacillin"
+     ],
+     "doser": [
+      "250 mg x 3"
+     ]
+    },
+    {
+     "etikett": "Barn < 20 kg",
+     "gruppe": "standard",
+     "preparater": [
+      "Klindamycin"
+     ],
+     "doser": [
+      "5 mg/kg x 3"
+     ]
+    },
+    {
+     "etikett": "Ved penicillinallergi eller terapisvikt: voksne",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Klindamycin"
+     ],
+     "doser": [
+      "150 mg x 4"
+     ]
+    },
+    {
+     "etikett": "Ved penicillinallergi: barn < 30 kg",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Klindamycin"
+     ],
+     "doser": [
+      "5 mg/kg x 3"
+     ]
+    }
+   ]
+  },
+  "erysipelas": {
+   "navn": "Erysipelas",
+   "gammelId": "erysipelas",
+   "fagomrader": [
+    "hud"
+   ],
+   "sokeord": [
+    "erysipelas",
+    "rosen",
+    "hudinfeksjon",
+    "erysipelas legg"
+   ],
+   "linjer": [
+    {
+     "etikett": "Voksne og barn > 40 kg",
+     "gruppe": "standard",
+     "preparater": [
+      "Fenoksymetylpenicillin"
+     ],
+     "doser": [
+      "1 g x 4"
+     ]
+    },
+    {
+     "etikett": "Barn < 40 kg",
+     "gruppe": "standard",
+     "preparater": [
+      "Fenoksymetylpenicillin"
+     ],
+     "doser": [
+      "10 mg/kg x 4"
+     ]
+    },
+    {
+     "etikett": "Ved penicillinallergi: alternativ med klindamycin",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Klindamycin"
+     ],
+     "doser": [
+      "300 mg x 2"
+     ]
+    },
+    {
+     "etikett": "Ved penicillinallergi: alternativ med erytromycin",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Erytromycin"
+     ],
+     "doser": [
+      "500 mg x 2"
+     ]
+    },
+    {
+     "etikett": "Ved penicillinallergi: barn < 30 kg",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Klindamycin"
+     ],
+     "doser": [
+      "5 mg/kg x 3"
+     ]
+    },
+    {
+     "etikett": "Ved penicillinallergi: barn > 30 kg",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Klindamycin"
+     ],
+     "doser": [
+      "150 mg x 3"
+     ]
+    }
+   ]
+  },
+  "bittskader-og-infeksjon": {
+   "navn": "Bittskader og infeksjon",
+   "gammelId": "bittskader",
+   "fagomrader": [
+    "hud"
+   ],
+   "sokeord": [
+    "bitt",
+    "bittskade",
+    "hundebitt",
+    "kattebitt",
+    "menneskebitt",
+    "bittsår"
+   ],
+   "linjer": [
+    {
+     "etikett": "Ved bitt av hund/katt: voksne",
+     "gruppe": "standard",
+     "preparater": [
+      "Fenoksymetylpenicillin"
+     ],
+     "doser": [
+      "1 g x 4"
+     ]
+    },
+    {
+     "etikett": "Ved bitt av hund/katt: barn",
+     "gruppe": "standard",
+     "preparater": [
+      "Fenoksymetylpenicillin"
+     ],
+     "doser": [
+      "15 mg/kg x 4"
+     ]
+    },
+    {
+     "etikett": "Ved bitt av menneske: voksne og barn > 40 kg",
+     "gruppe": "standard",
+     "preparater": [
+      "Fenoksymetylpenicillin",
+      "Dikloksacillin"
+     ],
+     "doser": [
+      "1 g x 4",
+      "500 mg x 4"
+     ]
+    },
+    {
+     "etikett": "Ved bitt av menneske: barn > 20 kg",
+     "gruppe": "standard",
+     "preparater": [
+      "Fenoksymetylpenicillin",
+      "Dikloksacillin"
+     ],
+     "doser": [
+      "15 mg/kg x 4",
+      "250 mg x 4"
+     ]
+    },
+    {
+     "etikett": "Ved bitt av menneske: barn < 20 kg",
+     "gruppe": "standard",
+     "preparater": [
+      "Amoksicillin og klavulansyre"
+     ],
+     "doser": [
+      "20/2,85 mg/kg x 3"
+     ]
+    },
+    {
+     "etikett": "Ved infeksjon og penicillinallergi eller manglende terapirespons: voksne",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Sulfametoksazol og trimetoprim"
+     ],
+     "doser": [
+      "800/160 mg x 2"
+     ]
+    },
+    {
+     "etikett": "Ved infeksjon og penicillinallergi eller manglende terapirespons: barn 20–40 kg",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Sulfametoksazol og trimetoprim"
+     ],
+     "doser": [
+      "400/80 mg x 2"
+     ]
+    },
+    {
+     "etikett": "Ved infeksjon og penicillinallergi eller manglende terapirespons: barn < 20 kg",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Sulfametoksazol og trimetoprim"
+     ],
+     "doser": [
+      "20/4 mg/kg x 2"
+     ]
+    }
+   ]
+  },
+  "genital-klamydiainfeksjon-icpc-koder-x92u72": {
+   "navn": "Genital klamydiainfeksjon",
+   "gammelId": "genital-klamydia",
+   "fagomrader": [
+    "urinveier"
+   ],
+   "sokeord": [
+    "klamydia",
+    "chlamydia",
+    "chlamydia trachomatis",
+    "soi",
+    "seksuelt overførbar",
+    "uretritt"
+   ],
+   "linjer": [
+    {
+     "etikett": "Standardbehandling",
+     "gruppe": "standard",
+     "preparater": [
+      "Doksysyklin"
+     ],
+     "doser": [
+      "100 mg x 2 i 7 døgn"
+     ]
+    },
+    {
+     "etikett": "Ved kontraindikasjon mot tetracykliner",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Azitromycin"
+     ],
+     "doser": [
+      "1 g x 1 som engangsdose"
+     ]
+    },
+    {
+     "etikett": "Ved lymfogranuloma venereum",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Doksysyklin"
+     ],
+     "doser": [
+      "100 mg x 2 i 21 døgn"
+     ]
+    },
+    {
+     "etikett": "Ved graviditet og amming: alternativ med azitromycin",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Azitromycin"
+     ],
+     "doser": [
+      "1 g x 1 som engangsdose"
+     ]
+    },
+    {
+     "etikett": "Ved graviditet og amming: alternativ med amoksicillin",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Amoksicillin"
+     ],
+     "doser": [
+      "500 mg x 3 i 7 døgn"
+     ]
+    }
+   ]
+  },
+  "mykoplasmainfeksjon-icpc-kode-u72x85": {
+   "navn": "Genital mykoplasmainfeksjon",
+   "gammelId": "genital-mykoplasma",
+   "fagomrader": [
+    "urinveier"
+   ],
+   "sokeord": [
+    "mycoplasma genitalium",
+    "genital mykoplasma",
+    "makrolidresistens",
+    "moksifloksacin"
+   ],
+   "linjer": [
+    {
+     "etikett": "Standardbehandling",
+     "gruppe": "standard",
+     "preparater": [
+      "Azitromycin"
+     ],
+     "doser": [
+      "500 mg x 1 som ladningsdose, deretter 250 mg x 1 fra dag 2, i 5 døgn totalt"
+     ]
+    },
+    {
+     "etikett": "Ved påvist makrolidresistens",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Moksifloksacin"
+     ],
+     "doser": [
+      "400 mg x 1 i 7 døgn"
+     ]
+    },
+    {
+     "etikett": "Ved graviditet og amming",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Azitromycin"
+     ],
+     "doser": [
+      "500 mg x 1 som ladningsdose, deretter 250 mg x 1 fra dag 2, i 5 døgn totalt"
+     ]
+    }
+   ]
+  },
+  "borreliose--erytema-migrans": {
+   "navn": "Borreliose — erytema migrans",
+   "gammelId": "erytema-migrans",
+   "fagomrader": [
+    "hud"
+   ],
+   "sokeord": [
+    "borreliose",
+    "erytema migrans",
+    "flåttbitt",
+    "flått",
+    "borrelia",
+    "lyme",
+    "skogflått"
+   ],
+   "linjer": [
+    {
+     "etikett": "Voksne og barn > 40 kg",
+     "gruppe": "standard",
+     "preparater": [
+      "Fenoksymetylpenicillin"
+     ],
+     "doser": [
+      "1 g x 4 i 10 døgn"
+     ]
+    },
+    {
+     "etikett": "Barn < 40 kg",
+     "gruppe": "standard",
+     "preparater": [
+      "Fenoksymetylpenicillin"
+     ],
+     "doser": [
+      "20 mg/kg x 4 i 10 døgn"
+     ]
+    },
+    {
+     "etikett": "Ved penicillinallergi: voksne og barn > 40 kg",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Doksysyklin"
+     ],
+     "doser": [
+      "200 mg x 1 i 10 døgn"
+     ]
+    },
+    {
+     "etikett": "Ved penicillinallergi: barn < 40 kg",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Azitromycin"
+     ],
+     "doser": [
+      "20 mg/kg x 1 som ladningsdose, deretter 10 mg/kg x 1 fra dag 2, totalt 5 døgn"
+     ]
+    }
+   ]
+  },
+  "sepsis": {
+   "navn": "Sepsis",
+   "gammelId": "sepsis",
+   "fagomrader": [
+    "akutt"
+   ],
+   "sokeord": [
+    "sepsis",
+    "septisk",
+    "blodforgiftning",
+    "news2",
+    "alvorlig infeksjon",
+    "prehospital antibiotika"
+   ],
+   "linjer": [
+    {
+     "etikett": "Voksne og barn > 12 år",
+     "gruppe": "standard",
+     "preparater": [
+      "Benzylpenicillin",
+      "Gentamicin"
+     ],
+     "doser": [
+      "3 g som engangsdose",
+      "6–7 mg/kg som engangsdose"
+     ]
+    },
+    {
+     "etikett": "Barn < 12 år",
+     "gruppe": "standard",
+     "preparater": [
+      "Cefotaksim"
+     ],
+     "doser": [
+      "50 mg/kg som engangsdose"
+     ]
+    },
+    {
+     "etikett": "Voksne og barn > 12 år: alternativ med cefotaksim",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Cefotaksim"
+     ],
+     "doser": [
+      "2 g som engangsdose"
+     ]
+    },
+    {
+     "etikett": "Barn < 12 år: alternativ med benzylpenicillin og gentamicin",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Benzylpenicillin",
+      "Gentamicin"
+     ],
+     "doser": [
+      "50 mg/kg som engangsdose",
+      "5 mg/kg som engangsdose"
+     ]
+    },
+    {
+     "etikett": "Ved allergi mot penicillin/cefalosporiner: voksne og barn",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Gentamicin"
+     ],
+     "doser": [
+      "5 mg/kg som engangsdose"
+     ]
+    }
+   ]
+  },
+  "bakteriell-meningitt": {
+   "navn": "Bakteriell meningitt",
+   "gammelId": "bakteriell-meningitt",
+   "fagomrader": [
+    "akutt",
+    "nevrologi"
+   ],
+   "sokeord": [
+    "meningitt",
+    "hjernehinnebetennelse",
+    "meningokokk",
+    "nakkestivhet",
+    "petekkier"
+   ],
+   "linjer": [
+    {
+     "etikett": "Voksne og barn > 12 år",
+     "gruppe": "standard",
+     "preparater": [
+      "Benzylpenicillin"
+     ],
+     "doser": [
+      "3 g som engangsdose"
+     ]
+    },
+    {
+     "etikett": "Barn < 12 år",
+     "gruppe": "standard",
+     "preparater": [
+      "Benzylpenicillin"
+     ],
+     "doser": [
+      "50 mg/kg som engangsdose"
+     ]
+    },
+    {
+     "etikett": "Ved penicillinallergi (ikke straksallergi), eller ved klinisk mistanke om septisk meningitt: voksne og barn > 12 år",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Cefotaksim"
+     ],
+     "doser": [
+      "2 g som engangsdose"
+     ]
+    },
+    {
+     "etikett": "Ved penicillinallergi (ikke straksallergi), eller ved klinisk mistanke om septisk meningitt: barn < 12 år",
+     "gruppe": "alternativ",
+     "preparater": [
+      "Cefotaksim"
+     ],
+     "doser": [
+      "100 mg/kg som engangsdose"
+     ]
+    }
+   ]
+  }
+ }
+}
