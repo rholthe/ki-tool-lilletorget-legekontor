@@ -5,6 +5,7 @@ export const WELLS_DVT: Verktoy = {
   navn: "Wells DVT",
   langtNavn: "Klinisk sannsynlighet for dyp venetrombose",
   kategori: "score",
+  fagomrader: ["hjerte_kar"],
   sokeord: [
     "dvt",
     "dyp venetrombose",

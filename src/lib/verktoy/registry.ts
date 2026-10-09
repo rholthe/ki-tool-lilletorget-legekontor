@@ -1,4 +1,5 @@
 import type {
+  Fagomrade,
   Kalkulator,
   Oppslag,
   Retningslinje,
@@ -59,6 +60,23 @@ export const KATEGORI_LABEL: Record<VerktoyKategori, string> = {
   kalkulator: "Kalkulator",
   retningslinje: "Retningslinje",
 }
+
+/** Rekkefølgen her er rekkefølgen i oversikten. */
+export const FAGOMRADE_LABEL: Record<Fagomrade, string> = {
+  akutt: "Akuttmedisin",
+  barn: "Barn",
+  hjerte_kar: "Hjerte og kar",
+  luftveier: "Luftveier og ØNH",
+  urinveier: "Urinveier og seksuell helse",
+  hud: "Hud og bløtvev",
+  muskel_skjelett: "Muskel og skjelett",
+  psykisk_helse: "Psykisk helse",
+  nevrologi: "Nevrologi og kognisjon",
+  geriatri: "Geriatri",
+  svangerskap: "Svangerskap",
+}
+
+export const FAGOMRADER = Object.keys(FAGOMRADE_LABEL) as Fagomrade[]
 
 export function erRetningslinje(oppslag: Oppslag): oppslag is Retningslinje {
   return oppslag.kategori === "retningslinje"

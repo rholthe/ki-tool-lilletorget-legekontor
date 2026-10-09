@@ -12,6 +12,7 @@ export const KNEUNDERSOKELSE: Verktoy = {
   navn: "Kneundersøkelse",
   langtNavn: "Strukturert undersøkelse av kne",
   kategori: "undersokelse",
+  fagomrader: ["muskel_skjelett"],
   sokeord: [
     "kne",
     "kneet",

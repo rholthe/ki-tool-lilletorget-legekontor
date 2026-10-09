@@ -13,6 +13,17 @@
  * aksenter) skjer i `sok.ts`.
  */
 export const SYNONYMGRUPPER: string[][] = [
+  // Fagområdene i oversikten
+  ["akuttmedisin", "akutt", "legevakt", "øyeblikkelig hjelp", "ø-hjelp"],
+  ["psykisk helse", "psykiatri", "psykisk"],
+  ["nevrologi", "nevrologisk", "kognisjon"],
+  ["geriatri", "eldre", "alderdom", "sykehjem"],
+  ["muskel og skjelett", "muskelskjelett", "ortopedi", "idrettsskade"],
+  ["luftveier", "ønh", "øre nese hals", "lunge", "lunger"],
+  ["hjerte og kar", "kardiologi", "hjerte", "kar"],
+  ["hud og bløtvev", "hud", "dermatologi", "sår"],
+  ["urinveier", "urologi", "seksuell helse", "gynekologi"],
+
   // Hjerte og kar
   ["atrieflimmer", "forkammerflimmer", "hjerteflimmer", "flimmer", "af", "uregelmessig puls", "arytmi"],
   ["blodfortynnende", "antikoagulasjon", "doak", "noak", "warfarin", "marevan", "apixaban", "eliquis", "rivaroksaban", "xarelto"],

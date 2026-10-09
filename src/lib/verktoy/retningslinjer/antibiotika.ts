@@ -28,6 +28,7 @@ const VERIFISERT = "2026-08-20"
 export const ANTIBIOTIKA: Retningslinje = {
   id: "antibiotika-allmennpraksis",
   navn: "Antibiotika i allmennpraksis",
+  kortNavn: "Antibiotika",
   langtNavn:
     "Nasjonal faglig retningslinje for antibiotikabruk i primærhelsetjenesten",
   kategori: "retningslinje",
@@ -52,6 +53,7 @@ export const ANTIBIOTIKA: Retningslinje = {
     {
       id: "akutt-mediaotitt",
       navn: "Akutt mediaotitt",
+      fagomrader: ["luftveier", "barn"],
       sokeord: [
         "otitt",
         "mediaotitt",
@@ -157,6 +159,7 @@ export const ANTIBIOTIKA: Retningslinje = {
     {
       id: "akutt-sinusitt",
       navn: "Akutt sinusitt",
+      fagomrader: ["luftveier"],
       sokeord: [
         "sinusitt",
         "bihulebetennelse",
@@ -259,6 +262,7 @@ export const ANTIBIOTIKA: Retningslinje = {
     {
       id: "streptokokkhalsinfeksjon",
       navn: "Streptokokkhalsinfeksjon og skarlagensfeber",
+      fagomrader: ["luftveier"],
       sokeord: [
         "halsbetennelse",
         "tonsillitt",
@@ -348,6 +352,7 @@ export const ANTIBIOTIKA: Retningslinje = {
     {
       id: "akutt-bronkitt",
       navn: "Akutt bronkitt",
+      fagomrader: ["luftveier"],
       sokeord: ["bronkitt", "hoste", "luftveisinfeksjon", "forkjølelse"],
       url: `${KILDE_URL}/emne/fc768e54e0955bb981cd/akutt-bronkitt`,
       sistVerifisert: VERIFISERT,
@@ -364,6 +369,7 @@ export const ANTIBIOTIKA: Retningslinje = {
     {
       id: "pneumoni",
       navn: "Pneumoni",
+      fagomrader: ["luftveier"],
       sokeord: [
         "pneumoni",
         "lungebetennelse",
@@ -474,6 +480,7 @@ export const ANTIBIOTIKA: Retningslinje = {
     {
       id: "atypisk-pneumoni",
       navn: "Atypisk pneumoni",
+      fagomrader: ["luftveier"],
       sokeord: [
         "atypisk pneumoni",
         "mykoplasma",
@@ -532,6 +539,7 @@ export const ANTIBIOTIKA: Retningslinje = {
     {
       id: "kols-forverring",
       navn: "Kols-forverring",
+      fagomrader: ["luftveier"],
       sokeord: [
         "kols",
         "kolsforverring",
@@ -599,6 +607,7 @@ export const ANTIBIOTIKA: Retningslinje = {
     {
       id: "cystitt-kvinne",
       navn: "Akutt cystitt hos ikke-gravid kvinne uten kompliserende forhold",
+      fagomrader: ["urinveier"],
       sokeord: [
         "cystitt",
         "blærekatarr",
@@ -646,6 +655,7 @@ export const ANTIBIOTIKA: Retningslinje = {
     {
       id: "cystitt-komplisert",
       navn: "Akutt cystitt hos menn, gravide og kvinner med kompliserende forhold",
+      fagomrader: ["urinveier", "svangerskap"],
       sokeord: [
         "cystitt gravid",
         "cystitt mann",
@@ -717,6 +727,7 @@ export const ANTIBIOTIKA: Retningslinje = {
     {
       id: "pyelonefritt",
       navn: "Pyelonefritt",
+      fagomrader: ["urinveier"],
       sokeord: [
         "pyelonefritt",
         "nyrebekkenbetennelse",
@@ -804,6 +815,7 @@ export const ANTIBIOTIKA: Retningslinje = {
     {
       id: "impetigo",
       navn: "Impetigo",
+      fagomrader: ["hud", "barn"],
       sokeord: ["impetigo", "brennkopper", "sårskorper", "gule skorper"],
       url: `${KILDE_URL}/emne/f9e2b53c7bfc615b33df/impetigo`,
       sistVerifisert: VERIFISERT,
@@ -865,6 +877,7 @@ export const ANTIBIOTIKA: Retningslinje = {
     {
       id: "erysipelas",
       navn: "Erysipelas",
+      fagomrader: ["hud"],
       sokeord: ["erysipelas", "rosen", "hudinfeksjon", "erysipelas legg"],
       url: `${KILDE_URL}/emne/f7348352436386b709d6/erysipelas`,
       sistVerifisert: VERIFISERT,
@@ -933,6 +946,7 @@ export const ANTIBIOTIKA: Retningslinje = {
     {
       id: "bittskader",
       navn: "Bittskader og infeksjon",
+      fagomrader: ["hud"],
       sokeord: [
         "bitt",
         "bittskade",
@@ -1035,6 +1049,7 @@ export const ANTIBIOTIKA: Retningslinje = {
     {
       id: "genital-klamydia",
       navn: "Genital klamydiainfeksjon",
+      fagomrader: ["urinveier"],
       sokeord: [
         "klamydia",
         "chlamydia",
@@ -1101,6 +1116,7 @@ export const ANTIBIOTIKA: Retningslinje = {
     {
       id: "genital-mykoplasma",
       navn: "Genital mykoplasmainfeksjon",
+      fagomrader: ["urinveier"],
       sokeord: [
         "mycoplasma genitalium",
         "genital mykoplasma",
@@ -1151,6 +1167,7 @@ export const ANTIBIOTIKA: Retningslinje = {
     {
       id: "erytema-migrans",
       navn: "Borreliose — erytema migrans",
+      fagomrader: ["hud"],
       sokeord: [
         "borreliose",
         "erytema migrans",
@@ -1211,6 +1228,7 @@ export const ANTIBIOTIKA: Retningslinje = {
     {
       id: "sepsis",
       navn: "Sepsis",
+      fagomrader: ["akutt"],
       sokeord: [
         "sepsis",
         "septisk",
@@ -1294,6 +1312,7 @@ export const ANTIBIOTIKA: Retningslinje = {
     {
       id: "bakteriell-meningitt",
       navn: "Bakteriell meningitt",
+      fagomrader: ["akutt", "nevrologi"],
       sokeord: [
         "meningitt",
         "hjernehinnebetennelse",

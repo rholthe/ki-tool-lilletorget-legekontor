@@ -8,8 +8,15 @@
  * allmennpraksis».
  */
 
-import type { Kalkulator, Oppslag, Retningslinje, Tilstand, Verktoy, VerktoyKategori } from "./typer"
-import { INNEBYGDE_OPPSLAG, KATEGORI_LABEL, erKalkulator, erRetningslinje } from "./registry"
+import type { Fagomrade, Kalkulator, Oppslag, Retningslinje, Tilstand, Verktoy, VerktoyKategori } from "./typer"
+import {
+  FAGOMRADER,
+  FAGOMRADE_LABEL,
+  INNEBYGDE_OPPSLAG,
+  KATEGORI_LABEL,
+  erKalkulator,
+  erRetningslinje,
+} from "./registry"
 import { SYNONYMGRUPPER } from "./synonymer"
 
 /**
@@ -60,8 +67,26 @@ export function treffId(treff: Treff): string {
   return `${treff.retningslinje.id}:${treff.tilstand.id}`
 }
 
+export function fagomraderFor(t: Treff): Fagomrade[] {
+  if (t.slag === "verktoy") return t.verktoy.fagomrader
+  if (t.slag === "kalkulator") return t.kalkulator.fagomrader
+  return t.tilstand.fagomrader
+}
+
+/**
+ * Alle rader ordnet etter fagområde, i `FAGOMRADE_LABEL`-rekkefølge. En rad med
+ * flere fagområder står under hvert av dem; tomme områder utelates.
+ */
+export function grupperEtterFagomrade(
+  oppslag: Oppslag[] = INNEBYGDE_OPPSLAG
+): [Fagomrade, Treff[]][] {
+  const alle = alleTreff(oppslag)
+  return FAGOMRADER.map((f) => [f, alle.filter((t) => fagomraderFor(t).includes(f))] as [Fagomrade, Treff[]])
+    .filter(([, liste]) => liste.length > 0)
+}
+
 /** Alle rader, uten filtrering. */
-function alleTreff(oppslag: Oppslag[]): Treff[] {
+export function alleTreff(oppslag: Oppslag[] = INNEBYGDE_OPPSLAG): Treff[] {
   return oppslag.flatMap<Treff>((o) => {
     if (erRetningslinje(o)) {
       return o.tilstander.map((tilstand) => ({
@@ -160,16 +185,18 @@ const KATEGORI_SOKEORD: Record<VerktoyKategori, string[]> = {
 }
 
 function felterFor(t: Treff): Felt[] {
+  // Fagområdet er søkbart, så «barn» eller «psykisk helse» lister hele området
+  const fag = fagomraderFor(t).map((f) => FAGOMRADE_LABEL[f])
   if (t.slag === "verktoy") {
     return lagFelter(
       [t.verktoy.navn, t.verktoy.langtNavn],
-      [...t.verktoy.sokeord, ...KATEGORI_SOKEORD[t.verktoy.kategori]]
+      [...t.verktoy.sokeord, ...KATEGORI_SOKEORD[t.verktoy.kategori], ...fag]
     )
   }
   if (t.slag === "kalkulator") {
     return lagFelter(
       [t.kalkulator.navn, t.kalkulator.langtNavn],
-      [...t.kalkulator.sokeord, ...KATEGORI_SOKEORD.kalkulator]
+      [...t.kalkulator.sokeord, ...KATEGORI_SOKEORD.kalkulator, ...fag]
     )
   }
   return lagFelter(
@@ -180,6 +207,7 @@ function felterFor(t: Treff): Felt[] {
       ...t.tilstand.sokeord,
       ...t.retningslinje.sokeord,
       ...KATEGORI_SOKEORD.retningslinje,
+      ...fag,
     ]
   )
 }

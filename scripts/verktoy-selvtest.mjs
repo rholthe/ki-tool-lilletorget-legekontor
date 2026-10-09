@@ -68,7 +68,7 @@ const {
   formaterTilNotat,
   synkVerktoySeksjon,
 } = require(path.join(utMappe, "beregn.js"))
-const { sokOppslag, foreslaaOppslag, treffId } = require(path.join(utMappe, "sok.js"))
+const { sokOppslag, foreslaaOppslag, treffId, alleTreff, fagomraderFor, grupperEtterFagomrade } = require(path.join(utMappe, "sok.js"))
 
 let feil = 0
 
@@ -306,6 +306,10 @@ const SOKEKASUS = [
   { sok: "cha2ds2", id: "chadsvasc", topp: 1 },
   { sok: "flått", id: "antibiotika-allmennpraksis:erytema-migrans", topp: 1 },
   { sok: "hjernehinnebetennelse", id: "antibiotika-allmennpraksis:bakteriell-meningitt", topp: 1 },
+  // Fagområdene er søkbare
+  { sok: "psykiatri", id: "madrs", topp: 2 },
+  { sok: "eldre", id: "klokketest", topp: 2 },
+  { sok: "legevakt", id: "qsofa", topp: 6 },
 ]
 
 console.log("\nSøk")
@@ -325,6 +329,12 @@ console.log("\nSøk")
     "«le» treffer sinusitt — korte ord skal kreve ordstart"
   )
   sjekk(sokOppslag("xyzzyq").length === 0, "meningsløst søk gir treff")
+  // Et oppslag uten fagområde ville vært usynlig i oversikten
+  for (const t of alleTreff()) {
+    sjekk(fagomraderFor(t).length > 0, `${treffId(t)} mangler fagområde`)
+  }
+  const iOversikt = new Set(grupperEtterFagomrade().flatMap(([, l]) => l.map(treffId)))
+  sjekk(iOversikt.size === alleTreff().length, "ikke alle oppslag vises i oversikten")
   sjekk(
     foreslaaOppslag("Pasienten har vridd kneet og har korsbandskade").some(
       (f) => treffId(f.treff) === "kne"

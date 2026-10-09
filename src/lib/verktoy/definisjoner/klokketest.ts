@@ -9,6 +9,7 @@ export const KLOKKETEST: Verktoy = {
   navn: "Klokketest",
   langtNavn: "Visuospatial og eksekutiv funksjon (Shulman)",
   kategori: "score",
+  fagomrader: ["nevrologi", "geriatri"],
   sokeord: [
     "klokketest",
     "kognitiv svikt",

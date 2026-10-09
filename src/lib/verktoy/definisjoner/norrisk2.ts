@@ -55,6 +55,7 @@ export const NORRISK2: Verktoy = {
   navn: "NORRISK 2",
   langtNavn: "10-årsrisiko for hjerteinfarkt eller hjerneslag",
   kategori: "kalkulator",
+  fagomrader: ["hjerte_kar"],
   sokeord: [
     "norrisk",
     "norrisk2",

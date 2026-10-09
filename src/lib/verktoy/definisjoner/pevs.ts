@@ -203,6 +203,7 @@ export const PEVS: Verktoy = {
   navn: "PEVS",
   langtNavn: "Pediatric Early Warning Score — potensielt sykt barn under 18 år",
   kategori: "score",
+  fagomrader: ["akutt", "barn"],
   sokeord: [
     "pevs",
     "pediatric early warning score",

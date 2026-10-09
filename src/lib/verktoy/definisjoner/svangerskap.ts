@@ -14,6 +14,7 @@ export const SVANGERSKAP: Kalkulator = {
   kategori: "kalkulator",
   kalkulatorId: "svangerskap",
   notatTittel: "Svangerskap",
+  fagomrader: ["svangerskap"],
   sokeord: [
     "termin",
     "termindato",

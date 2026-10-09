@@ -329,6 +329,15 @@ Nettleser (klinikkens datamaskin)
     en prosent), så der dekker referansekasusene grenseverdiene i stedet. Prosjektet har ingen
     testrunner, og poengsummene er nettopp det som ikke får være feil — kjør dette etter hver
     endring i et verktøy
+  - **Oversikt etter fagområde:** uten valgt verktøy fyller oversikten hele modalen — kort per
+    fagområde (`Fagomrade` i `typer.ts`, `FAGOMRADE_LABEL` i `registry.ts` bestemmer rekkefølgen),
+    med forslag og «Nylig brukt» øverst. Når et verktøy velges, krymper søket til en linje med
+    «Alle verktøy», og skjemaet får hele bredden. Går legen tilbake til oversikten (eller søker fra
+    skjemaet), beholdes skjemaet, og «Tilbake til …» henter det fram igjen med svarene
+    - `fagomrader` er påkrevd på `Verktoy`, `Kalkulator` og hver `Tilstand` (ikke per retningslinje —
+      ørebetennelse og cystitt hører hjemme ulike steder). Flere er lov; oppslaget vises da under
+      hvert. Selvtesten feiler hvis et oppslag mangler fagområde
+    - Fagområdenavnene er søkbare («barn», «psykiatri», «legevakt» via synonymene)
   - Søk og forslag skjer lokalt i `src/lib/verktoy/sok.ts`, **uten AI**. Retningslinjenes
     tilstander er egne rader, så legen kan søke på «ørebetennelse»
     - **Fritekstsøket** er rangert (beste treff først, Enter åpner det) og tåler synonymer,

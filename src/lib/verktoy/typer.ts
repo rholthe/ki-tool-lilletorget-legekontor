@@ -16,6 +16,23 @@ export type VerktoyKategori =
   | "kalkulator"
   | "retningslinje"
 
+/**
+ * Fagområde i verktøyoversikten. Et oppslag kan høre til flere — PEVS er både
+ * akuttmedisin og barn — og vises da under hvert av dem.
+ */
+export type Fagomrade =
+  | "akutt"
+  | "barn"
+  | "hjerte_kar"
+  | "luftveier"
+  | "urinveier"
+  | "hud"
+  | "muskel_skjelett"
+  | "psykisk_helse"
+  | "nevrologi"
+  | "geriatri"
+  | "svangerskap"
+
 export type Funnverdi = "normal" | "patologisk" | "ikke_utfort"
 
 export type Svarverdi = boolean | number | string | null
@@ -181,6 +198,8 @@ export interface Verktoy {
   kategori: VerktoyKategori
   /** Driver både søkefeltet og nøkkelordbaserte forslag. */
   sokeord: string[]
+  /** Minst ett — styrer hvor verktøyet står i oversikten. */
+  fagomrader: Fagomrade[]
   /** Verktøy som gjelder én kroppsside — legen velger venstre/høyre. */
   lateralitet?: boolean
   seksjoner: Seksjon[]
@@ -279,6 +298,8 @@ export interface Tilstand {
   id: string
   navn: string
   sokeord: string[]
+  /** Per tilstand, ikke per retningslinje: ørebetennelse og cystitt hører hjemme ulike steder. */
+  fagomrader: Fagomrade[]
   /** Direkte lenke til kapitlet hos kilden — ett klikk til fasit. */
   url: string
   /** ISO-dato: når innholdet her sist ble sammenholdt med kilden. */
@@ -300,6 +321,8 @@ export interface Tilstand {
 export interface Retningslinje {
   id: string
   navn: string
+  /** Etikett ved tilstandene i oversikten, der hele navnet ikke får plass. */
+  kortNavn: string
   langtNavn: string
   kategori: "retningslinje"
   sokeord: string[]
@@ -345,6 +368,7 @@ export interface Kalkulator {
   langtNavn: string
   kategori: "kalkulator"
   sokeord: string[]
+  fagomrader: Fagomrade[]
   seksjoner: Seksjon[]
   /**
    * Slår opp en navngitt funksjon i `kalkulatorer.ts` — aldri lagret kode som

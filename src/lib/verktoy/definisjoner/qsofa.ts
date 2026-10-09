@@ -5,6 +5,7 @@ export const QSOFA: Verktoy = {
   navn: "qSOFA",
   langtNavn: "Rask vurdering av organsvikt ved mistenkt infeksjon",
   kategori: "score",
+  fagomrader: ["akutt"],
   sokeord: [
     "sepsis",
     "infeksjon",

@@ -87,6 +87,7 @@ export const MDI: Verktoy = {
   navn: "MDI",
   langtNavn: "Major Depression Inventory (selvutfylling)",
   kategori: "score",
+  fagomrader: ["psykisk_helse"],
   sokeord: [
     "mdi",
     "depresjon",

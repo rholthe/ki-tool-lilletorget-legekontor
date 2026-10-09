@@ -24,6 +24,7 @@ export const MADRS: Verktoy = {
   navn: "MADRS",
   langtNavn: "Alvorlighetsgrad av depresjon",
   kategori: "score",
+  fagomrader: ["psykisk_helse"],
   sokeord: [
     "depresjon",
     "deprimert",

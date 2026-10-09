@@ -5,6 +5,7 @@ export const CHADSVASC: Verktoy = {
   navn: "CHA₂DS₂-VASc",
   langtNavn: "Slagrisiko ved atrieflimmer",
   kategori: "score",
+  fagomrader: ["hjerte_kar", "geriatri"],
   sokeord: [
     "atrieflimmer",
     "af",

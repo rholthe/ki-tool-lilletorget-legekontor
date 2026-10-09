@@ -5,6 +5,7 @@ export const WELLS_LE: Verktoy = {
   navn: "Wells LE",
   langtNavn: "Klinisk sannsynlighet for lungeemboli",
   kategori: "score",
+  fagomrader: ["hjerte_kar", "akutt"],
   sokeord: [
     "lungeemboli",
     "le",
