@@ -333,7 +333,7 @@ Nettleser (klinikkens datamaskin)
     «Nylig brukt» øverst. Fanen «Verktøy» viser verktøyene i koden som kort per fagområde
     (`Fagomrade` i `typer.ts`, `FAGOMRADE_LABEL` i `registry.ts` bestemmer rekkefølgen). Hver
     retningslinje har egen fane med kildens kapitler som kort — ellers druknet 12 verktøy i 63
-    antibiotikarader. Fanen «Andre retningslinjer» er en plassholder for fase 2. Søket gjelder alle faner; siste fane huskes (localStorage
+    antibiotikarader. Søket gjelder alle faner; siste fane huskes (localStorage
     `legeassist:verktoy-fane`). Når et verktøy velges, krymper søket til en linje med
     «Alle verktøy», og skjemaet får hele bredden. Går legen tilbake til oversikten (eller søker fra
     skjemaet), beholdes skjemaet, og «Tilbake til …» henter det fram igjen med svarene
@@ -405,6 +405,31 @@ Nettleser (klinikkens datamaskin)
         på preparat og hvert tall i dosen i rekkefølge. Feiler testen etter ny reservekopi: les
         kilden, og oppdater fasiten hvis Helsedirektoratet har endret anbefalingen. Testen feiler
         også når reservekopien er eldre enn 180 dager
+    - **Retningslinjer til oppslag (leseren, fase 2):** andre nasjonale faglige retningslinjer,
+      valgt av admin på `/admin/retningslinjer` (SystemSetting `hapi_lese_utvalg`, JSON med
+      `infoId`-er; uten valg brukes `STANDARD_UTVALG` i `retningslinjer-server.ts`). Katalogen over
+      alle gjeldende retningslinjer mellomlagres som `katalog:retningslinje`
+      - `hentNestet()` beholder kapittelstrukturen og henter ikke referanser/PICO (400+ i diabetes)
+      - `lese-hapi.ts` (ren): `LeseRetningslinje` → `LeseKapittel` → `LeseEnhet` (anbefaling med
+        `styrke`, `tekst`, `praktisk`, `begrunnelse` = nokkelInfo-feltene + rasjonale). Et
+        kapittel med egen brødtekst blir første enhet i kapittelet (`erKapitteltekst`, samme id) —
+        røykeavvenning har nesten alt innholdet slik. «Metode og prosess», «Om retningslinjen» og
+        «Referanser» utelates. Øk `LESE_FORMAT` når oversettingen endres
+      - Noen retningslinjer (overvekt hos voksne, underernæring) har ingen kapitler i API-et —
+        vises som kort med lenke «Finnes bare på helsedirektoratet.no»
+      - Rader `les:<infoId>` i `HapiInnhold`. Alle hentinger går i én kø (aldri parallelle
+        retningslinjer mot API-et); parset JSON holdes i minnet per `hentetAt`
+      - `/api/retningslinjer` gir også innholdsfortegnelsene (`tilIndeks`, uten brødtekst, ~10–60 kB
+        per retningslinje) og `leseVenter`; da svarer ruten `no-store` så et halvt svar ikke
+        mellomlagres. Full tekst: `/api/retningslinjer/les/[id]` (kun retningslinjer i utvalget),
+        `useLeseRetningslinje()`/`hentFull()`
+      - Søket: `Treff` har `slag: "leseenhet"` (tittel, kapittel, retningslinjenavn); ingen søkeord og
+        ingen forslag fra transkriptet. Fanen «Andre retningslinjer» viser kort per retningslinje med
+        kapitlene; `RetningslinjeLeser` har innholdsfortegnelse + tekst, «Praktisk» åpen og
+        «Begrunnelse» lukket
+      - «Legg i notat» (`byggLeseResultat`): anbefalingens tekst ordrett (uten markdown), eller bare
+        tittelen for kapitteltekst og tekster over 500 tegn, + styrke og kilde med faglig dato.
+        `verktoyId` = `les:<infoId>`, så resultatet kan gjenåpnes i leseren
     - **Lisens: NLOD** (vilkårene for Helsedirektoratets API, lest 2026-10-09). Krav: oppgi
       Helsedirektoratet som kilde, tydelig, i **samme skriftstørrelse som innholdet** og rett ved
       det (`retningslinje-visning.tsx` øverst, og i notatlinjen med faglig dato); ikke framstå som
@@ -423,9 +448,8 @@ Nettleser (klinikkens datamaskin)
       gjenåpning og «Regenerer»-motstand gratis, uten egen datamodell
 
 ### Planlagt
-- Retningslinjer fra HAPI, fase 2: leser for andre retningslinjer (diabetes, kols, demens,
-  hjerte-kar …) med admin-valg av hvilke som er med; fase 3: pakkeforløp («Begrunnet mistanke –
-  kriterier for henvisning», under `nasjonalt-forlop`). Osteoporose finnes ikke hos Helsedirektoratet
+- Retningslinjer fra HAPI, fase 3: pakkeforløp («Begrunnet mistanke – kriterier for henvisning»,
+  under `nasjonalt-forlop`). Osteoporose finnes ikke hos Helsedirektoratet
 - Vektbasert barnedosering som egen `kalkulator`
 - Kliniske verktøy, gjenstående faser: MMS-NR (krever rettighetsavklaring for itemtekst),
   AI-forhåndsutfylling med bekreftelseskrav, admin-CRUD for egne verktøy
@@ -486,7 +510,8 @@ legeassist/
 │   │   │       ├── innstillinger/ # Adminside: modell/region/nøkler (kun admin)
 │   │   │       ├── brukere/       # Adminside: opprett/inviter/slett brukere
 │   │   │       ├── databehandleravtale/ # Adminside: opprett/se DPA-versjoner
-│   │   │       └── meldinger/     # Adminside: publiser meldinger, se hvem som har lest
+│   │   │       ├── meldinger/     # Adminside: publiser meldinger, se hvem som har lest
+│   │   │       └── retningslinjer/ # Adminside: HAPI-status, «Hent alt nå», utvalg av retningslinjer
 │   │   ├── api/
 │   │   │   ├── auth/              # NextAuth
 │   │   │   ├── soniox-token/      # Genererer temp-tokens for Soniox

@@ -337,7 +337,7 @@ export interface Retningslinje {
 }
 
 /** Alt som kan velges i verktøymodalen. */
-export type Oppslag = Verktoy | Retningslinje | Kalkulator
+export type Oppslag = Verktoy | Retningslinje | Kalkulator | LeseRetningslinje
 
 /* ────────────────────────── Kalkulatorer ──────────────────────────
  *
@@ -391,4 +391,58 @@ export interface Kalkulator {
     forventet: Record<string, string>
   }[]
   opphav: "innebygd" | "egendefinert"
+}
+
+// ─── Retningslinjer til oppslag (leseren) ─────────────────────────────────────
+
+/**
+ * Én normerende enhet i en retningslinje — som regel en anbefaling. Tekstfeltene
+ * er Markdown konvertert fra kildens HTML, og mangler i innholdsfortegnelsen
+ * (`/api/retningslinjer`); de lastes når retningslinjen åpnes.
+ */
+export interface LeseEnhet {
+  id: string
+  tittel: string
+  /**
+   * Kapittelets egen brødtekst, lagt inn som første enhet i kapittelet (samme id
+   * som kapittelet). Mange retningslinjer har det meste av innholdet slik —
+   * røykeavvenning har bare tre anbefalinger, men kapitler om hvert legemiddel.
+   */
+  erKapitteltekst?: boolean
+  /** «sterk anbefaling», «svak anbefaling» — kildens egen formulering. */
+  styrke?: string
+  url: string
+  sistFagligOppdatert: string
+  /** Selve anbefalingen. */
+  tekst?: string
+  praktisk?: string
+  /** Fordeler og ulemper, kvalitet, verdier og preferanser, ressurshensyn og rasjonale. */
+  begrunnelse?: string
+}
+
+export interface LeseKapittel {
+  id: string
+  tittel: string
+  url: string
+  kapitler: LeseKapittel[]
+  enheter: LeseEnhet[]
+}
+
+/**
+ * En nasjonal faglig retningslinje fra Helsedirektoratet, til oppslag. Legen
+ * fyller ikke ut noe, og vi tolker ingenting — innholdet vises ordrett med
+ * kildens egen kapittelstruktur.
+ */
+export interface LeseRetningslinje {
+  id: string
+  kategori: "leseretningslinje"
+  navn: string
+  /** «Diabetes» — kildens `kortTittel`. */
+  kortNavn: string
+  url: string
+  sistFagligOppdatert: string
+  hentetAt: string
+  kapitler: LeseKapittel[]
+  /** Enheter rett under retningslinjen, uten kapittel. */
+  enheter: LeseEnhet[]
 }

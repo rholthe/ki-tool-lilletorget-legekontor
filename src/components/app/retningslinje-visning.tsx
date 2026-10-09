@@ -49,7 +49,7 @@ const MD: Components = {
   td: (p) => <td className="px-2 py-1 align-top border-t border-slate-100" {...p} />,
 }
 
-function KildeTekst({ children }: { children: string }) {
+export function KildeTekst({ children }: { children: string }) {
   return (
     <ReactMarkdown remarkPlugins={[remarkGfm]} components={MD}>
       {children}

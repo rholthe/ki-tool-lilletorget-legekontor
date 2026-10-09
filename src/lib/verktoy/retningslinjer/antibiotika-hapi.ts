@@ -1,5 +1,5 @@
-import TurndownService from "turndown"
 import type { HapiNode, HapiTre } from "../../hapi/hent"
+import { avkod, tilMarkdown } from "../../hapi/markdown"
 import type { Anbefaling, Retningslinje, Tilstand } from "../typer"
 import {
   KAPITTEL_FAGOMRADE,
@@ -31,46 +31,6 @@ export const ANTIBIOTIKA_ROT =
  * for å vises i gammel form.
  */
 export const ANTIBIOTIKA_FORMAT = 1
-
-const ENTITETER: Record<string, string> = {
-  "&gt;": ">",
-  "&lt;": "<",
-  "&amp;": "&",
-  "&nbsp;": " ",
-  "&quot;": '"',
-  "&#39;": "'",
-}
-
-/** Kildens etiketter og visningstekster er HTML-escapet. */
-function avkod(tekst: string): string {
-  return tekst
-    .replace(/&(gt|lt|amp|nbsp|quot|#39);/g, (m) => ENTITETER[m] ?? m)
-    .replace(/ /g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-}
-
-const turndown = new TurndownService({
-  headingStyle: "atx",
-  bulletListMarker: "-",
-  emDelimiter: "*",
-})
-turndown.remove(["script", "style", "iframe", "object", "embed", "form"])
-
-/**
- * HTML → Markdown. Resultatet rendres med react-markdown uten rå HTML, så selv
- * en ufullkommen konvertering kan ikke bli en sårbarhet — verste utfall er
- * formatering som ser litt rar ut.
- */
-export function tilMarkdown(html: string | null | undefined): string {
-  if (!html?.trim()) return ""
-  return turndown
-    .turndown(html.replace(/&nbsp;/g, " "))
-    .replace(/ /g, " ")
-    .replace(/[ \t]+\n/g, "\n")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim()
-}
 
 /** Visningen har sin egen overskrift for indikasjonen; kildens første overskrift dupliserer den. */
 function utenIndikasjonsoverskrift(md: string): string {

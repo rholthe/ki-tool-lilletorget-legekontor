@@ -1,6 +1,7 @@
 import type {
   Fagomrade,
   Kalkulator,
+  LeseRetningslinje,
   Oppslag,
   Retningslinje,
   Verktoy,
@@ -76,6 +77,10 @@ export const FAGOMRADE_LABEL: Record<Fagomrade, string> = {
 }
 
 export const FAGOMRADER = Object.keys(FAGOMRADE_LABEL) as Fagomrade[]
+
+export function erLeseretningslinje(oppslag: Oppslag): oppslag is LeseRetningslinje {
+  return oppslag.kategori === "leseretningslinje"
+}
 
 export function erRetningslinje(oppslag: Oppslag): oppslag is Retningslinje {
   return oppslag.kategori === "retningslinje"

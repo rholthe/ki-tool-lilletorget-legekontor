@@ -8,13 +8,25 @@
  * allmennpraksis».
  */
 
-import type { Fagomrade, Kalkulator, Oppslag, Retningslinje, Tilstand, Verktoy, VerktoyKategori } from "./typer"
+import type {
+  Fagomrade,
+  Kalkulator,
+  LeseEnhet,
+  LeseKapittel,
+  LeseRetningslinje,
+  Oppslag,
+  Retningslinje,
+  Tilstand,
+  Verktoy,
+  VerktoyKategori,
+} from "./typer"
 import {
   FAGOMRADER,
   FAGOMRADE_LABEL,
   INNEBYGDE_OPPSLAG,
   KATEGORI_LABEL,
   erKalkulator,
+  erLeseretningslinje,
   erRetningslinje,
 } from "./registry"
 import { SYNONYMGRUPPER } from "./synonymer"
@@ -55,21 +67,28 @@ function inneholderOrd(tekst: string, ord: string): boolean {
   return monster.test(tekst)
 }
 
-/** Én rad i verktøylisten: enten et verktøy, eller én tilstand i en retningslinje. */
+/**
+ * Én rad i verktøylisten: et verktøy, en tilstand i antibiotikaretningslinjen,
+ * eller en anbefaling (enhet) i en retningslinje til oppslag.
+ */
 export type Treff =
   | { slag: "verktoy"; verktoy: Verktoy }
   | { slag: "kalkulator"; kalkulator: Kalkulator }
   | { slag: "tilstand"; retningslinje: Retningslinje; tilstand: Tilstand }
+  | { slag: "leseenhet"; retningslinje: LeseRetningslinje; enhet: LeseEnhet; kapittel: string }
 
 export function treffId(treff: Treff): string {
   if (treff.slag === "verktoy") return treff.verktoy.id
   if (treff.slag === "kalkulator") return treff.kalkulator.id
+  if (treff.slag === "leseenhet") return `${treff.retningslinje.id}:${treff.enhet.id}`
   return `${treff.retningslinje.id}:${treff.tilstand.id}`
 }
 
 export function fagomraderFor(t: Treff): Fagomrade[] {
   if (t.slag === "verktoy") return t.verktoy.fagomrader
   if (t.slag === "kalkulator") return t.kalkulator.fagomrader
+  // Retningslinjene til oppslag har sin egen fane, ikke plass i fagområdekortene
+  if (t.slag === "leseenhet") return []
   return t.tilstand.fagomrader
 }
 
@@ -85,9 +104,26 @@ export function grupperEtterFagomrade(
     .filter(([, liste]) => liste.length > 0)
 }
 
+/** Alle enheter i en retningslinje, med nærmeste kapittel som kontekst. */
+export function leseenheter(retningslinje: LeseRetningslinje): Treff[] {
+  const ut: Treff[] = []
+  const gaa = (kapitler: LeseKapittel[]) => {
+    for (const k of kapitler) {
+      for (const enhet of k.enheter) ut.push({ slag: "leseenhet", retningslinje, enhet, kapittel: k.tittel })
+      gaa(k.kapitler)
+    }
+  }
+  for (const enhet of retningslinje.enheter) {
+    ut.push({ slag: "leseenhet", retningslinje, enhet, kapittel: "" })
+  }
+  gaa(retningslinje.kapitler)
+  return ut
+}
+
 /** Alle rader, uten filtrering. */
 export function alleTreff(oppslag: Oppslag[] = INNEBYGDE_OPPSLAG): Treff[] {
   return oppslag.flatMap<Treff>((o) => {
+    if (erLeseretningslinje(o)) return leseenheter(o)
     if (erRetningslinje(o)) {
       return o.tilstander.map((tilstand) => ({
         slag: "tilstand" as const,
@@ -197,6 +233,12 @@ function felterFor(t: Treff): Felt[] {
     return lagFelter(
       [t.kalkulator.navn, t.kalkulator.langtNavn],
       [...t.kalkulator.sokeord, ...KATEGORI_SOKEORD.kalkulator, ...fag]
+    )
+  }
+  if (t.slag === "leseenhet") {
+    return lagFelter(
+      [t.enhet.tittel],
+      [t.kapittel, t.retningslinje.kortNavn, t.retningslinje.navn, ...KATEGORI_SOKEORD.retningslinje]
     )
   }
   return lagFelter(
@@ -320,12 +362,15 @@ export function foreslaaOppslag(
 
   return alleTreff(oppslag)
     .map((treff) => {
+      // Retningslinjene til oppslag har ingen søkeord og gir ingen forslag
       const sokeord =
         treff.slag === "verktoy"
           ? treff.verktoy.sokeord
           : treff.slag === "kalkulator"
             ? treff.kalkulator.sokeord
-            : treff.tilstand.sokeord
+            : treff.slag === "tilstand"
+              ? treff.tilstand.sokeord
+              : []
       return { treff, ord: sokeord.filter((o) => inneholderOrd(kilde, normaliser(o))) }
     })
     .filter((f) => f.ord.length > 0)

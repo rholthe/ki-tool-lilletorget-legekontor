@@ -3,8 +3,7 @@ import { redirect } from "next/navigation"
 import { isAdmin, hentSystemSetting, tilgjengeligeModeller, tilgjengeligeRegioner, standardModell, standardRegion } from "@/lib/admin"
 import { BedrockInnstillinger } from "@/components/admin/bedrock-innstillinger"
 import { SonioxStatus } from "@/components/admin/soniox-status"
-import { HapiStatus } from "@/components/admin/hapi-status"
-import { hentHapiStatus } from "@/lib/hapi/retningslinjer-server"
+import Link from "next/link"
 import { Separator } from "@/components/ui/separator"
 import { Shield, Cpu, Key, Mic, BookOpen } from "lucide-react"
 
@@ -22,7 +21,6 @@ export default async function AdminInnstillingerSide() {
   const harNokler =
     !!process.env.BEDROCK_API_KEY && !!process.env.BEDROCK_SECRET_KEY
   const harSonioxNokkel = !!process.env.SONIOX_API_KEY
-  const hapiStatus = await hentHapiStatus()
 
   return (
     <div className="max-w-2xl mx-auto px-6 py-8 space-y-8">
@@ -100,12 +98,12 @@ export default async function AdminInnstillingerSide() {
           </h2>
         </div>
         <div className="rounded-xl border border-slate-200 bg-white p-5 space-y-3 text-sm">
-          <HapiStatus status={hapiStatus} />
-          <p className="text-xs text-slate-400">
-            Innholdet hentes fra Helsedirektoratets API (NLOD) og oppdateres automatisk når det er
-            eldre enn et døgn. Nøkkelen leses fra <code>.env</code> (HELSEDIR_API_KEY) og må være
-            for produksjons-API-et, ikke QA.
+          <p className="text-slate-600">
+            Antibiotikaretningslinjen og retningslinjene til oppslag hentes fra Helsedirektoratets API.
           </p>
+          <Link href="/admin/retningslinjer" className="text-blue-600 hover:underline">
+            Status, henting og utvalg av retningslinjer →
+          </Link>
         </div>
       </section>
 

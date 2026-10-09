@@ -35,10 +35,11 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { VerktoySkjema } from "@/components/app/verktoy-skjema"
 import { VeiledningLenke } from "@/components/app/verktoy-veiledning"
 import { RetningslinjeVisning } from "@/components/app/retningslinje-visning"
+import { RetningslinjeLeser } from "@/components/app/retningslinje-leser"
 import { KalkulatorVisning } from "@/components/app/kalkulator-visning"
 import { useKonsultasjon } from "@/hooks/use-konsultasjon"
 import { useVerktoy } from "@/hooks/use-verktoy"
-import { useRetningslinjer } from "@/hooks/use-retningslinjer"
+import { hentFull, useRetningslinjer } from "@/hooks/use-retningslinjer"
 import {
   beregn,
   byggResultat,
@@ -48,7 +49,10 @@ import {
 } from "@/lib/verktoy/beregn"
 import {
   INGEN_BEHANDLING,
+  LESE_PREFIKS,
+  byggLeseResultat,
   byggRetningslinjeResultat,
+  norskDato,
   lesRetningslinjeValg,
 } from "@/lib/verktoy/retningslinje"
 import {
@@ -60,6 +64,7 @@ import {
   FAGOMRADE_LABEL,
   INNEBYGDE_OPPSLAG,
   erKalkulator,
+  erLeseretningslinje,
   erRetningslinje,
   finnOppslag,
 } from "@/lib/verktoy/registry"
@@ -68,6 +73,7 @@ import {
   finnTreff,
   foreslaaOppslag,
   grupperEtterFagomrade,
+  leseenheter,
   sokOppslag,
   treffId,
 } from "@/lib/verktoy/sok"
@@ -105,7 +111,7 @@ const KATEGORI_KORT: Record<VerktoyKategori, string> = {
 
 /** Kort typeetikett i listene. Tilstander viser retningslinjen de hører til. */
 function treffType(t: Treff): string {
-  if (t.slag === "tilstand") return t.retningslinje.kortNavn
+  if (t.slag === "tilstand" || t.slag === "leseenhet") return t.retningslinje.kortNavn
   return KATEGORI_KORT[treffKategori(t)]
 }
 
@@ -127,7 +133,7 @@ const FAGOMRADE_IKON: Record<Fagomrade, LucideIcon> = {
 }
 
 const FANE_NOKKEL = "legeassist:verktoy-fane"
-/** Plassholderfane til fase 2 (andre retningslinjer og pakkeforløp). */
+/** Fanen for retningslinjene til oppslag (leseren). */
 const ANDRE_RETNINGSLINJER = "andre-retningslinjer"
 
 /** «verktoy» eller id-en til en retningslinje. Husker siste fane — bare en bekvemmelighet. */
@@ -204,10 +210,13 @@ export function VerktoyModal({ open, onClose }: Props) {
 function VerktoyInnhold({ onClose }: { onClose: () => void }) {
   const { aktiv } = useKonsultasjon()
   const { resultater, lagreResultat, slettResultat } = useVerktoy()
-  const { retningslinjer, laster: lasterRetningslinjer, feil: retningslinjeFeil } =
+  const { retningslinjer, lese, leseVenter, laster: lasterRetningslinjer, feil: retningslinjeFeil } =
     useRetningslinjer()
   /** Verktøyene i koden + retningslinjene fra Helsedirektoratet, når de er lastet. */
-  const oppslag = useMemo(() => [...INNEBYGDE_OPPSLAG, ...retningslinjer], [retningslinjer])
+  const oppslag = useMemo(
+    () => [...INNEBYGDE_OPPSLAG, ...retningslinjer, ...lese],
+    [retningslinjer, lese]
+  )
 
   const [sok, setSok] = useState("")
   const [valgt, setValgt] = useState<Treff | null>(null)
@@ -291,7 +300,9 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
     verktoy?.beregning.type === "formel" && beregning?.sum === null
 
   const kanLagre =
-    valgt?.slag === "tilstand"
+    valgt?.slag === "leseenhet"
+      ? true
+      : valgt?.slag === "tilstand"
       ? valgteLinjer.length > 0
       : valgt?.slag === "kalkulator"
         ? !kalkMangler
@@ -316,6 +327,24 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
     const resultat = resultater.find((r) => r.id === resultatId)
     if (!resultat) return
 
+    // Anbefaling fra en retningslinje til oppslag
+    if (resultat.verktoyId.startsWith(LESE_PREFIKS)) {
+      const retningslinje = lese.find((r) => `${LESE_PREFIKS}${r.id}` === resultat.verktoyId)
+      const treff = retningslinje
+        ? leseenheter(retningslinje).find(
+            (t) => t.slag === "leseenhet" && t.enhet.id === resultat.svar.enhet
+          )
+        : undefined
+      if (!treff) return
+      setValgt(treff)
+      setSvar({})
+      setValgteLinjer([])
+      setRedigererId(resultat.id)
+      setLagret(false)
+      setVisOversikt(false)
+      return
+    }
+
     const funnet = finnOppslag(resultat.verktoyId, oppslag)
     if (!funnet) return
 
@@ -330,7 +359,7 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
       setValgt({ slag: "tilstand", retningslinje: funnet, tilstand })
       setValgteLinjer(valgte)
       setSvar({})
-    } else {
+    } else if (!erLeseretningslinje(funnet)) {
       setValgt({ slag: "verktoy", verktoy: funnet })
       setSvar({ ...standardSvar(funnet), ...resultat.svar })
       setValgteLinjer([])
@@ -346,8 +375,22 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
     if (!valgt || !kanLagre) return
     const id = redigererId ?? cuid()
 
+    // Leseren viser innholdsfortegnelsen; notatet trenger anbefalingens tekst
+    const fullEnhet =
+      valgt.slag === "leseenhet"
+        ? leseenheter(await hentFull(valgt.retningslinje.id).catch(() => valgt.retningslinje)).find(
+            (t) => t.slag === "leseenhet" && t.enhet.id === valgt.enhet.id
+          )
+        : undefined
+
     const resultat =
-      valgt.slag === "tilstand"
+      valgt.slag === "leseenhet"
+        ? byggLeseResultat(
+            valgt.retningslinje,
+            fullEnhet?.slag === "leseenhet" ? fullEnhet.enhet : valgt.enhet,
+            { id }
+          )
+        : valgt.slag === "tilstand"
         ? byggRetningslinjeResultat(valgt.retningslinje, valgt.tilstand, valgteLinjer, { id })
         : valgt.slag === "kalkulator"
           ? kalkResultat
@@ -384,6 +427,7 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
   function treffNavn(t: Treff): string {
     if (t.slag === "verktoy") return t.verktoy.navn
     if (t.slag === "kalkulator") return t.kalkulator.navn
+    if (t.slag === "leseenhet") return t.enhet.tittel
     return t.tilstand.navn
   }
 
@@ -520,7 +564,9 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
                       }`
                     : valgt.slag === "kalkulator"
                       ? `${valgt.kalkulator.langtNavn} · ${valgt.kalkulator.kilde.navn}`
-                      : valgt.retningslinje.langtNavn}
+                      : valgt.slag === "leseenhet"
+                        ? [valgt.retningslinje.kortNavn, valgt.kapittel].filter(Boolean).join(" · ")
+                        : valgt.retningslinje.langtNavn}
                 </p>
               </div>
               {kildeUrl && (
@@ -552,6 +598,17 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
               )}
             </div>
 
+            {valgt.slag === "leseenhet" ? (
+              <div className="flex-1 min-h-0">
+                <RetningslinjeLeser
+                  retningslinje={valgt.retningslinje}
+                  enhetId={valgt.enhet.id}
+                  onVelg={(enhet, kapittel) =>
+                    velg({ slag: "leseenhet", retningslinje: valgt.retningslinje, enhet, kapittel })
+                  }
+                />
+              </div>
+            ) : (
             <div className="flex-1 overflow-y-auto px-5 py-4">
               <div className="max-w-5xl mx-auto">
                 {valgt.slag === "verktoy" || valgt.slag === "kalkulator" ? (
@@ -572,11 +629,16 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
                 )}
               </div>
             </div>
+            )}
 
             {/* Resultat + handling */}
             <div className="border-t border-slate-200 shrink-0">
               <div className="px-5 py-3 space-y-2.5 w-full max-w-5xl mx-auto">
-                {valgt.slag === "kalkulator" ? (
+                {valgt.slag === "leseenhet" ? (
+                  <p className="text-xs text-slate-500">
+                    «Legg i notat» setter inn anbefalingen ordrett, med styrke og kilde.
+                  </p>
+                ) : valgt.slag === "kalkulator" ? (
                   kalkResultat ? (
                     <KalkulatorVisning resultat={kalkResultat} />
                   ) : (
@@ -668,7 +730,10 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
                     >
                       <div className="text-sm font-medium text-slate-800">{treffNavn(t)}</div>
                       <div className="text-xs text-slate-500 mt-0.5">
-                        {treffType(t)} · {fagomraderFor(t).map((f) => FAGOMRADE_LABEL[f]).join(", ")}
+                        {treffType(t)} ·{" "}
+                        {t.slag === "leseenhet"
+                          ? t.kapittel || t.retningslinje.navn
+                          : fagomraderFor(t).map((f) => FAGOMRADE_LABEL[f]).join(", ")}
                       </div>
                     </button>
                   ))}
@@ -727,7 +792,7 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
                   {[
                     { id: "verktoy", navn: "Verktøy", antall: INNEBYGDE_OPPSLAG.length },
                     ...retningslinjer.map((r) => ({ id: r.id, navn: r.kortNavn, antall: r.tilstander.length })),
-                    { id: ANDRE_RETNINGSLINJER, navn: "Andre retningslinjer", antall: null },
+                    { id: ANDRE_RETNINGSLINJER, navn: "Andre retningslinjer", antall: lese.length },
                   ].map((f) => (
                     <button
                       key={f.id}
@@ -790,18 +855,84 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
                     })}
                   </div>
                 ) : visFane === ANDRE_RETNINGSLINJER ? (
-                  <div className="max-w-xl rounded-xl border border-dashed border-slate-300 bg-slate-50 p-5 space-y-2">
-                    <h3 className="text-sm font-semibold text-slate-700">Kommer: flere retningslinjer og pakkeforløp</h3>
-                    <p className="text-sm text-slate-600">
-                      Nasjonale faglige retningslinjer fra Helsedirektoratet skal kunne slås opp her, med
-                      kapitler og anbefalinger gjengitt ordrett — for eksempel diabetes, kols, demens og
-                      forebygging av hjerte- og karsykdom. Pakkeforløpenes kriterier for henvisning ved
-                      begrunnet mistanke kommer også.
+                  lese.length === 0 ? (
+                    <p className="text-sm text-slate-400 italic">
+                      {lasterRetningslinjer
+                        ? "Henter retningslinjer…"
+                        : leseVenter > 0
+                          ? "Retningslinjene hentes fra Helsedirektoratet. Lukk og åpne modalen om et øyeblikk."
+                          : "Ingen retningslinjer er valgt ennå. Administrator velger dem under Admin → Retningslinjer."}
                     </p>
-                    <p className="text-xs text-slate-400">
-                      Innholdet hentes fra Helsedirektoratet på samme måte som antibiotikaretningslinjen.
-                    </p>
-                  </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <p className="text-xs text-slate-500">
+                        Nasjonale faglige retningslinjer fra Helsedirektoratet, gjengitt ordrett. Søk etter
+                        en anbefaling, eller velg et kapittel.
+                      </p>
+                      {leseVenter > 0 && (
+                        <p className="text-xs text-slate-400 italic">
+                          {leseVenter === 1 ? "Én retningslinje" : `${leseVenter} retningslinjer`} hentes ennå fra
+                          Helsedirektoratet.
+                        </p>
+                      )}
+                      <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4">
+                        {lese.map((r) => {
+                          const forste = leseenheter(r)[0]
+                          return (
+                            <section
+                              key={r.id}
+                              className="break-inside-avoid mb-4 rounded-xl border border-slate-200 bg-white p-3"
+                            >
+                              <h3 className="px-1 mb-1.5">
+                                {forste ? (
+                                  <button
+                                    onClick={() => velg(forste)}
+                                    className="text-left text-xs font-semibold text-slate-700 uppercase tracking-wide hover:text-blue-700"
+                                  >
+                                    {r.kortNavn}
+                                  </button>
+                                ) : (
+                                  <span className="text-xs font-semibold text-slate-700 uppercase tracking-wide">
+                                    {r.kortNavn}
+                                  </span>
+                                )}
+                                <span className="block text-[11px] text-slate-400 normal-case tracking-normal">
+                                  Faglig oppdatert {norskDato(r.sistFagligOppdatert)}
+                                </span>
+                              </h3>
+                              {forste ? (
+                                <div>
+                                  {r.kapitler.map((k) => {
+                                    const inngang = leseenheter({ ...r, enheter: [], kapitler: [k] })[0]
+                                    if (!inngang) return null
+                                    return (
+                                      <button
+                                        key={k.id}
+                                        onClick={() => velg(inngang)}
+                                        className="w-full text-left px-2 py-1 rounded-md text-sm text-slate-800 hover:bg-slate-50"
+                                      >
+                                        {k.tittel}
+                                      </button>
+                                    )
+                                  })}
+                                </div>
+                              ) : (
+                                <a
+                                  href={r.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-1 px-1 text-xs text-blue-600 hover:underline"
+                                >
+                                  <ExternalLink className="w-3 h-3" />
+                                  Finnes bare på helsedirektoratet.no
+                                </a>
+                              )}
+                            </section>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )
                 ) : (
                   aktivRetningslinje && (
                     <div className="space-y-3">

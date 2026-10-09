@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { signOut } from "next-auth/react"
-import { Settings, ShieldCheck, LogOut, ChevronDown, User, Users, FileText, Megaphone, BarChart3 } from "lucide-react"
+import { Settings, ShieldCheck, LogOut, ChevronDown, User, Users, FileText, Megaphone, BarChart3, BookOpen } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -88,6 +88,12 @@ export function AppHeaderMeny({ visNavn, erAdmin }: Props) {
                 <Link href="/admin/bruk" className="flex items-center gap-2 w-full">
                   <BarChart3 className="w-4 h-4" />
                   Bruk og kostnader
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Link href="/admin/retningslinjer" className="flex items-center gap-2 w-full">
+                  <BookOpen className="w-4 h-4" />
+                  Retningslinjer
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem>

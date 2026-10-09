@@ -36,6 +36,8 @@ execFileSync(
     "src/lib/verktoy/kalkulator.ts",
     "src/lib/verktoy/sok.ts",
     "src/lib/verktoy/retningslinjer/antibiotika-tillegg.ts",
+    "src/lib/verktoy/retningslinjer/lese-hapi.ts",
+    "--esModuleInterop",
     "--outDir",
     utMappe,
     "--module",
@@ -50,11 +52,13 @@ execFileSync(
 )
 
 const require = createRequire(import.meta.url)
+// tsc legger utdataene under felles rot for filene: src/lib når hapi/ er med
+const v = fs.existsSync(path.join(utMappe, "verktoy")) ? path.join(utMappe, "verktoy") : utMappe
 const { INNEBYGDE_VERKTOY, INNEBYGDE_KALKULATORER, INNEBYGDE_OPPSLAG } = require(
-  path.join(utMappe, "registry.js")
+  path.join(v, "registry.js")
 )
 const { TILSTAND_TILLEGG } = require(
-  path.join(utMappe, "retningslinjer", "antibiotika-tillegg.js")
+  path.join(v, "retningslinjer", "antibiotika-tillegg.js")
 )
 
 // Retningslinjene kommer fra Helsedirektoratets API. Testen kjører på
@@ -67,9 +71,14 @@ const RETNINGSLINJER = [ANTIBIOTIKA]
 const OPPSLAG = [...INNEBYGDE_OPPSLAG, ...RETNINGSLINJER]
 const FASIT = JSON.parse(fs.readFileSync(path.join(rot, "scripts/fasit/antibiotika-verifisert.json"), "utf8"))
 const { beregnKalkulator, byggKalkulatorResultat } = require(
-  path.join(utMappe, "kalkulator.js")
+  path.join(v, "kalkulator.js")
 )
-const { byggRetningslinjeResultat } = require(path.join(utMappe, "retningslinje.js"))
+const { byggRetningslinjeResultat, byggLeseResultat, utenMarkdown } = require(
+  path.join(v, "retningslinje.js")
+)
+const { byggLeseRetningslinje, tilIndeks, antallEnheter } = require(
+  path.join(v, "retningslinjer", "lese-hapi.js")
+)
 const {
   beregn,
   kjorTestkasus,
@@ -77,8 +86,8 @@ const {
   byggResultat,
   formaterTilNotat,
   synkVerktoySeksjon,
-} = require(path.join(utMappe, "beregn.js"))
-const { sokOppslag, foreslaaOppslag, treffId, alleTreff, fagomraderFor, grupperEtterFagomrade } = require(path.join(utMappe, "sok.js"))
+} = require(path.join(v, "beregn.js"))
+const { sokOppslag, foreslaaOppslag, treffId, alleTreff, fagomraderFor, grupperEtterFagomrade } = require(path.join(v, "sok.js"))
 
 let feil = 0
 
@@ -306,6 +315,69 @@ for (const retningslinje of RETNINGSLINJER) {
       `${linjer} linjer sammenholdt med manuell verifisering` +
       (feil === forFeil ? " · ✓ alle sjekker grønne" : "")
   )
+}
+
+/*
+ * Retningslinjer til oppslag: oversettingen fra API-et, på et lite kunstig tre
+ * med de tilfellene som har overrasket: kapitler med egen brødtekst
+ * (røykeavvenning har nesten alt innholdet slik), kapitler som skal utelates,
+ * og kryssreferanser til API-et som krever nøkkel.
+ */
+{
+  console.log("\nRetningslinjer til oppslag (oversetting)")
+  const forFeil = feil
+  const node = (infoId, infoType, tittel, ekstra = {}) => ({
+    id: `0006-x-${infoId}`,
+    tittel,
+    tekniskeData: { infoId, infoType },
+    url: `https://www.helsedirektoratet.no/test/${infoId}`,
+    sistFagligOppdatert: "2025-06-02T00:00",
+    ...ekstra,
+  })
+  const A = "11111111-1111-1111-1111-111111111111"
+  const B = "22222222-2222-2222-2222-222222222222"
+  const tre = {
+    rot: node("00000000-0000-0000-0000-000000000000", "retningslinje", "Nasjonal faglig retningslinje for test", { kortTittel: "Test" }),
+    enheter: [],
+    kapitler: [
+      {
+        node: node("33333333-3333-3333-3333-333333333333", "kapittel", "Legemidler", { tekst: "<p>Innledning &gt; alt.</p>" }),
+        kapitler: [],
+        enheter: [
+          node(A, "anbefaling", "Metformin som førstevalg", {
+            tekst: `<p>Metformin anbefales som førstevalg. Se <a href="https://api.helsedirektoratet.no/innhold/anbefalinger/0006-0002-${B}">annen anbefaling</a>.</p>`,
+            data: { styrke: "sterk anbefaling", praktisk: "<ul><li>eGFR &lt; 45</li></ul>", nokkelInfo: { fordelerogulemper: "<p>Robust.</p>" }, rasjonale: "<p>Studier.</p>" },
+          }),
+          node(B, "anbefaling", "Annen", { tekst: "<p>Kort.</p><script>x()</script>" }),
+        ],
+      },
+      { node: node("44444444-4444-4444-4444-444444444444", "kapittel", "Metode og prosess"), kapitler: [], enheter: [] },
+      { node: node("55555555-5555-5555-5555-555555555555", "kapittel", "Referanser", { tekst: "<p>Mange.</p>" }), kapitler: [], enheter: [] },
+    ],
+  }
+  const r = byggLeseRetningslinje(tre, "2026-10-09T00:00:00.000Z")
+  sjekk(r.kapitler.length === 1, `utelatte kapitler slapp gjennom: ${r.kapitler.map((k) => k.tittel).join(", ")}`)
+  const [kap] = r.kapitler
+  sjekk(kap.enheter[0]?.erKapitteltekst === true && kap.enheter[0].tekst === "Innledning > alt.", "kapittelets egen tekst ble ikke første side")
+  sjekk(antallEnheter(r) === 3, `antall sider ${antallEnheter(r)}, forventet 3`)
+  const metformin = kap.enheter.find((e) => e.id === A)
+  sjekk(metformin?.styrke === "sterk anbefaling", "styrken mangler")
+  sjekk(metformin?.tekst.includes(`](https://www.helsedirektoratet.no/test/${B})`), "lenke til API-et ble ikke skrevet om")
+  sjekk(/Fordeler og ulemper[\s\S]*Rasjonale/.test(metformin?.begrunnelse ?? ""), "begrunnelsen mangler eller er i feil rekkefølge")
+  sjekk(!kap.enheter.find((e) => e.id === B)?.tekst.includes("x()"), "innhold fra <script> slapp gjennom")
+  const indeks = tilIndeks(r)
+  sjekk(indeks.kapitler[0].enheter.every((e) => e.tekst === undefined && e.praktisk === undefined), "indeksen inneholder brødtekst")
+
+  const res = byggLeseResultat(r, metformin, { id: "t" })
+  const linje = formaterTilNotat(res)
+  console.log(`  ${linje.split("\n").join("\n    ")}`)
+  sjekk(linje.includes("Metformin anbefales som førstevalg") && linje.includes("sterk anbefaling"), "notatlinjen mangler anbefaling eller styrke")
+  sjekk(linje.includes("Helsedirektoratet, Nasjonal faglig retningslinje for test (faglig oppdatert 02.06.2025)"), "notatlinjen mangler kildeangivelse")
+  sjekk(!/[*\[\]()]{2}|\]\(/.test(res.detaljer[0]), "markdown slapp gjennom til notatet")
+  sjekk(utenMarkdown("**fet** og [lenke](https://x.no)\n- punkt") === "fet og lenke punkt", "utenMarkdown")
+  const lang = byggLeseResultat(r, { ...metformin, tekst: "ord ".repeat(200) }, { id: "t" })
+  sjekk(lang.detaljer[0] === "Metformin som førstevalg", "lang anbefaling skal gi bare tittelen i notatet")
+  if (feil === forFeil) console.log("  ✓ alle sjekker grønne")
 }
 
 /*

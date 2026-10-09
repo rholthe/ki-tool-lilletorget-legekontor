@@ -1,5 +1,7 @@
 import type {
   Anbefaling,
+  LeseEnhet,
+  LeseRetningslinje,
   Retningslinje,
   Tilstand,
   VerktoyResultat,
@@ -105,7 +107,7 @@ export function lesRetningslinjeValg(resultat: VerktoyResultat): {
  * et høyt tall betyr at hentingen har feilet en stund — da kan en dose ha
  * endret seg uten at vi vet det.
  */
-export function dagerSidenHentet(retningslinje: Retningslinje, naa = new Date()): number {
+export function dagerSidenHentet(retningslinje: { hentetAt: string }, naa = new Date()): number {
   const hentet = new Date(retningslinje.hentetAt)
   if (Number.isNaN(hentet.getTime())) return Number.POSITIVE_INFINITY
   return Math.floor((naa.getTime() - hentet.getTime()) / 86_400_000)
@@ -113,3 +115,57 @@ export function dagerSidenHentet(retningslinje: Retningslinje, naa = new Date())
 
 /** Over dette antallet dager viser UI-et en advarsel om at innholdet kan være utdatert. */
 export const HENTING_ADVARSEL_DAGER = 7
+
+// ─── Retningslinjer til oppslag ───────────────────────────────────────────────
+
+/** Prefiks på `verktoyId` for anbefalinger fra leseren, så resultatet kan gjenåpnes. */
+export const LESE_PREFIKS = "les:"
+
+/** Markdown → ren tekst for notatet. Notatet rendres uten markdown. */
+export function utenMarkdown(md: string): string {
+  return md
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
+    .replace(/[*_`#>]+/g, "")
+    .replace(/^\s*[-+]\s+/gm, "")
+    .replace(/\\(.)/g, "$1")
+    .replace(/\s+/g, " ")
+    .trim()
+}
+
+/** Lengre enn dette blir bare tittelen med i notatet — resten finnes hos kilden. */
+const MAKS_ANBEFALING_TEGN = 500
+
+/**
+ * En anbefaling lagt i notatet: kildens egen ordlyd, uendret, med styrke og
+ * kildeangivelse. Kapitteltekster og lange anbefalinger gir bare tittelen.
+ */
+export function byggLeseResultat(
+  retningslinje: LeseRetningslinje,
+  enhet: LeseEnhet,
+  opts: { id: string }
+): VerktoyResultat {
+  const tekst = enhet.erKapitteltekst ? "" : utenMarkdown(enhet.tekst ?? "")
+  const innhold = tekst && tekst.length <= MAKS_ANBEFALING_TEGN ? tekst : enhet.tittel
+  const detaljer = [utenPunktum(innhold)]
+  if (enhet.styrke) detaljer.push(enhet.styrke)
+
+  const dato = norskDato(enhet.sistFagligOppdatert) || norskDato(retningslinje.sistFagligOppdatert)
+  return {
+    id: opts.id,
+    verktoyId: `${LESE_PREFIKS}${retningslinje.id}`,
+    navn: enhet.tittel,
+    notatTittel: `Retningslinje (${retningslinje.kortNavn.toLowerCase()})`,
+    svar: { enhet: enhet.id },
+    sum: null,
+    sumEtikett: "poeng",
+    detaljer,
+    klasse: null,
+    tolkning: null,
+    // Kildeangivelse etter NLOD
+    kilde: `Helsedirektoratet, ${retningslinje.navn}${dato ? ` (faglig oppdatert ${dato})` : ""}`,
+    visKilde: true,
+    utfortAt: Date.now(),
+    aiForhandsutfylt: false,
+    bekreftet: true,
+  }
+}

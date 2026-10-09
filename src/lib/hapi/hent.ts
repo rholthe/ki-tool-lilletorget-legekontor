@@ -112,3 +112,49 @@ export async function hentTre(rotSti: string, valg: HentValg): Promise<HapiTre> 
   )
   return { rot, kapitler }
 }
+
+/** Kapittel med underkapitler i kildens rekkefølge. */
+export interface HapiNestetKapittel {
+  node: HapiNode
+  kapitler: HapiNestetKapittel[]
+  enheter: HapiNode[]
+}
+
+export interface HapiNestetTre {
+  rot: HapiNode
+  kapitler: HapiNestetKapittel[]
+  /** Enheter rett under produktet, uten kapittel. */
+  enheter: HapiNode[]
+}
+
+/**
+ * Barn som ikke er innhold i seg selv. Referanser og PICO-er ligger under hver
+ * anbefaling — over 400 i diabetesretningslinjen — og trengs ikke i leseren.
+ */
+const UTELATTE_TYPER = new Set(["referanse", "pico"])
+
+/**
+ * Henter et normerende produkt med kapittelstrukturen intakt. Brukes for
+ * leseren, der innholdsfortegnelsen skal speile kilden.
+ */
+export async function hentNestet(rotSti: string, valg: HentValg): Promise<HapiNestetTre> {
+  const n = valg.samtidige ?? 3
+  const rot = await hentNode(rotSti, valg)
+
+  async function barnAv(node: HapiNode): Promise<{ kapitler: HapiNestetKapittel[]; enheter: HapiNode[] }> {
+    const lenker = barn(node).filter((l) => !UTELATTE_TYPER.has(l.type))
+    const noder = await medBegrensning(lenker.map((l) => () => hentNode(l.href, valg)), n)
+    const kapitler: HapiNestetKapittel[] = []
+    const enheter: HapiNode[] = []
+    for (const b of noder) {
+      if (b.tekniskeData.infoType === "kapittel") {
+        kapitler.push({ node: b, ...(await barnAv(b)) })
+      } else {
+        enheter.push(b)
+      }
+    }
+    return { kapitler, enheter }
+  }
+
+  return { rot, ...(await barnAv(rot)) }
+}
