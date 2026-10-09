@@ -513,6 +513,11 @@ console.log("\nSøk")
     "«le» treffer sinusitt — korte ord skal kreve ordstart"
   )
   sjekk(sokOppslag("xyzzyq", OPPSLAG).length === 0, "meningsløst søk gir treff")
+  // Skrivefeiltreff skal ikke drukne gode treff: «hjerte» er ikke «hjerne»
+  sjekk(
+    !sokOppslag("hjerte", OPPSLAG).some((t) => treffId(t) === tilstand("Bakteriell meningitt")),
+    "«hjerte» gir hjernehinnebetennelse (skrivefeiltreff skal vike for gode treff)"
+  )
   // Et oppslag uten fagområde ville vært usynlig i oversikten
   for (const t of alleTreff(OPPSLAG)) {
     sjekk(fagomraderFor(t).length > 0, `${treffId(t)} mangler fagområde`)

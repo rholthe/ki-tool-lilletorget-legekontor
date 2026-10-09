@@ -74,10 +74,11 @@ import {
   foreslaaOppslag,
   grupperEtterFagomrade,
   leseenheter,
+  sokKategori,
   sokOppslag,
   treffId,
 } from "@/lib/verktoy/sok"
-import type { Treff } from "@/lib/verktoy/sok"
+import type { SokKategori, Treff } from "@/lib/verktoy/sok"
 import type {
   Fagomrade,
   LeseRetningslinje,
@@ -142,6 +143,17 @@ const FAGOMRADE_IKON: Record<Fagomrade, LucideIcon> = {
 const FANE_NOKKEL = "legeassist:verktoy-fane"
 /** Fanen for retningslinjene til oppslag (leseren). */
 const ANDRE_RETNINGSLINJER = "andre-retningslinjer"
+/** Kategoriene i søkefilteret, i visningsrekkefølge. */
+const SOK_KATEGORIER: { id: SokKategori; navn: string }[] = [
+  { id: "verktoy", navn: "Verktøy" },
+  { id: "antibiotika", navn: "Antibiotika" },
+  { id: "retningslinjer", navn: "Retningslinjer" },
+  { id: "pakkeforlop", navn: "Pakkeforløp" },
+]
+
+/** Under «Alle» vises så mange treff per kategori; resten bak «Vis alle». */
+const MAKS_PER_KATEGORI = 6
+
 /** Fanen for pakkeforløp og andre nasjonale forløp. */
 const PAKKEFORLOP = "pakkeforlop"
 
@@ -260,6 +272,28 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
   const treff = useMemo(() => sokOppslag(sok, oppslag), [sok, oppslag])
 
   /**
+   * Kategorifilter for søket. «Alle» viser de beste treffene gruppert per
+   * kategori; en valgt kategori viser hele den rangerte listen.
+   */
+  const [sokFilter, setSokFilter] = useState<SokKategori | "alle">("alle")
+  const treffPerKategori = useMemo(() => {
+    const grupper: Record<SokKategori, Treff[]> = {
+      verktoy: [],
+      antibiotika: [],
+      retningslinjer: [],
+      pakkeforlop: [],
+    }
+    for (const t of treff) grupper[sokKategori(t)].push(t)
+    return grupper
+  }, [treff])
+  const synligeTreff = sokFilter === "alle" ? treff : treffPerKategori[sokFilter]
+  /** Det Enter åpner: første synlige treff, i samme rekkefølge som visningen. */
+  const forsteTreff =
+    sokFilter === "alle"
+      ? SOK_KATEGORIER.map((k) => treffPerKategori[k.id][0]).find(Boolean)
+      : synligeTreff[0]
+
+  /**
    * Nylig brukte verktøy, kun id-er (ingen pasientdata). En id kan bli
    * ugyldig hvis et verktøy fjernes — da faller raden bare ut.
    */
@@ -351,6 +385,7 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
     setValgt(t)
     setVisOversikt(false)
     setSok("")
+    setSokFilter("alle")
     setSvar(t.slag === "verktoy" ? standardSvar(t.verktoy) : {})
     setValgteLinjer([])
     setSide(undefined)
@@ -466,6 +501,28 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
     return t.tilstand.navn
   }
 
+  /** Ett søketreff. Treffet Enter åpner, er markert. */
+  function treffKort(t: Treff) {
+    const forst = t === forsteTreff
+    return (
+      <button
+        key={treffId(t)}
+        onClick={() => velg(t)}
+        className={`text-left px-3 py-2 rounded-lg border transition-colors ${
+          forst ? "border-blue-300 bg-blue-50/50 hover:bg-blue-50" : "border-slate-200 hover:bg-slate-50"
+        }`}
+      >
+        <div className="text-sm font-medium text-slate-800">{treffNavn(t)}</div>
+        <div className="text-xs text-slate-500 mt-0.5">
+          {treffType(t)} ·{" "}
+          {t.slag === "leseenhet"
+            ? t.kapittel || t.retningslinje.navn
+            : fagomraderFor(t).map((f) => FAGOMRADE_LABEL[f]).join(", ")}
+        </div>
+      </button>
+    )
+  }
+
   const valgtId = valgt ? treffId(valgt) : null
 
   /** Kildelenken, når oppslaget har en. Tilstander har sin egen i visningen. */
@@ -571,14 +628,16 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
               value={sok}
               onChange={(e) => {
                 setSok(e.target.value)
+                // Nytt søk fra tomt felt starter i «Alle»
+                if (!e.target.value) setSokFilter("alle")
                 // Søk fra skjemaet tar deg til oversikten; skjemaet beholdes
                 setVisOversikt(true)
               }}
               onKeyDown={(e) => {
                 // Enter åpner beste treff — søk og velg uten mus
-                if (e.key === "Enter" && sok && treff[0]) {
+                if (e.key === "Enter" && sok && forsteTreff) {
                   e.preventDefault()
-                  velg(treff[0])
+                  velg(forsteTreff)
                 }
               }}
               className="pl-8 text-sm"
@@ -752,26 +811,61 @@ function VerktoyInnhold({ onClose }: { onClose: () => void }) {
           <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
             {sok ? (
               treff.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                  {treff.map((t, i) => (
-                    <button
-                      key={treffId(t)}
-                      onClick={() => velg(t)}
-                      className={`text-left px-3 py-2 rounded-lg border transition-colors ${
-                        i === 0
-                          ? "border-blue-300 bg-blue-50/50 hover:bg-blue-50"
-                          : "border-slate-200 hover:bg-slate-50"
-                      }`}
-                    >
-                      <div className="text-sm font-medium text-slate-800">{treffNavn(t)}</div>
-                      <div className="text-xs text-slate-500 mt-0.5">
-                        {treffType(t)} ·{" "}
-                        {t.slag === "leseenhet"
-                          ? t.kapittel || t.retningslinje.navn
-                          : fagomraderFor(t).map((f) => FAGOMRADE_LABEL[f]).join(", ")}
-                      </div>
-                    </button>
-                  ))}
+                <div className="space-y-4">
+                  {/* Kategorifilter */}
+                  <div className="flex flex-wrap gap-1.5">
+                    {[{ id: "alle" as const, navn: "Alle", antall: treff.length }, ...SOK_KATEGORIER.map((k) => ({ ...k, antall: treffPerKategori[k.id].length }))].map((k) => (
+                      <button
+                        key={k.id}
+                        onClick={() => setSokFilter(k.id)}
+                        disabled={k.antall === 0}
+                        className={`px-2.5 py-1 rounded-full text-xs border transition-colors disabled:opacity-40 ${
+                          sokFilter === k.id
+                            ? "border-slate-800 bg-slate-800 text-white"
+                            : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                        }`}
+                      >
+                        {k.navn}
+                        <span className={`ml-1 tabular-nums ${sokFilter === k.id ? "text-slate-300" : "text-slate-400"}`}>
+                          {k.antall}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+
+                  {sokFilter === "alle" ? (
+                    SOK_KATEGORIER.filter((k) => treffPerKategori[k.id].length > 0).map((k) => {
+                      const liste = treffPerKategori[k.id]
+                      return (
+                        <section key={k.id} className="space-y-1.5">
+                          <div className="flex items-baseline justify-between gap-2">
+                            <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                              {k.navn}
+                            </h3>
+                            {liste.length > MAKS_PER_KATEGORI && (
+                              <button
+                                onClick={() => setSokFilter(k.id)}
+                                className="text-xs text-blue-600 hover:underline"
+                              >
+                                Vis alle {liste.length} →
+                              </button>
+                            )}
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                            {liste.slice(0, MAKS_PER_KATEGORI).map(treffKort)}
+                          </div>
+                        </section>
+                      )
+                    })
+                  ) : synligeTreff.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                      {synligeTreff.map(treffKort)}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-slate-400 italic">
+                      Ingen treff i denne kategorien.
+                    </p>
+                  )}
                 </div>
               ) : (
                 <p className="text-sm text-slate-400 italic">Ingen treff på «{sok}».</p>

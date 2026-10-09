@@ -351,6 +351,14 @@ Nettleser (klinikkens datamaskin)
       gitt forslag i annenhver konsultasjon. Det som skal utløse forslag, står i `sokeord`
     - Synonymer får ikke skrivefeiltoleranse (ellers traff «knesmerter» «øresmerter»), og treff
       inni et ord krever minst fire bokstaver (ellers traff «tia» «visuospatial»)
+    - **Vekting:** navnet +5, søkeord 0, kontekst −25 (kapittel, retningslinjens navn, typeord som
+      «pakkeforløp»). Ellers treffer alle sidene i en retningslinje like godt på retningslinjens navn
+    - **Svake treff viker:** finnes et treff ≥ 60 (`GODT_TREFF`), utelates treff under 50
+      (`SVAKT_TREFF`) — skrivefeil og ord inni konteksten. «hjerte» ga ellers alle sidene om
+      hjerneslag («hjerne»): 184 treff, nå 70. Rene skrivefeilsøk («ørebetenelse») virker som før
+    - **Kategorifilter** over søketreffene: Alle · Verktøy · Antibiotika · Retningslinjer ·
+      Pakkeforløp, med antall (`sokKategori()`). «Alle» viser de 6 beste per kategori med
+      «Vis alle N →»; en valgt kategori viser hele listen. Enter åpner første synlige treff
     - **Forslag** ut fra transkript/kontekst er hele-ord-treff på `sokeord`; retningslinjens egne
       søkeord teller ikke
     - «Nylig brukt» (maks 5, kun treff-id-er i localStorage `legeassist:verktoy-nylig`)

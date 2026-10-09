@@ -84,6 +84,15 @@ export function treffId(treff: Treff): string {
   return `${treff.retningslinje.id}:${treff.tilstand.id}`
 }
 
+/** Kategoriene i søkefilteret. */
+export type SokKategori = "verktoy" | "antibiotika" | "retningslinjer" | "pakkeforlop"
+
+export function sokKategori(t: Treff): SokKategori {
+  if (t.slag === "verktoy" || t.slag === "kalkulator") return "verktoy"
+  if (t.slag === "tilstand") return "antibiotika"
+  return t.retningslinje.art === "forlop" ? "pakkeforlop" : "retningslinjer"
+}
+
 export function fagomraderFor(t: Treff): Fagomrade[] {
   if (t.slag === "verktoy") return t.verktoy.fagomrader
   if (t.slag === "kalkulator") return t.kalkulator.fagomrader
@@ -197,16 +206,32 @@ function ordPoeng(ord: string, felt: string, feltOrd: string[], tillatFeil: bool
 interface Felt {
   tekst: string
   ord: string[]
-  /** Navnet teller litt mer enn søkeordene. */
-  erNavn: boolean
+  /**
+   * Tillegg til poengsummen: navnet teller litt mer enn søkeordene, og konteksten
+   * (kapittel, retningslinjens navn) mye mindre. Ellers treffer alle 20 sidene i
+   * «Forebygging av hjerte- og karsykdom» like godt som CHA₂DS₂-VASc på «hjerte».
+   */
+  vekt: number
 }
 
-function lagFelter(navn: string[], ovrige: string[]): Felt[] {
-  const lag = (t: string, erNavn: boolean): Felt => {
+const VEKT_NAVN = 5
+const VEKT_KONTEKST = -25
+
+/** Ordet står i navnet, eller som helt ord/ordstart i et søkeord. */
+const GODT_TREFF = 60
+/** Under dette: bare skrivefeil eller treff inni et ord i konteksten. */
+const SVAKT_TREFF = 50
+
+function lagFelter(navn: string[], ovrige: string[], kontekst: string[] = []): Felt[] {
+  const lag = (t: string, vekt: number): Felt => {
     const tekst = normaliser(t)
-    return { tekst, ord: tekst.split(" ").filter(Boolean), erNavn }
+    return { tekst, ord: tekst.split(" ").filter(Boolean), vekt }
   }
-  return [...navn.map((n) => lag(n, true)), ...ovrige.map((o) => lag(o, false))]
+  return [
+    ...navn.map((n) => lag(n, VEKT_NAVN)),
+    ...ovrige.map((o) => lag(o, 0)),
+    ...kontekst.map((k) => lag(k, VEKT_KONTEKST)),
+  ]
 }
 
 /**
@@ -238,9 +263,12 @@ function felterFor(t: Treff): Felt[] {
       [...t.kalkulator.sokeord, ...KATEGORI_SOKEORD.kalkulator, ...fag]
     )
   }
+  // Sidene i en retningslinje: tittelen er det som skiller dem. Retningslinjens navn,
+  // kapittelet og typeordene («pakkeforløp») er felles for mange sider og teller lite
   if (t.slag === "leseenhet") {
     return lagFelter(
       [t.enhet.tittel],
+      [],
       [
         t.kapittel,
         t.retningslinje.kortNavn,
@@ -251,14 +279,13 @@ function felterFor(t: Treff): Felt[] {
   }
   return lagFelter(
     [t.tilstand.navn],
+    [...t.tilstand.sokeord, ...fag],
     [
       t.tilstand.kapittel,
       t.retningslinje.navn,
       t.retningslinje.langtNavn,
-      ...t.tilstand.sokeord,
       ...t.retningslinje.sokeord,
       ...KATEGORI_SOKEORD.retningslinje,
-      ...fag,
     ]
   )
 }
@@ -288,7 +315,7 @@ function besteOrdPoeng(ord: string, felter: Felt[], tillatFeil: boolean): number
   let best = 0
   for (const f of felter) {
     const p = ordPoeng(ord, f.tekst, f.ord, tillatFeil)
-    if (p > 0) best = Math.max(best, p + (f.erNavn ? 5 : 0))
+    if (p > 0) best = Math.max(best, Math.max(1, p + f.vekt))
   }
   return best
 }
@@ -333,7 +360,7 @@ export function sokOppslag(
 
   const synonymer = synonymerFor(q)
 
-  return alle
+  const rader = alle
     .map((t, indeks) => {
       const felter = felterFor(t)
       let poeng = frasePoeng(q, felter)
@@ -342,6 +369,12 @@ export function sokOppslag(
       return { t, poeng, indeks }
     })
     .filter((r) => r.poeng > 0)
+
+  // Svake treff (skrivefeil, eller ordet bare inni konteksten) tas bare med når det
+  // ikke finnes gode. Ellers gir «hjerte» alle sidene om hjerneslag («hjerne»)
+  const best = rader.reduce((m, r) => Math.max(m, r.poeng), 0)
+  return rader
+    .filter((r) => best < GODT_TREFF || r.poeng >= SVAKT_TREFF)
     .sort((a, b) => b.poeng - a.poeng || a.indeks - b.indeks)
     .map((r) => r.t)
 }
