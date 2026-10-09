@@ -87,7 +87,8 @@ Nettleser (klinikkens datamaskin)
     - Brukerliste viser status «Venter på passord»/«Aktiv» + «Send invitasjon på nytt»
   - Tilgangsforespørsel: offentlig skjema `/tilgang` (navn/e-post/arbeidssted) → e-post til
     `ACCESS_REQUEST_TO`; lenket fra login («Kontakt en administrator»)
-  - E-post via SMTP (`src/lib/mail.ts`, nodemailer + Google Workspace app-passord)
+  - E-post via SMTP (`src/lib/mail.ts`, nodemailer) fra mailcow-postboksen `legeassist@lilletorget.org`
+    (port 587/STARTTLS; postboksen har `smtp_access=1`, `force_pw_update=0` og egen ProISP-relay)
   - Offentlige ruter i `proxy.ts`: `/login`, `/tilgang`, `/sett-passord`, `/databehandleravtale`, `/api/auth`
 - Databehandleravtale (DPA): ingen appbruk uten gyldig signatur
   - Admin-versjonert i DB (`DpaVersjon`: versjon, innhold/markdown, krevNySignering,
@@ -674,12 +675,13 @@ HELSEDIR_API_KEY=...
 # Administrasjon
 ADMIN_EMAILS=admin@klinikk.no     # Kommaseparert liste over admin-e-poster
 
-# E-post (SMTP) — Google Workspace med app-passord
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=465                     # 465 = implisitt TLS, 587 = STARTTLS
-SMTP_USER=ragnar@lilletorget.org
-SMTP_PASSWORD=...                 # App-passord (ikke vanlig kontopassord)
-SMTP_FROM="legeassist <ragnar@lilletorget.org>"  # Valgfri; faller tilbake til SMTP_USER
+# E-post (SMTP) — mailcow på egen server, tjenestepostboks legeassist@lilletorget.org
+# (utgående post går via ProISP-relay satt opp per postboks i mailcow, relayhost id 14)
+SMTP_HOST=mail.lilletorget.org    # Offentlig navn, ikke containernavn (sertifikatet)
+SMTP_PORT=587                     # STARTTLS (465 = implisitt TLS)
+SMTP_USER=legeassist@lilletorget.org
+SMTP_PASSWORD=...                 # Postboksens passord
+SMTP_FROM="LegeAssist <legeassist@lilletorget.org>"  # Valgfri; faller tilbake til SMTP_USER
 ACCESS_REQUEST_TO=ragnar@lilletorget.org         # Mottaker for tilgangsforespørsler
 APP_URL=https://ki.lilletorget.org  # Basis-URL for absolutte lenker i e-post
 PORT=3001                         # Port appen lytter på i prod (3000 er opptatt)

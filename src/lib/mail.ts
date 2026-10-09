@@ -3,13 +3,15 @@ import nodemailer from "nodemailer"
 import { headers } from "next/headers"
 
 /**
- * SMTP-konfig leses fra .env. Beregnet for Google Workspace med app-passord:
- *   SMTP_HOST=smtp.gmail.com
- *   SMTP_PORT=465
- *   SMTP_USER=ragnar@lilletorget.org
- *   SMTP_PASSWORD=<app-passord uten mellomrom>
- *   SMTP_FROM="legeassist <ragnar@lilletorget.org>"   (valgfri; faller tilbake til SMTP_USER)
- *   ACCESS_REQUEST_TO=ragnar@lilletorget.org          (valgfri; faller tilbake til SMTP_USER)
+ * SMTP-konfig leses fra .env. Sender via mailcow på egen server, med egen
+ * tjenestepostboks (utgående post går videre via ProISP-relay satt opp per
+ * postboks i mailcow):
+ *   SMTP_HOST=mail.lilletorget.org     (det offentlige navnet — sertifikatet gjelder det)
+ *   SMTP_PORT=587                      (STARTTLS; mailcow tilbyr AUTH først etter TLS)
+ *   SMTP_USER=legeassist@lilletorget.org
+ *   SMTP_PASSWORD=<postboksens passord>
+ *   SMTP_FROM="LegeAssist <legeassist@lilletorget.org>"  (valgfri; faller tilbake til SMTP_USER)
+ *   ACCESS_REQUEST_TO=ragnar@lilletorget.org             (valgfri; faller tilbake til SMTP_USER)
  */
 
 let transporter: nodemailer.Transporter | null = null
