@@ -506,13 +506,15 @@ Nettleser (klinikkens datamaskin)
 - Pasientdata behandles i nettleseren og hos Soniox/AWS Bedrock
 - VPS håndterer autentisering og deler ut kortlivede nøkler; pasientinnhold er aldri innom serveren
 - Soniox: EU-databehandling, DPA tilgjengelig
-- AWS Bedrock (eu-west-1 Irland): EU-databehandling for Claude-modeller
+- AWS Bedrock (eu-central-1 Frankfurt, `eu.`-profil som kan rute til andre EU-regioner): EU-databehandling for Claude-modeller; «Model invocation logging» er av (bekreftet 09.10.2026)
   - IAM-nøklene til `legeassist` ligger kun på serveren; nettleseren får 1-times STS-nøkler
   - Pasienttranskript sendes fra nettleseren direkte til Bedrock (STS-nøkler, kun EU)
 - Ingen lydopptak lagres — streames direkte gjennom Soniox
 - Transkript og notater beholdes kun i nettlesersesjon (eller IndexedDB med TTL)
 - Logging på serveren skal ikke inneholde pasientrelatert innhold
-- 2FA anbefalt for alle brukere (blir obligatorisk — brukerne varsles via meldingssystemet først)
+- 2FA obligatorisk fra 16.10.2026, med gjenopprettingskoder og admin-nullstilling som reserve
+- Databehandleravtale versjon 2.0 publisert 09.10.2026 (krev ny signering). Underleverandøravtaler: Soniox DPA 1.3
+  (EUs standardkontraktsklausuler) og netcup AVV (art. 28), begge signert 09.10.2026
 - Konsultasjoner i nettleseren er kryptert per bruker; nøkkelen finnes bare i minnet mens brukeren er innlogget
 
 ## Mappestruktur
