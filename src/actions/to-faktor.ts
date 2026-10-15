@@ -8,6 +8,7 @@ import { prisma } from "@/lib/db"
 import { encrypt, decrypt } from "@/lib/crypto"
 import { erKrav2faAktivt } from "@/lib/to-faktor-krav"
 import { antallUbrukte, lagNyeKoder, slettKoder } from "@/lib/gjenoppretting"
+import { slettAllePasskeys } from "@/lib/passkey"
 
 export async function generer2FAHemmelighet(): Promise<
   { qrUrl: string; manuellKode: string } | { feil: string }
@@ -120,6 +121,8 @@ export async function deaktiver2FA(
     data: { twoFactorEnabled: false, twoFactorSecret: null },
   })
   await slettKoder(bruker.id)
+  // Passkeys forutsetter to-faktor (de legges til med en TOTP-kode)
+  await slettAllePasskeys(bruker.id)
 
   return { suksess: true }
 }

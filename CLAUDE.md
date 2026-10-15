@@ -84,9 +84,24 @@ Nettleser (klinikkens datamaskin)
     telefonen?»); bruken er atomisk (`updateMany … bruktAt: null`) og brukeren får e-post
     (`to-faktor-varsel.ts`). Innstillinger viser antall ubrukte og «Lag nye koder» (krever gyldig TOTP).
     Valgt framfor et felles superpassord i `.env`: per bruker, engangs, kan byttes, og bruk varsles
-  - **Admin nullstiller 2FA** på `/admin/brukere` («Nullstill 2FA», også for seg selv): sletter hemmelighet
-    og koder, e-post til brukeren, logglinje uten innhold. Når 2FA er obligatorisk, sender
+  - **Admin nullstiller 2FA** på `/admin/brukere` («Nullstill 2FA», også for seg selv): sletter hemmelighet,
+    koder og passkeys, e-post til brukeren, logglinje uten innhold. Når 2FA er obligatorisk, sender
     `(app)/layout.tsx` brukeren til `/sikre-kontoen` ved neste forespørsel (leser DB hver gang)
+  - **Passkeys** (`src/lib/passkey.ts`, `actions/passkey.ts`, tabeller `Passkey` + `PasskeyUtfordring`):
+    innlogging uten passord og engangskode. SimpleWebAuthn (v14) som egen Credentials-provider
+    `"passkey"` i `auth.ts` — ikke Auth.js' eksperimentelle WebAuthn-provider — så øktregler, DPA-sperre
+    og 2FA-krav gjelder uendret. `package.json` har `overrides` fordi next-auth/@auth/core har en
+    valgfri peer-avhengighet til SimpleWebAuthn v9
+    - `userVerification: "required"` (biometri/PIN): én passkey er fullverdig tofaktor
+    - `residentKey: "required"`: innlogging uten å oppgi e-post, så innloggingssiden avslører aldri om en
+      adresse har konto. Knapp «Logg inn med passkey» + autoutfylling i e-postfeltet (`username webauthn`)
+    - Alle typer godtas (Windows Hello, Bitwarden, iCloud/Google, YubiKey FIDO2), ingen attestasjon.
+      Listen i Innstillinger viser «Synkronisert» / «Kun denne enheten» (`flerEnhet`)
+    - Legges til under Innstillinger → Sikkerhet; krever aktiv TOTP og en gyldig kode. E-postvarsel ved ny passkey
+    - Slettes når TOTP slås av eller admin nullstiller 2FA. «Glemt passord» rører dem ikke
+    - Utfordringer (challenge) er engangs i DB (5 min registrering, 15 min innlogging), maks 200 per IP i timen
+    - rpID/origin fra `APP_URL`: passkeys fra prod virker ikke mot localhost
+    - Testet ende til ende med Chromes virtuelle autentikator (CDP `WebAuthn.addVirtualAuthenticator`, playwright-core)
   - 2FA-påminnelse: diskret kort nederst til høyre for brukere uten 2FA, maks ~1 gang/mnd
     (`to-faktor-paaminnelse.tsx`, husker i localStorage `legeassist:2fa-paaminnelse-sist`)
 - Brukeradministrasjon (kun admin): selvregistrering er deaktivert
@@ -512,7 +527,7 @@ Nettleser (klinikkens datamaskin)
 - Ingen lydopptak lagres — streames direkte gjennom Soniox
 - Transkript og notater beholdes kun i nettlesersesjon (eller IndexedDB med TTL)
 - Logging på serveren skal ikke inneholde pasientrelatert innhold
-- 2FA obligatorisk fra 16.10.2026, med gjenopprettingskoder og admin-nullstilling som reserve
+- 2FA obligatorisk fra 16.10.2026, med gjenopprettingskoder og admin-nullstilling som reserve; passkeys som alternativ innlogging
 - Databehandleravtale versjon 2.0 publisert 09.10.2026 (krev ny signering). Underleverandøravtaler: Soniox DPA 1.3
   (EUs standardkontraktsklausuler) og netcup AVV (art. 28), begge signert 09.10.2026
 - Konsultasjoner i nettleseren er kryptert per bruker; nøkkelen finnes bare i minnet mens brukeren er innlogget
@@ -574,6 +589,7 @@ legeassist/
 │   ├── actions/                   # Server actions
 │   │   ├── auth.ts                # sjekkInnlogging (credential-presjekk)
 │   │   ├── to-faktor.ts           # 2FA: generer/bekreft/deaktiver
+│   │   ├── passkey.ts             # Passkeys: start innlogging, legg til (krever TOTP), slett
 │   │   ├── admin-brukere.ts       # opprettBruker (m/invitasjon), sendInvitasjonPaaNytt, slettBruker
 │   │   ├── tilgang.ts             # sendTilgangsforesporsel + settPassordMedToken (signerer DPA)
 │   │   ├── dpa.ts                 # signerAvtale (innlogget signering)
@@ -629,6 +645,7 @@ legeassist/
 │   │   ├── okt.ts                 # Øktregler: 1 t inaktivitet, 12 t maks, øktcookie, fornyOktToken
 │   │   ├── to-faktor-krav.ts      # Obligatorisk 2FA fra dato: hentKrav2faFra, maaAktivere2fa (server-only)
 │   │   ├── gjenoppretting.ts      # Gjenopprettingskoder: lagNyeKoder, brukKode (HMAC, engangs)
+│   │   ├── passkey.ts             # WebAuthn (SimpleWebAuthn): valg, verifisering, engangsutfordringer
 │   │   ├── to-faktor-varsel.ts    # E-post ved brukt gjenopprettingskode og nullstilt 2FA
 │   │   ├── aktivitet.ts           # registrerAktivitet() — signal til OktVakt (f.eks. under opptak)
 │   │   ├── meldinger-forslag.ts   # Forhåndsutfylt sikkerhetsmelding i admin-skjemaet

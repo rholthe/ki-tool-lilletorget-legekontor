@@ -38,6 +38,7 @@ model User {
 
   passordOppsett PasswordSetupToken?
   gjenopprettingskoder Gjenopprettingskode[]
+  passkeys             Passkey[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -68,6 +69,43 @@ model Gjenopprettingskode {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+// Passkey (WebAuthn): innlogging uten passord og engangskode. Krever
+// brukerverifisering (biometri/PIN), så én passkey er fullverdig tofaktor.
+// Kan bare legges til når TOTP er aktivert, og slettes sammen med TOTP.
+// Bare den offentlige nøkkelen lagres.
+model Passkey {
+  id                String    @id @default(cuid())
+  userId            String
+  credentialId      String    @unique @db.VarChar(512) // base64url
+  publicKey         String    @db.Text // base64url, COSE
+  counter           Int       @default(0)
+  transports        String?   @db.VarChar(255) // kommaseparert
+  // Kan synkroniseres mellom enheter (Bitwarden, iCloud, Google) — ellers bundet
+  // til én enhet (YubiKey, som regel Windows Hello)
+  flerEnhet         Boolean   @default(false)
+  sikkerhetskopiert Boolean   @default(false)
+  aaguid            String?   @db.VarChar(36)
+  navn              String    @db.VarChar(100)
+  opprettet         DateTime  @default(now())
+  sistBrukt         DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// Engangsutfordring (challenge) for registrering eller innlogging med passkey.
+// Slettes når den brukes; utløpte rader ryddes ved neste opprettelse.
+model PasskeyUtfordring {
+  id         String   @id @default(cuid())
+  utfordring String   @db.VarChar(128)
+  formaal    String   @db.VarChar(20) // "registrering" | "innlogging"
+  userId     String? // satt ved registrering
+  utloper    DateTime
+
+  @@index([utloper])
 }
 
 model Account {

@@ -5,11 +5,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
 import { User, Shield, Key, BookOpen, FileText, ExternalLink } from "lucide-react"
 import { ToFaktorSeksjon } from "@/components/settings/to-faktor-seksjon"
+import { PasskeySeksjon } from "@/components/settings/passkey-seksjon"
+import type { PasskeyInfo } from "@/lib/passkey"
 import { PromptbibliotekKlient } from "@/components/settings/promptbibliotek-klient"
 
 interface Props {
   /** Ubrukte gjenopprettingskoder (0 når 2FA er av). */
   ubrukteKoder: number
+  passkeys: PasskeyInfo[]
   bruker: {
     name: string | null
     email: string | null
@@ -23,7 +26,7 @@ interface Props {
   erAdmin: boolean
 }
 
-export function InnstillingerKlient({ bruker, ubrukteKoder, aktivModell, aktivRegion, harBedrockNokler, erAdmin }: Props) {
+export function InnstillingerKlient({ bruker, ubrukteKoder, passkeys, aktivModell, aktivRegion, harBedrockNokler, erAdmin }: Props) {
   const searchParams = useSearchParams()
   const router = useRouter()
   const aktivFane = searchParams.get("tab") === "prompts" ? "prompts" : "konto"
@@ -84,6 +87,9 @@ export function InnstillingerKlient({ bruker, ubrukteKoder, aktivModell, aktivRe
             </div>
             <div className="rounded-xl border border-slate-200 bg-white p-5">
               <ToFaktorSeksjon er2FAaktivert={bruker?.twoFactorEnabled ?? false} ubrukteKoder={ubrukteKoder} />
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-white p-5">
+              <PasskeySeksjon passkeys={passkeys} er2FAaktivert={bruker?.twoFactorEnabled ?? false} />
             </div>
           </section>
 

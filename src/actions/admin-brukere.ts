@@ -8,6 +8,7 @@ import { isAdmin } from "@/lib/admin"
 import { sendEpost, hentBasisUrl } from "@/lib/mail"
 import { lagPassordOppsettToken } from "@/lib/passord-token"
 import { slettKoder } from "@/lib/gjenoppretting"
+import { slettAllePasskeys } from "@/lib/passkey"
 import { varsleNullstilt2fa } from "@/lib/to-faktor-varsel"
 import { sendPassordlenke } from "@/lib/passord-epost"
 import { TILBAKESTILLING_ADMIN_MS } from "@/lib/passord-token"
@@ -162,7 +163,7 @@ export type Nullstill2faState = { ok?: boolean; melding?: string }
 
 /**
  * Admin nullstiller to-faktor for en bruker (også seg selv), når telefonen og
- * gjenopprettingskodene er borte. Hemmeligheten og kodene slettes. Er to-faktor
+ * gjenopprettingskodene er borte. Hemmeligheten, kodene og passkeyene slettes. Er to-faktor
  * obligatorisk, sendes brukeren til «Sikre kontoen» ved neste forespørsel og må
  * sette det opp på nytt før appen kan brukes. Brukeren varsles på e-post.
  */
@@ -184,6 +185,7 @@ export async function nullstill2fa(userId: string): Promise<Nullstill2faState> {
     data: { twoFactorEnabled: false, twoFactorSecret: null },
   })
   await slettKoder(bruker.id)
+  await slettAllePasskeys(bruker.id)
   // Uten pasientdata: hvem som nullstilte for hvem, til sporbarhet
   console.info(`[2fa] nullstilt for bruker ${bruker.id} av ${session.user.email}`)
   await varsleNullstilt2fa(bruker)

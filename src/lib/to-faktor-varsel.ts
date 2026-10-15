@@ -41,7 +41,7 @@ export async function varsleNullstilt2fa(bruker: { email: string; name: string |
       tekst:
         `${hilsen(bruker.name)}\n\n` +
         `Administrator har nullstilt to-faktor-autentiseringen for kontoen din i legeassist. ` +
-        `Sett opp autentiseringsappen på nytt under Innstillinger, og lagre de nye ` +
+        `Eventuelle passkeys er også fjernet. Sett opp autentiseringsappen på nytt under Innstillinger, og lagre de nye ` +
         `gjenopprettingskodene. Når to-faktor er obligatorisk, må dette gjøres ved neste ` +
         `innlogging før appen kan brukes.\n\n` +
         `Har du ikke bedt om dette, kontakt administrator.\n\n` +
@@ -49,5 +49,26 @@ export async function varsleNullstilt2fa(bruker: { email: string; name: string |
     })
   } catch (e) {
     console.error(`[2fa] varsel om nullstilling feilet: ${e instanceof Error ? e.message : e}`)
+  }
+}
+
+export async function varsleNyPasskey(
+  bruker: { email: string; name: string | null },
+  navn: string
+): Promise<void> {
+  try {
+    await sendEpost({
+      til: bruker.email,
+      emne: "legeassist: en passkey er lagt til kontoen din",
+      tekst:
+        `${hilsen(bruker.name)}\n\n` +
+        `En ny passkey («${navn}») er lagt til kontoen din i legeassist. Den kan brukes til å ` +
+        `logge inn uten passord og engangskode.\n\n` +
+        `Var det ikke deg, kontakt administrator straks. Passkeyen kan slettes under ` +
+        `Innstillinger, og administrator kan nullstille to-faktor, som også fjerner alle passkeys.\n\n` +
+        `Hilsen legeassist`,
+    })
+  } catch (e) {
+    console.error(`[passkey] varsel om ny passkey feilet: ${e instanceof Error ? e.message : e}`)
   }
 }

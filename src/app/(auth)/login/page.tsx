@@ -1,7 +1,13 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useCallback, useEffect, useState, useTransition } from "react"
 import { signIn } from "next-auth/react"
+import {
+  browserSupportsWebAuthn,
+  browserSupportsWebAuthnAutofill,
+  startAuthentication,
+} from "@simplewebauthn/browser"
+import { KeyRound } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -16,6 +22,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { sjekkInnlogging } from "@/actions/auth"
+import { startPasskeyInnlogging } from "@/actions/passkey"
 
 const LAAST = "Konsultasjonene dine er låst og kommer tilbake når du logger inn."
 const UTLOGGING_TEKST: Record<string, string> = {
@@ -40,6 +47,74 @@ export default function LoginPage() {
   const [brukerGjenoppretting, setBrukerGjenoppretting] = useState(false)
   const [feil, setFeil] = useState("")
   const [isPending, startTransition] = useTransition()
+  const [passkeyVenter, setPasskeyVenter] = useState(false)
+  /** Økes for å starte autoutfyllingen på nytt etter et mislykket forsøk. */
+  const [autofillRunde, setAutofillRunde] = useState(0)
+
+  /**
+   * Innlogging med passkey. `autofill` = passkeyen foreslås i e-postfeltet
+   * (venter i bakgrunnen fra siden lastes); ellers åpner nettleseren dialogen
+   * med en gang. Et nytt forsøk avbryter det ventende.
+   */
+  const loggInnMedPasskey = useCallback(
+    async (autofill: boolean): Promise<void> => {
+      const start = await startPasskeyInnlogging()
+      if ("feil" in start) {
+        if (!autofill) setFeil(start.feil)
+        return
+      }
+      let svar
+      try {
+        svar = await startAuthentication({ optionsJSON: start.valg, useBrowserAutofill: autofill })
+      } catch (e) {
+        const navn = e instanceof Error ? e.name : ""
+        // Avbrutt av brukeren eller av et nytt forsøk: ingen feilmelding
+        if (!autofill && navn !== "AbortError" && navn !== "NotAllowedError") {
+          setFeil("Innlogging med passkey feilet. Prøv igjen, eller bruk passord.")
+        }
+        // Dialogen avbrøt autoutfyllingen; start den igjen
+        if (!autofill) setAutofillRunde((n) => n + 1)
+        return
+      }
+      setFeil("")
+      setPasskeyVenter(true)
+      const result = await signIn("passkey", {
+        utfordringId: start.utfordringId,
+        svar: JSON.stringify(svar),
+        redirect: false,
+      })
+      if (result?.error) {
+        setPasskeyVenter(false)
+        setFeil("Passkeyen ble ikke godkjent. Er den lagt til kontoen din under Innstillinger?")
+        // Gjør autoutfyllingen klar for et nytt forsøk
+        setAutofillRunde((n) => n + 1)
+        return
+      }
+      router.push(callbackUrl)
+      router.refresh()
+    },
+    [callbackUrl, router]
+  )
+
+  // Autoutfylling: nettlesere som støtter det, viser passkeyen i e-postfeltet
+  useEffect(() => {
+    let avbrutt = false
+    void browserSupportsWebAuthnAutofill().then((ja) => {
+      if (ja && !avbrutt) void loggInnMedPasskey(true)
+    })
+    return () => {
+      avbrutt = true
+    }
+  }, [loggInnMedPasskey, autofillRunde])
+
+  function handlePasskeyKnapp() {
+    setFeil("")
+    if (!browserSupportsWebAuthn()) {
+      setFeil("Denne nettleseren støtter ikke passkeys. Logg inn med passord.")
+      return
+    }
+    void loggInnMedPasskey(false)
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -135,7 +210,7 @@ export default function LoginPage() {
                 <Input
                   id="email"
                   type="email"
-                  autoComplete="email"
+                  autoComplete="username webauthn"
                   placeholder="lege@klinikk.no"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -239,13 +314,33 @@ export default function LoginPage() {
         </CardContent>
 
         <CardFooter className="flex flex-col gap-3">
-          <Button type="submit" className="w-full" disabled={isPending}>
-            {isPending
+          <Button type="submit" className="w-full" disabled={isPending || passkeyVenter}>
+            {isPending || passkeyVenter
               ? "Vent..."
               : step === "credentials"
                 ? "Logg inn"
                 : "Bekreft"}
           </Button>
+
+          {step === "credentials" && (
+            <>
+              <div className="flex items-center gap-3 w-full text-xs text-slate-400">
+                <span className="h-px flex-1 bg-slate-200" />
+                eller
+                <span className="h-px flex-1 bg-slate-200" />
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                disabled={isPending || passkeyVenter}
+                onClick={handlePasskeyKnapp}
+              >
+                <KeyRound className="w-4 h-4 mr-1.5" />
+                Logg inn med passkey
+              </Button>
+            </>
+          )}
 
           {step === "totp" && (
             <Button

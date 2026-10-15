@@ -148,7 +148,7 @@ export default async function DatabehandleravtalePage() {
               <tbody className="text-slate-600 align-top">
                 {[
                   ["Avlytting av data under overføring", "Lav", "Høy", "TLS/WSS på all trafikk; ingen ukryptert transport"],
-                  ["Uautorisert innlogging", "Middels", "Høy", "Sterke passord, 2FA, admin-styrt kontoopprettelse"],
+                  ["Uautorisert innlogging", "Middels", "Høy", "Sterke passord, obligatorisk 2FA, passkeys, admin-styrt kontoopprettelse"],
                   ["Lekkasje fra applikasjonsserveren", "Lav", "Middels", "Pasientinnhold lagres ikke på serveren; logger uten innhold"],
                   ["Lekkasje hos underdatabehandler", "Lav", "Høy", "EU-leverandører med DPA; ingen modelltrening på data"],
                   ["Pasientinnhold ligger igjen lokalt", "Middels", "Middels", "IndexedDB med automatisk tidsbegrenset sletting"],
@@ -216,7 +216,11 @@ export default async function DatabehandleravtalePage() {
             <ul className="list-disc list-inside space-y-1">
               <li>Kontoer opprettes kun av administrator; bruker setter eget passord via engangslenke.</li>
               <li>Passord lagres som bcrypt-hash; 2FA-hemmeligheter krypteres (AES-256-GCM).</li>
-              <li>Tofaktor (TOTP) tilgjengelig for alle.</li>
+              <li>Tofaktor (TOTP) er obligatorisk for alle, med gjenopprettingskoder som reserve.</li>
+              <li>
+                Innlogging med passkey (WebAuthn) som alternativ: krever biometri eller PIN, er bundet til
+                domenet og kan ikke fiskes. Serveren lagrer bare den offentlige nøkkelen.
+              </li>
             </ul>
           </Detalj>
         </Seksjon>

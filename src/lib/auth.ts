@@ -9,11 +9,17 @@ import { decrypt } from "@/lib/crypto"
 import { fornyOktToken } from "@/lib/okt"
 import { antallUbrukte, brukKode, erGjenopprettingskode } from "@/lib/gjenoppretting"
 import { varsleBruktGjenopprettingskode } from "@/lib/to-faktor-varsel"
+import { verifiserInnlogging } from "@/lib/passkey"
 
 // Eget feilsignal for 2FA-krav — fanges av login-siden
 export class TwoFactorRequired extends CredentialsSignin {
   code = "TwoFactorRequired"
 }
+
+const passkeySchema = z.object({
+  utfordringId: z.string().min(1).max(64),
+  svar: z.string().min(1).max(20_000),
+})
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -67,6 +73,28 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
 
         return { id: user.id, email: user.email, name: user.name }
+      },
+    }),
+    // Passkey erstatter både passord og engangskode: brukerverifisering
+    // (biometri/PIN) kreves, så den er tofaktor i seg selv. Se src/lib/passkey.ts.
+    Credentials({
+      id: "passkey",
+      name: "Passkey",
+      credentials: {
+        utfordringId: {},
+        svar: {},
+      },
+      async authorize(credentials) {
+        const parsed = passkeySchema.safeParse(credentials)
+        if (!parsed.success) return null
+        let svar
+        try {
+          svar = JSON.parse(parsed.data.svar)
+        } catch {
+          return null
+        }
+        if (typeof svar?.id !== "string") return null
+        return verifiserInnlogging(parsed.data.utfordringId, svar)
       },
     }),
   ],

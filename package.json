@@ -19,6 +19,8 @@
     "@base-ui/react": "^1.5.0",
     "@prisma/adapter-mariadb": "^7.8.0",
     "@prisma/client": "^7.8.0",
+    "@simplewebauthn/browser": "^14.0.0",
+    "@simplewebauthn/server": "^14.0.3",
     "@smithy/eventstream-codec": "^4.5.2",
     "@smithy/signature-v4": "^5.7.4",
     "@smithy/util-utf8": "^4.5.2",
@@ -63,5 +65,15 @@
     "prisma": "^7.8.0",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "overrides": {
+    "@auth/core": {
+      "@simplewebauthn/browser": "$@simplewebauthn/browser",
+      "@simplewebauthn/server": "$@simplewebauthn/server"
+    },
+    "next-auth": {
+      "@simplewebauthn/browser": "$@simplewebauthn/browser",
+      "@simplewebauthn/server": "$@simplewebauthn/server"
+    }
   }
 }
