@@ -102,6 +102,8 @@ Nettleser (klinikkens datamaskin)
     - Utfordringer (challenge) er engangs i DB (5 min registrering, 15 min innlogging), maks 200 per IP i timen
     - rpID/origin fra `APP_URL`: passkeys fra prod virker ikke mot localhost
     - Testet ende til ende med Chromes virtuelle autentikator (CDP `WebAuthn.addVirtualAuthenticator`, playwright-core)
+    - Deployet 15.10.2026. Ikke testet med ekte Bitwarden/YubiKey eller autoutfylling i e-postfeltet (headless
+      Chrome støtter det ikke) — prøv det i prod
   - 2FA-påminnelse: diskret kort nederst til høyre for brukere uten 2FA, maks ~1 gang/mnd
     (`to-faktor-paaminnelse.tsx`, husker i localStorage `legeassist:2fa-paaminnelse-sist`)
 - Brukeradministrasjon (kun admin): selvregistrering er deaktivert
