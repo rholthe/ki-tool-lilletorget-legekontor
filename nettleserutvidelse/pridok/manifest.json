@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "LegeAssist → Pridok",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Sender journalnotatet fra LegeAssist til Anamnese, Funn, Vurdering og Tiltak i et åpent Pridok-notat. Teksten går bare mellom fanene i nettleseren.",
   "background": {
     "service_worker": "bakgrunn.js",

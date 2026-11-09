@@ -1,9 +1,10 @@
 // Innholdsskript på LegeAssist-siden. Kunngjør at utvidelsen finnes, og videresender
-// «Send til journal» fra siden til bakgrunnsskriptet. Kun samme opprinnelse godtas.
+// forespørsler fra siden til bakgrunnsskriptet. Kun samme opprinnelse godtas.
 
 const FRA_SIDEN = "legeassist"
 const FRA_UTVIDELSEN = "legeassist-utvidelse"
 const VERSJON = chrome.runtime.getManifest().version
+const TILLATT = new Set(["finn-notater", "fyll-notat"])
 
 function post(data) {
   window.postMessage({ kilde: FRA_UTVIDELSEN, ...data }, location.origin)
@@ -19,14 +20,10 @@ window.addEventListener("message", async (e) => {
     return
   }
 
-  if (d.type === "send-til-journal" && typeof d.id === "string") {
+  if (d.type === "foresporsel" && typeof d.id === "string" && TILLATT.has(d.innhold?.type)) {
     let svar
     try {
-      svar = await chrome.runtime.sendMessage({
-        type: "send-til-journal",
-        felter: d.felter,
-        modus: d.modus,
-      })
+      svar = await chrome.runtime.sendMessage(d.innhold)
     } catch (err) {
       svar = { ok: false, grunn: "feil", melding: String(err?.message ?? err) }
     }

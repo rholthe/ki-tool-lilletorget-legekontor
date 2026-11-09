@@ -5,9 +5,13 @@ LegeAssist inn i feltene **Anamnese (Notat)**, **Funn**, **Vurdering** og **Tilt
 åpent notat i Pridok (`epj3.pridok.no`).
 
 - Knappen «Send til journal» i konsultasjonsbildet vises bare når utvidelsen er installert.
+- Utvidelsen finner alle åpne notater i alle Pridok-faner. Er det bare ett, fylles det
+  direkte. Er det flere, velger legen i LegeAssist ut fra pasientens navn og fødselsdato
+  (fra dokumenthodet i Pridok, `.document-subname`), dokumenttype og om feltene har tekst.
+  Navnet holdes bare i minnet i nettleseren.
 - Teksten går kun mellom fanene i nettleseren. Den er aldri innom LegeAssist-serveren,
   og utvidelsen lagrer ingenting.
-- Notatet **lagres og låses ikke**. Legen ser over teksten og lagrer i Pridok.
+- Utvidelsen **låser aldri** notatet. Pridok lagrer endringene automatisk; legen ser over teksten.
 - Gul lapp røres aldri. Har feltene tekst fra før, spør LegeAssist om teksten skal legges
   til under eller erstatte den.
 - Overskriftene i notatet (ANAMNESE, UNDERSØKELSE, VURDERING, TILTAK, eller de gamle
@@ -19,12 +23,17 @@ LegeAssist inn i feltene **Anamnese (Notat)**, **Funn**, **Vurdering** og **Tilt
 | Fil | Kjører | Gjør |
 |---|---|---|
 | `legeassist.js` | på ki.lilletorget.org og localhost | kunngjør utvidelsen, videresender «Send til journal» |
-| `bakgrunn.js` | i bakgrunnen | finner sist brukte Pridok-fane, sender videre, viser fanen |
-| `pridok.js` | på epj3.pridok.no (alle rammer) | finner feltene ut fra etikettene og fyller dem |
+| `bakgrunn.js` | i bakgrunnen | `finn-notater`: spør alle Pridok-faner; `fyll-notat`: fyller valgt notat (sjekker at fanen er Pridok), viser fanen |
+| `pridok.js` | på epj3.pridok.no (alle rammer) | finner notatene ut fra etikettene, grupperer per `<form id="docform…">`, beskriver og fyller dem |
 
 Pridok er AngularJS. Feltene fylles ved å sette verdien og sende `input`/`change`, slik at
-`ng-model` oppdateres. Endrer Pridok etikettene eller markupen (`.legend` → `pddata` →
-`.fielddata textarea`), må `pridok.js` oppdateres.
+`ng-model` oppdateres. Hvert åpne dokument er et eget `<form id="docform<uuid>">` (venstre og
+høyre side kan ha hvert sitt notat), og form-id-en identifiserer notatet. Endrer Pridok
+etikettene eller markupen (`.legend` → `pddata` → `.fielddata textarea`, `.document-name`,
+`.document-subname`), må `pridok.js` oppdateres.
+
+LegeAssist krever minst versjon 1.1 (`MIN_VERSJON` i `send-til-journal.tsx`) og ber legen
+oppdatere utvidelsen ellers.
 
 ## Installere
 
@@ -51,4 +60,5 @@ Sjekk først med `npx web-ext lint` — eneste forventede advarsel er at Firefox
 `background.service_worker` (den er for Chrome; Firefox bruker `background.scripts`).
 
 Øk `version` i `manifest.json` ved hver endring — Mozilla avviser en versjon som allerede er
-signert. Versjon 1.0.0 ble signert 09.11.2026 (Ragnars AMO-konto).
+signert. Versjon 1.0.0 ble signert 09.11.2026 (Ragnars AMO-konto); 1.1.0 (valg mellom flere
+notater) må signeres.

@@ -63,18 +63,23 @@ Nettleser (klinikkens datamaskin)
 - Alle "fortsett"-knapper pre-laster eksisterende transkript (ingen appendModus)
 - Notatgenerering via Claude (SSE-streaming), auto-start etter stopp. Konsultasjonsnotatene har
   overskriftene ANAMNESE, UNDERSØKELSE, VURDERING og TILTAK (tidligere SOAP), som i Pridok
-- **Send til journal (Pridok):** knapp ved siden av «Kopier notat», vises bare når nettleserutvidelsen
-  `nettleserutvidelse/pridok/` er installert (`useJournalUtvidelse`, ping/klar via `postMessage`)
+- **Send til journal (Pridok):** knapp ved siden av «Kopier notat» (`send-til-journal.tsx`), vises bare
+  når nettleserutvidelsen `nettleserutvidelse/pridok/` er installert (`useJournalUtvidelse`, ping/klar via `postMessage`)
+  - Utvidelsen finner alle åpne notater i alle Pridok-faner (`finn-notater`), gruppert per
+    `<form id="docform…">`, med dokumenttype, pasientnavn og fødselsdato fra dokumenthodet
+    (`.document-subname`, «Ragnar  Holthe, 14.10.75»). Ett notat → fylles direkte; flere → legen velger.
+    Navnet holdes bare i minnet i nettleseren og sendes ikke til serveren
   - `delNotatIJournalfelt()` (`src/lib/journal-eksport.ts`) deler notatet på overskriftene (godtar også
     SOAP-overskrifter); alt etter TILTAK, også kliniske verktøy og OCR, går i Tiltak. Uten overskrifter → alt i Anamnese
-  - Utvidelsen finner sist brukte fane på `epj3.pridok.no`, fyller Anamnese (Notat)/Funn/Vurdering/Tiltak
+  - `fyll-notat` (tabId + dokId, bakgrunnen sjekker at fanen er Pridok) fyller Anamnese (Notat)/Funn/Vurdering/Tiltak
     ut fra etikettene (`.legend` → `pddata` → `textarea`) og sender `input`/`change` så AngularJS sin
     `ng-model` oppdateres. Gul lapp og låste notater røres ikke; har feltene tekst, spør appen om
-    «Legg til under» eller «Erstatt». Lagrer aldri i Pridok — legen ser over og lagrer selv
+    «Legg til under» eller «Erstatt». Låser aldri notatet; Pridok autolagrer, legen ser over
   - Teksten går bare mellom fanene i nettleseren, aldri via serveren
   - Testet 09.11.2026 i Chromium mot en kopi av Pridok-markupen med AngularJS 1.8 (Playwright,
-    `--load-extension`). Ikke testet mot ekte Pridok eller i Firefox ennå
-  - Firefox: versjon 1.0.0 signert «unlisted» hos Mozilla 09.11.2026 (`web-ext sign`, krever Firefox 140+).
+    `--load-extension`), også to faner med til sammen tre dagsnotater. Ikke testet mot ekte Pridok ennå
+  - Appen krever utvidelse ≥ 1.1 (`MIN_VERSJON`) og ber om oppdatering ellers
+  - Firefox: versjon 1.0.0 signert «unlisted» hos Mozilla 09.11.2026 (1.1.0 med notatvalg må signeres) (`web-ext sign`, krever Firefox 140+).
     Øk `version` i `manifest.json` før ny signering; fremgangsmåte i utvidelsens README
 - Chat / AI-hjelp: multi-turn chat med konsultasjonskontekst, lagret i IndexedDB
   - Historikk bevares ved lukking/gjenåpning (24t TTL)
