@@ -61,7 +61,21 @@ Nettleser (klinikkens datamaskin)
 - Sanntidstranskribering med Soniox, pause/fortsett opptak
 - Autolagring av transkript hvert 10 sek under opptak + lagring ved pause
 - Alle "fortsett"-knapper pre-laster eksisterende transkript (ingen appendModus)
-- SOAP-notatgenerering via Claude (SSE-streaming), auto-start etter stopp
+- Notatgenerering via Claude (SSE-streaming), auto-start etter stopp. Konsultasjonsnotatene har
+  overskriftene ANAMNESE, UNDERSØKELSE, VURDERING og TILTAK (tidligere SOAP), som i Pridok
+- **Send til journal (Pridok):** knapp ved siden av «Kopier notat», vises bare når nettleserutvidelsen
+  `nettleserutvidelse/pridok/` er installert (`useJournalUtvidelse`, ping/klar via `postMessage`)
+  - `delNotatIJournalfelt()` (`src/lib/journal-eksport.ts`) deler notatet på overskriftene (godtar også
+    SOAP-overskrifter); alt etter TILTAK, også kliniske verktøy og OCR, går i Tiltak. Uten overskrifter → alt i Anamnese
+  - Utvidelsen finner sist brukte fane på `epj3.pridok.no`, fyller Anamnese (Notat)/Funn/Vurdering/Tiltak
+    ut fra etikettene (`.legend` → `pddata` → `textarea`) og sender `input`/`change` så AngularJS sin
+    `ng-model` oppdateres. Gul lapp og låste notater røres ikke; har feltene tekst, spør appen om
+    «Legg til under» eller «Erstatt». Lagrer aldri i Pridok — legen ser over og lagrer selv
+  - Teksten går bare mellom fanene i nettleseren, aldri via serveren
+  - Testet 09.11.2026 i Chromium mot en kopi av Pridok-markupen med AngularJS 1.8 (Playwright,
+    `--load-extension`). Ikke testet mot ekte Pridok eller i Firefox ennå
+  - Firefox: versjon 1.0.0 signert «unlisted» hos Mozilla 09.11.2026 (`web-ext sign`, krever Firefox 140+).
+    Øk `version` i `manifest.json` før ny signering; fremgangsmåte i utvidelsens README
 - Chat / AI-hjelp: multi-turn chat med konsultasjonskontekst, lagret i IndexedDB
   - Historikk bevares ved lukking/gjenåpning (24t TTL)
   - Endringsmarkører når transkript/kontekst/tilleggsinfo/vedlegg endres
@@ -553,6 +567,7 @@ legeassist/
 ├── push-and-deploy.sh             # Kjøres lokalt: push + SSH kjører deploy.sh på server + helsesjekk
 ├── db-tunnel.sh                   # Kjøres lokalt (Git Bash): SSH-tunnel til shared-mariadb (slår opp container-IP)
 ├── db-tunnel.ps1                  # Samme tunnel for PowerShell (bruker Windows sin ssh.exe)
+├── nettleserutvidelse/pridok/      # Chrome/Firefox-utvidelse: «Send til journal» → Pridok (se README der)
 ├── scripts/
 │   ├── verktoy-selvtest.mjs       # npm run verktoy:test — referansekasus, terskler, notat-synk, søk, antibiotika mot fasit
 │   ├── retningslinjer-reserve.mjs # npm run retningslinjer:reserve — henter fra HAPI, skriver reservekopi

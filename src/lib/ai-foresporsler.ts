@@ -90,7 +90,7 @@ export function byggChatForesporsel(inn: ChatInn, overrides: StagingOverrides): 
   if (inn.kontekst?.trim()) deler.push(`**Kontekst (epikriser, tidligere notater):**\n${inn.kontekst}`)
   if (inn.tilleggsinfo?.trim()) deler.push(`**Tilleggsopplysninger:**\n${inn.tilleggsinfo}`)
   if (inn.transkript?.trim()) deler.push(`**Transkript av konsultasjonen:**\n${inn.transkript}`)
-  if (inn.notat?.trim()) deler.push(`**Generert journalnotat (SOAP):**\n${inn.notat}`)
+  if (inn.notat?.trim()) deler.push(`**Generert journalnotat:**\n${inn.notat}`)
   const kontekstTekst = deler.length > 0 ? deler.join("\n\n---\n\n") : "(Ingen kontekst lagt til ennå)"
 
   const system =

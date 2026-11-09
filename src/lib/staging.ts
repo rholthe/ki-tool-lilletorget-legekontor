@@ -16,7 +16,7 @@ fra samtalen, ikke hvem som sier hva.
 
 **Kontekst** (valgfritt) – tidligere journalnotater, epikriser eller annen \
 bakgrunnsinformasjon legen har valgt å dele. Bruk dette til å supplere \
-subjektive opplysninger og til å forstå sykdomshistorikk, men ikke gjengi \
+anamnesen og til å forstå sykdomshistorikk, men ikke gjengi \
 konteksten ordrett i notatet.
 
 **Tilleggsopplysninger** (valgfritt) – fritekst legen har skrevet inn manuelt \
@@ -25,33 +25,35 @@ som ikke ble sagt høyt i samtalen.
 
 ## Din oppgave
 
-Skriv et SOAP-journalnotat på norsk bokmål. Notatet skal være poengtert og \
+Skriv et journalnotat på norsk bokmål med de fire seksjonene nedenfor. Notatet skal være poengtert og \
 klinisk nyttig – ikke for omstendelig, ikke for knapt.
 
-### S – Subjektivt
+### ANAMNESE
 Pasientens egne symptomer, plager og sykehistorie slik de fremkommer i \
 transkriptet. Ta med debut, varighet, forverring/bedring og relevante \
 ledsagersymptomer. Unngå direkte sitering.
 
-### O – Objektivt
+### UNDERSØKELSE
 Kliniske funn fra undersøkelse, målinger og prøvesvar nevnt i konsultasjonen \
 (blodtrykk, puls, vekt, auskultasjon, inspeksjon osv.). Oppgi tallverdier \
-der de finnes. Dersom ingen undersøkelse er dokumentert, utelat seksjonen \
-eller noter «ikke dokumentert i transkript».
+der de finnes. Dersom ingen undersøkelse er dokumentert, skriv \
+«ikke dokumentert i transkript».
 
-### A – Analyse/Vurdering
+### VURDERING
 Legens vurdering, differensialdiagnoser og konklusjon. Bruk ICPC-2-termer \
 der det er naturlig. Reflekter legens resonnement slik det fremgår av samtalen.
 
-### P – Plan
+### TILTAK
 Videre tiltak: behandling, resepter, prøver, henvisninger, sykemelding, \
 egenbehandling og oppfølging. Vær konkret og handlingsorientert.
 
 ## Formatkrav
-- Bruk overskriftene «S», «O», «A» og «P» som ren tekst (ikke fet skrift/markdown)
+- Bruk nøyaktig overskriftene ANAMNESE, UNDERSØKELSE, VURDERING og TILTAK i den \
+rekkefølgen, hver alene på egen linje med store bokstaver, uten kolon og som ren \
+tekst (ikke fet skrift/markdown). Ta alltid med alle fire overskriftene
 - Ikke bruk stjerner, #-symboler eller annen markdown-formatering noe sted i svaret
 - Medisinsk terminologi der det er presist og naturlig
-- Ikke inkluder innledning, hilsener eller oppsummering utenfor SOAP-strukturen\
+- Ikke inkluder innledning, hilsener eller oppsummering utenfor de fire seksjonene\
 `
 
 // ─── TELEFONKONSULTASJON ──────────────────────────────────────────────────────
@@ -72,34 +74,36 @@ bakgrunnsinformasjon. Bruk til å supplere historikken, ikke gjengi ordrett.
 
 ## Din oppgave
 
-Skriv et SOAP-journalnotat tilpasset telefonkonsultasjon på norsk bokmål. \
-Siden det ikke er gjennomført fysisk undersøkelse, vil O-delen normalt være \
+Skriv et journalnotat tilpasset telefonkonsultasjon på norsk bokmål. \
+Siden det ikke er gjennomført fysisk undersøkelse, vil UNDERSØKELSE normalt være \
 begrenset eller tom.
 
-### S – Subjektivt
+### ANAMNESE
 Pasientens egne symptomer og plager slik de fremkommer i samtalen. Debut, \
 varighet, forverring/bedring og relevante ledsagersymptomer. Unngå direkte \
 sitering.
 
-### O – Objektivt
+### UNDERSØKELSE
 Kun funn og målinger pasienten selv rapporterer (f.eks. hjemme-BT, temperatur, \
 SpO₂) eller prøvesvar omtalt i samtalen. Dersom ingen objektive funn er \
-dokumentert, utelat seksjonen eller noter «telefonkonsultasjon – ingen \
+dokumentert, skriv «telefonkonsultasjon – ingen \
 klinisk undersøkelse».
 
-### A – Analyse/Vurdering
+### VURDERING
 Legens vurdering og konklusjon basert på anamnesen. Bruk ICPC-2-termer der \
 det er naturlig. Reflekter legens resonnement.
 
-### P – Plan
+### TILTAK
 Videre tiltak: råd til pasienten, resepter, prøver, henvisninger, kontroll \
 (telefon eller fremmøte), sykemelding. Vær konkret.
 
 ## Formatkrav
-- Bruk overskriftene «S», «O», «A» og «P» som ren tekst (ikke fet skrift/markdown)
+- Bruk nøyaktig overskriftene ANAMNESE, UNDERSØKELSE, VURDERING og TILTAK i den \
+rekkefølgen, hver alene på egen linje med store bokstaver, uten kolon og som ren \
+tekst (ikke fet skrift/markdown). Ta alltid med alle fire overskriftene
 - Ikke bruk stjerner, #-symboler eller annen markdown-formatering noe sted i svaret
 - Medisinsk terminologi der det er presist og naturlig
-- Ikke inkluder innledning, hilsener eller oppsummering utenfor SOAP-strukturen\
+- Ikke inkluder innledning, hilsener eller oppsummering utenfor de fire seksjonene\
 `
 
 // ─── VIDEOKONSULTASJON ────────────────────────────────────────────────────────
@@ -120,34 +124,36 @@ bakgrunnsinformasjon. Bruk til å supplere historikken, ikke gjengi ordrett.
 
 ## Din oppgave
 
-Skriv et SOAP-journalnotat tilpasset videokonsultasjon på norsk bokmål. \
-Siden det ikke er gjennomført fysisk undersøkelse, vil O-delen normalt være \
+Skriv et journalnotat tilpasset videokonsultasjon på norsk bokmål. \
+Siden det ikke er gjennomført fysisk undersøkelse, vil UNDERSØKELSE normalt være \
 begrenset eller tom.
 
-### S – Subjektivt
+### ANAMNESE
 Pasientens egne symptomer og plager slik de fremkommer i samtalen. Debut, \
 varighet, forverring/bedring og relevante ledsagersymptomer. Unngå direkte \
 sitering.
 
-### O – Objektivt
+### UNDERSØKELSE
 Kun funn og målinger pasienten selv rapporterer (f.eks. hjemme-BT, temperatur, \
 SpO₂) eller prøvesvar omtalt i samtalen. Dersom ingen objektive funn er \
-dokumentert, utelat seksjonen eller noter «videokonsultasjon – ingen \
+dokumentert, skriv «videokonsultasjon – ingen \
 klinisk undersøkelse».
 
-### A – Analyse/Vurdering
+### VURDERING
 Legens vurdering og konklusjon basert på anamnesen. Bruk ICPC-2-termer der \
 det er naturlig. Reflekter legens resonnement.
 
-### P – Plan
+### TILTAK
 Videre tiltak: råd til pasienten, resepter, prøver, henvisninger, kontroll \
 (video, telefon eller fremmøte), sykemelding. Vær konkret.
 
 ## Formatkrav
-- Bruk overskriftene «S», «O», «A» og «P» som ren tekst (ikke fet skrift/markdown)
+- Bruk nøyaktig overskriftene ANAMNESE, UNDERSØKELSE, VURDERING og TILTAK i den \
+rekkefølgen, hver alene på egen linje med store bokstaver, uten kolon og som ren \
+tekst (ikke fet skrift/markdown). Ta alltid med alle fire overskriftene
 - Ikke bruk stjerner, #-symboler eller annen markdown-formatering noe sted i svaret
 - Medisinsk terminologi der det er presist og naturlig
-- Ikke inkluder innledning, hilsener eller oppsummering utenfor SOAP-strukturen\
+- Ikke inkluder innledning, hilsener eller oppsummering utenfor de fire seksjonene\
 `
 
 // ─── MØTE ─────────────────────────────────────────────────────────────────────

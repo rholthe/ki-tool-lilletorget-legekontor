@@ -42,3 +42,7 @@ yarn-error.log*
 next-env.d.ts
 
 /src/generated/prisma
+
+# Signerte Firefox-pakker (web-ext sign)
+nettleserutvidelse/pridok/web-ext-artifacts/
+nettleserutvidelse/pridok/.amo-upload-uuid

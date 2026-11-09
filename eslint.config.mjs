@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Nettleserutvidelse (egen kjøretid, chrome.*-API)
+    "nettleserutvidelse/**",
   ]),
 ]);
 

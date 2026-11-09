@@ -25,6 +25,7 @@ import {
   BookOpen,
   Sparkles,
   ClipboardList,
+  Send,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -39,6 +40,8 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
@@ -63,6 +66,13 @@ import { ChatModal } from "@/components/app/chat-modal"
 import { VerktoyModal } from "@/components/app/verktoy-modal"
 import { synkVerktoySeksjon } from "@/lib/verktoy/beregn"
 import { lagreKonsultasjon, hentKonsultasjon } from "@/lib/idb"
+import { delNotatIJournalfelt } from "@/lib/journal-eksport"
+import {
+  sendTilJournal,
+  useJournalUtvidelse,
+  type JournalModus,
+  type JournalSvar,
+} from "@/hooks/use-journal-utvidelse"
 
 function parseStikkord(fullTekst: string): { notat: string; stikkord?: string[] } {
   const match = fullTekst.match(/\nSTIKKORD:\s*(.+?)[\n\r]*$/)
@@ -91,6 +101,11 @@ export function KonsultasjonView() {
   const [visChat, setVisChat] = useState(false)
   const [visVerktoy, setVisVerktoy] = useState(false)
   const [kopiert, setKopiert] = useState(false)
+  const journal = useJournalUtvidelse()
+  const [journalSender, setJournalSender] = useState(false)
+  const [journalSendt, setJournalSendt] = useState(false)
+  const [journalMelding, setJournalMelding] = useState<{ type: "feil" | "info"; tekst: string } | null>(null)
+  const [journalHarInnhold, setJournalHarInnhold] = useState<string[] | null>(null)
   const [utvidetFelt, setUtvidetFelt] = useState<"kontekst" | "tilleggsinfo" | null>(null)
   const [moteform, setMoteform] = useState<MoteForm>("fysisk")
   const [visVedlegg, setVisVedlegg] = useState(false)
@@ -359,6 +374,33 @@ export function KonsultasjonView() {
     await navigator.clipboard.writeText(tekst)
     setKopiert(true)
     setTimeout(() => setKopiert(false), 2000)
+  }
+
+  async function sendNotatTilJournal(modus: JournalModus = "tom") {
+    const tekst = aktiv?.notat
+    if (!tekst) return
+    setJournalHarInnhold(null)
+    setJournalMelding(null)
+    setJournalSender(true)
+    const { seksjoner, fantOverskrifter } = delNotatIJournalfelt(tekst)
+    const svar = await sendTilJournal(seksjoner, modus)
+    setJournalSender(false)
+    if (svar.ok) {
+      setJournalSendt(true)
+      setTimeout(() => setJournalSendt(false), 2500)
+      if (!fantOverskrifter) {
+        setJournalMelding({
+          type: "info",
+          tekst: "Notatet hadde ikke overskriftene ANAMNESE, UNDERSØKELSE, VURDERING og TILTAK, så hele teksten ble lagt i Anamnese.",
+        })
+      }
+      return
+    }
+    if (svar.grunn === "har-innhold") {
+      setJournalHarInnhold(svar.felt ?? [])
+      return
+    }
+    setJournalMelding({ type: "feil", tekst: journalFeiltekst(svar) })
   }
 
   return (
@@ -909,7 +951,46 @@ export function KonsultasjonView() {
             <Copy className="w-4 h-4" />
             {kopiert ? "Kopiert!" : "Kopier notat"}
           </Button>
+
+          {journal.installert && (
+            <Tooltip>
+              <TooltipTrigger render={<span />}>
+                <Button
+                  size="sm"
+                  className="gap-1.5 text-sm bg-sky-700 hover:bg-sky-800"
+                  disabled={!harNotat || isGenerating || journalSender}
+                  onClick={() => sendNotatTilJournal()}
+                >
+                  <Send className="w-4 h-4" />
+                  {journalSender ? "Sender…" : journalSendt ? "Sendt!" : "Send til journal"}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                Fyller Anamnese, Funn, Vurdering og Tiltak i notatet som er åpent i Pridok. Lagres ikke — se over og lagre i Pridok.
+              </TooltipContent>
+            </Tooltip>
+          )}
         </div>
+
+        {journalMelding && (
+          <div
+            className={`flex items-start gap-2 text-xs rounded-lg px-3 py-2 border ${
+              journalMelding.type === "feil"
+                ? "text-red-700 bg-red-50 border-red-200"
+                : "text-amber-800 bg-amber-50 border-amber-200"
+            }`}
+          >
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+            <span className="flex-1">{journalMelding.tekst}</span>
+            <button
+              type="button"
+              className="shrink-0 underline-offset-2 hover:underline"
+              onClick={() => setJournalMelding(null)}
+            >
+              Lukk
+            </button>
+          </div>
+        )}
 
         {/* Claude-feilmelding */}
         {claudeFeil && (
@@ -956,9 +1037,52 @@ export function KonsultasjonView() {
         </DialogContent>
       </Dialog>
 
+      {/* Send til journal: feltene i Pridok har allerede tekst */}
+      <Dialog open={journalHarInnhold !== null} onOpenChange={(open) => { if (!open) setJournalHarInnhold(null) }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Notatet i Pridok har allerede tekst</DialogTitle>
+            <DialogDescription>
+              {journalHarInnhold?.length
+                ? `Det står allerede tekst i ${journalHarInnhold.join(", ")}.`
+                : "Noen av feltene har allerede tekst."}{" "}
+              Vil du legge notatet til under det som står der, eller erstatte teksten?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setJournalHarInnhold(null)}>
+              Avbryt
+            </Button>
+            <Button variant="outline" onClick={() => sendNotatTilJournal("erstatt")}>
+              Erstatt
+            </Button>
+            <Button className="bg-sky-700 hover:bg-sky-800" onClick={() => sendNotatTilJournal("legg-til")}>
+              Legg til under
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <ChatModal open={visChat} onClose={() => setVisChat(false)} />
 
       <VerktoyModal open={visVerktoy} onClose={() => setVisVerktoy(false)} />
     </div>
   )
+}
+
+function journalFeiltekst(svar: Extract<JournalSvar, { ok: false }>): string {
+  switch (svar.grunn) {
+    case "ingen-fane":
+      return "Fant ingen åpen Pridok-fane (epj3.pridok.no). Åpne notatet til pasienten i Pridok og prøv igjen."
+    case "fant-ikke-felt":
+      return svar.felt?.length
+        ? `Fant ikke feltene ${svar.felt.join(", ")} i Pridok. Åpne et dagsnotat og prøv igjen.`
+        : "Fant ikke notatfeltene i Pridok. Åpne et dagsnotat og prøv igjen."
+    case "flere-notater":
+      return "Flere notater er åpne for redigering i Pridok. Lukk de andre og prøv igjen."
+    case "skrivebeskyttet":
+      return `Notatet i Pridok er låst${svar.felt?.length ? ` (${svar.felt.join(", ")})` : ""}. Åpne et nytt notat.`
+    default:
+      return `Kunne ikke sende til journal${svar.melding ? `: ${svar.melding}` : "."}`
+  }
 }

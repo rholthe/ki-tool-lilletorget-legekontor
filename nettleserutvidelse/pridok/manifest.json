@@ -1,0 +1,51 @@
+{
+  "manifest_version": 3,
+  "name": "LegeAssist → Pridok",
+  "version": "1.0.0",
+  "description": "Sender journalnotatet fra LegeAssist til Anamnese, Funn, Vurdering og Tiltak i et åpent Pridok-notat. Teksten går bare mellom fanene i nettleseren.",
+  "background": {
+    "service_worker": "bakgrunn.js",
+    "scripts": [
+      "bakgrunn.js"
+    ]
+  },
+  "host_permissions": [
+    "https://epj3.pridok.no/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://ki.lilletorget.org/*",
+        "http://localhost/*"
+      ],
+      "js": [
+        "legeassist.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://epj3.pridok.no/*"
+      ],
+      "js": [
+        "pridok.js"
+      ],
+      "all_frames": true,
+      "run_at": "document_idle"
+    }
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "legeassist-pridok@lilletorget.org",
+      "strict_min_version": "140.0",
+      "data_collection_permissions": {
+        "required": [
+          "none"
+        ]
+      }
+    },
+    "gecko_android": {
+      "strict_min_version": "142.0"
+    }
+  }
+}
