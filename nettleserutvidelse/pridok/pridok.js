@@ -26,6 +26,13 @@ function synlig(el) {
   return el.getClientRects().length > 0
 }
 
+/** Dokumentet et felt hører til. Det ytre docform-et, ikke nærmeste <form>: AngularJS kan
+ * legge et eget (navnløst) skjema rundt hvert felt, og da havnet de fire feltene i hver
+ * sin gruppe og ingen notater ble funnet. */
+function dokumentFor(ta) {
+  return ta.closest('form[id^="docform"]') ?? ta.closest("form")
+}
+
 function pasient(form) {
   let raa = tekst(form?.querySelector(".document-subname"))
   if (!raa) {
@@ -45,7 +52,7 @@ function finnNotater() {
     const boks = legend.closest("pddata") ?? legend.parentElement
     const ta = boks?.querySelector(".fielddata textarea")
     if (!ta || !synlig(ta)) continue
-    const form = ta.closest("form")
+    const form = dokumentFor(ta)
     const dokId = form?.id || "dokument"
     if (!dokumenter.has(dokId)) {
       dokumenter.set(dokId, { form, felt: { anamnese: [], funn: [], vurdering: [], tiltak: [] } })
@@ -56,7 +63,11 @@ function finnNotater() {
   const notater = []
   let laaste = 0
   for (const [dokId, { form, felt }] of dokumenter) {
-    if (ALLE.some((k) => felt[k].length === 0)) continue
+    if (ALLE.some((k) => felt[k].length === 0)) {
+      // Kun antall og feltnavn, aldri innhold — til feilsøking når Pridok endrer markupen.
+      console.debug("[LegeAssist] ufullstendig notat", dokId, Object.fromEntries(ALLE.map((k) => [k, felt[k].length])))
+      continue
+    }
     const redigerbare = Object.fromEntries(
       ALLE.map((k) => [k, felt[k].find((ta) => !ta.disabled && !ta.readOnly)]),
     )
