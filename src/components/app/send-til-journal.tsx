@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { AlertCircle, Check, Send } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
@@ -38,6 +38,9 @@ function pasientTekst(n: JournalNotat): string {
 
 type Melding = { type: "ok" | "info" | "feil"; tekst: string }
 
+/** Hvor lenge meldingen står før den forsvinner. Feil og info er lengre tekster. */
+const VISNINGSTID_MS: Record<Melding["type"], number> = { ok: 5000, info: 8000, feil: 8000 }
+
 /**
  * «Send til journal»: legger notatet inn i et åpent notat i Pridok via
  * nettleserutvidelsen. Er flere notater åpne (i én eller flere faner), velger legen
@@ -50,6 +53,14 @@ export function SendTilJournal({ notat, disabled }: { notat?: string; disabled: 
   const [melding, setMelding] = useState<Melding | null>(null)
   const [valg, setValg] = useState<JournalNotat[] | null>(null)
   const [bekreft, setBekreft] = useState<JournalNotat | null>(null)
+  const [holdes, setHoldes] = useState(false)
+
+  // Forsvinner av seg selv; står så lenge musepekeren er over den.
+  useEffect(() => {
+    if (!melding || holdes) return
+    const t = setTimeout(() => setMelding(null), VISNINGSTID_MS[melding.type])
+    return () => clearTimeout(t)
+  }, [melding, holdes])
 
   if (!installert) return null
 
@@ -141,6 +152,8 @@ export function SendTilJournal({ notat, disabled }: { notat?: string; disabled: 
       {melding && (
         <div
           role="status"
+          onMouseEnter={() => setHoldes(true)}
+          onMouseLeave={() => setHoldes(false)}
           className={`fixed bottom-4 right-4 z-50 flex max-w-sm items-start gap-2 rounded-lg border px-3 py-2 text-sm shadow-lg ${
             melding.type === "feil"
               ? "border-red-200 bg-red-50 text-red-700"
@@ -158,7 +171,10 @@ export function SendTilJournal({ notat, disabled }: { notat?: string; disabled: 
           <button
             type="button"
             className="shrink-0 text-xs underline-offset-2 hover:underline"
-            onClick={() => setMelding(null)}
+            onClick={() => {
+              setMelding(null)
+              setHoldes(false)
+            }}
           >
             Lukk
           </button>
