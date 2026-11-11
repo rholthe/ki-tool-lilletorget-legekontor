@@ -2,8 +2,9 @@
 
 Detaljer flyttet fra `CLAUDE.md`. Gjelder `src/lib/skjema/`, `skjema-view.tsx`, `til-skjema.tsx`, `/admin/skjema` og PDF-sporet.
 
-- **Skjema** (oppgavetype `SKJEMA`, rosa `FileText`-ikon, `Alt+6`): hjelp til skjemautfylling. Trinn 1–2 bygget
-  10.11.2026, **ikke deployet og ikke testet mot ekte Pridok** (tabellene finnes ikke før `prisma db push`)
+- **Skjema** (oppgavetype `SKJEMA`, rosa `FileText`-ikon, `Alt+6`): hjelp til skjemautfylling. Bygget
+  10.–11.11.2026 og committet, **ikke deployet, ikke prøvd i nettleser og ikke testet mot ekte Pridok**. Tabellene
+  (`SkjemaKategori`, `Skjema`, `SkjemaPdf`, kolonnen `User.hprNummer`) finnes i databasen
   - Admin legger inn kategorier og skjema på `/admin/skjema` (`SkjemaKategori`, `Skjema`; `actions/admin-skjema.ts`).
     Et skjema = feltliste (JSON, `SkjemaFelt` i `src/lib/skjema/typer.ts`) + instruks til AI. Bare definisjonen
     ligger på serveren; utfylte verdier finnes kun i nettleseren (`Konsultasjon.skjema`/`skjemaVerdier`/`pasient`,
@@ -45,7 +46,7 @@ Detaljer flyttet fra `CLAUDE.md`. Gjelder `src/lib/skjema/`, `skjema-view.tsx`, 
   - Utvidelsen testet 10.11.2026 i Chromium (Playwright, `--load-extension`) mot en kopi av markupen for
     journalhodet, SPK-fanen «Om uførheten» og NAV-skjemaet «Legeerklæring ved arbeidsuførhet» (avkrysset
     tilstand, ja/nei-felt, skjulte felt, oppslagsfelt, to felt med samme tekst)
-  - **PDF-sporet** (bygget 11.11.2026, **ikke prøvd i nettleser** — krever `prisma db push` for tabellen `SkjemaPdf`):
+  - **PDF-sporet** (**ikke prøvd i nettleser**):
     admin laster opp det tomme skjemaet som PDF-mal, legen får «Last ned PDF» med feltene fylt inn
     - Malen ligger i egen tabell `SkjemaPdf` (LongBlob, maks 10 MB) så den ikke følger med skjemalisten.
       Opplasting `PUT /api/admin/skjema/[id]/pdf` (rå fil i kroppen — for stor for en server action), henting
