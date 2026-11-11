@@ -90,3 +90,9 @@ export function resolverVedleggInstruksjon(
   if (!nokkel) return lagVedleggInstruksjon(vedlegg) // egendefinert
   return tekst(`vedlegg:${nokkel}`, overrides) || lagVedleggInstruksjon(vedlegg)
 }
+
+/** Felles systemprompt for skjemautfylling + instruksen admin har skrevet for skjemaet. */
+export function byggSkjemaStaging(skjemaPrompt: string, overrides: StagingOverrides): string {
+  const felles = tekst("skjema", overrides)
+  return skjemaPrompt.trim() ? `${felles}\n\n## Om dette skjemaet\n\n${skjemaPrompt.trim()}` : felles
+}

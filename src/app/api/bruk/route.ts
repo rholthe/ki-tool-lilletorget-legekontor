@@ -13,7 +13,7 @@ const tall = (maks: number) => z.number().int().min(0).max(maks).default(0)
 
 const skjema = z.object({
   tjeneste: z.enum(["BEDROCK", "SONIOX"]),
-  funksjon: z.enum(["notat", "chat", "aihjelp", "promptbygger", "transkribering", "diktering"]),
+  funksjon: z.enum(["notat", "chat", "aihjelp", "promptbygger", "skjema", "transkribering", "diktering"]),
   modell: z.string().max(120).regex(/^[\w.:\-/]+$/).optional(),
   inputTokens: tall(2_000_000),
   outputTokens: tall(200_000),

@@ -61,6 +61,7 @@ import { TYPE_TEMA } from "@/lib/tema"
 import { VedleggPanel } from "@/components/app/vedlegg-panel"
 import { ChatModal } from "@/components/app/chat-modal"
 import { VerktoyModal } from "@/components/app/verktoy-modal"
+import { TilSkjema } from "@/components/app/til-skjema"
 import { synkVerktoySeksjon } from "@/lib/verktoy/beregn"
 import { lagreKonsultasjon, hentKonsultasjon } from "@/lib/idb"
 import { SendTilJournal } from "@/components/app/send-til-journal"
@@ -81,6 +82,7 @@ const TYPE_IKON = {
   JOURNALGJENNOMGANG: <BookOpen className="w-3.5 h-3.5" />,
   DIKTAT: <Mic className="w-3.5 h-3.5" />,
   AIHJELP: <Sparkles className="w-3.5 h-3.5" />,
+  SKJEMA: <FileText className="w-3.5 h-3.5" />,
 }
 
 export function KonsultasjonView() {
@@ -887,6 +889,17 @@ export function KonsultasjonView() {
               Skåringsverktøy, undersøkelser og retningslinjer (Alt+V)
             </TooltipContent>
           </Tooltip>
+
+          {(aktiv.type === "KONSULTASJON" || aktiv.type === "TELEFONKONSULTASJON") && <TilSkjema
+            disabled={isGenerating || erOpptar || erPause || !(harNotat || aktiv.transkript.trim() || aktiv.kontekst.trim())}
+            grunn={
+              isGenerating
+                ? "Vent til notatet er ferdig"
+                : erOpptar || erPause
+                  ? "Stopp opptaket først"
+                  : "Ingenting å fylle ut fra ennå"
+            }
+          />}
 
           <div className="flex-1" />
 

@@ -257,6 +257,8 @@ export function AiHjelpView() {
               kompakt
               vedlegg={aktiv.vedlegg ?? []}
               onChange={(nyeVedlegg: Vedlegg[]) => oppdater({ vedlegg: nyeVedlegg })}
+              kontekst={aktiv.kontekst}
+              onKontekst={(ny) => oppdater({ kontekst: ny })}
             />
           </div>
         )}

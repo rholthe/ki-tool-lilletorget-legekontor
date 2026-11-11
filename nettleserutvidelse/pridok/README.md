@@ -11,11 +11,30 @@ LegeAssist inn i feltene **Anamnese (Notat)**, **Funn**, **Vurdering** og **Tilt
 - Gul lapp røres aldri. Har feltene tekst fra før, spør LegeAssist om teksten skal legges til under eller erstatte den.
 - Overskriftene i notatet (ANAMNESE, UNDERSØKELSE, VURDERING, TILTAK, eller de gamle SOAP-overskriftene) bestemmer hvilket felt teksten havner i. Kliniske verktøy og OCR havner i Tiltak. Uten overskrifter havner alt i Anamnese.
 
+## Pasient og skjema (fra 1.2)
+
+- **Pasient:** når legen starter en skjemaoppgave i LegeAssist, leser utvidelsen navn, fødselsdato,
+  fødselsnummer og adresse for pasienten som er åpen i Pridok (`button.journalheader` og
+  `.box-contextitem[title]` i journalhodet). Opplysningene går til LegeAssist-fanen, der de lagres
+  kryptert i nettleseren sammen med oppgaven (slettes etter 24 timer). Utvidelsen lagrer ingenting.
+- **Skjema:** «Send til skjema i Pridok» fyller et åpent skjema. Feltene kjennes igjen på teksten sin,
+  som står i `.legend`, i feltets `placeholder`, i `.chktxt` på en avkrysningsknapp eller i
+  `.tristate-caption` på et ja/nei-felt. LegeAssist
+  sender tekstene den leter etter; utvidelsen kjenner ingen skjema selv. Element-id-ene i Pridok
+  (`id="203"`) er løpende tellere og brukes ikke.
+- **Avkrysning** finnes i to slag: `button.b-check` (av/på, `.fa-check` = på og `.fa-tag` = av) og
+  `div.tristate` med knappene Ja (`.checkyes`) og Nei (`.checkno`). Tilstanden leses først, og det
+  klikkes bare når den avviker. Avkrysning settes før tekst, fordi noen tekstfelt først vises når et
+  ja/nei-felt er besvart.
+- **Oppslagsfelt** (dato, poststed, ICPC-2B — `input.stretch` med nedtrekksknapp) hoppes over. De må
+  velges fra Pridoks egen liste.
+- **Import:** admin kan hente feltlisten (tekst, type, fane — aldri verdier) fra et åpent skjema.
+
 ## Filer
 
 | Fil             | Kjører                             | Gjør                                                                                                               |
 |-----------------|------------------------------------|--------------------------------------------------------------------------------------------------------------------|
-| `legeassist.js` | på ki.lilletorget.org og localhost | kunngjør utvidelsen, videresender «Send til journal»                                                               |
+| `legeassist.js` | på ki.lilletorget.org og localhost | kunngjør utvidelsen, videresender forespørslene (dagsnotat, pasient, skjema)                                       |
 | `bakgrunn.js`   | i bakgrunnen                       | `finn-notater`: spør alle Pridok-faner; `fyll-notat`: fyller valgt notat (sjekker at fanen er Pridok), viser fanen |
 | `pridok.js`     | på epj3.pridok.no (alle rammer)    | finner notatene ut fra etikettene, grupperer per `<form id="docform…">`, beskriver og fyller dem                   |
 
@@ -51,4 +70,6 @@ Sjekk først med `npx web-ext lint` — eneste forventede advarsel er at Firefox
 
 Øk `version` i `manifest.json` ved hver endring — Mozilla avviser en versjon som allerede er
 signert. Versjon 1.0.0 ble signert 09.11.2026 (Ragnars AMO-konto); 1.1.0 (valg mellom flere
-notater) er signert; 1.1.1 (gruppering per ytre `docform`) ble signert 10.11.2026.
+notater) er signert; 1.1.1 (gruppering per ytre `docform`) ble signert 10.11.2026. 1.2.0 (pasient og skjema)
+er ikke signert ennå. Fra 1.2 leser utvidelsen personalia og gir dem til LegeAssist-siden; vurder om
+`data_collection_permissions` i manifestet fortsatt skal være `none` før signering.

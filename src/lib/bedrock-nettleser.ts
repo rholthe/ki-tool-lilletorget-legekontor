@@ -31,7 +31,7 @@ export interface AiForbruk {
 }
 
 /** Funksjonene som logges i bruksstatistikken. */
-export type AiFunksjon = "notat" | "chat" | "aihjelp" | "promptbygger"
+export type AiFunksjon = "notat" | "chat" | "aihjelp" | "promptbygger" | "skjema"
 
 // ─── Oppsett (nøkler hentes på nytt 5 min før de utløper) ────────────────────
 
@@ -94,6 +94,7 @@ function bedrockBody(f: AiForesporsel): string {
     max_tokens: f.maxTokens,
     system: f.system,
     messages: f.messages,
+    ...(f.verktoy ? { tools: [f.verktoy], tool_choice: { type: "tool", name: f.verktoy.name } } : {}),
   })
 }
 
@@ -138,6 +139,37 @@ export async function sendTilClaude(f: AiForesporsel, funksjon: AiFunksjon, sign
     cacheSkrivTokens: u.cache_creation_input_tokens ?? 0,
   })
   return (data.content ?? []).map((b: { type: string; text?: string }) => (b.type === "text" ? b.text : "")).join("")
+}
+
+/**
+ * Ett kall med tvunget verktøybruk (`f.verktoy`): svaret er verktøyets argumenter,
+ * altså gyldig JSON etter skjemaet. Brukes til skjemautfylling.
+ */
+export async function hentStrukturertSvar(
+  f: AiForesporsel,
+  funksjon: AiFunksjon,
+  signal?: AbortSignal
+): Promise<Record<string, unknown>> {
+  if (!f.verktoy) throw new Error("Forespørselen mangler verktøy")
+  const o = await hentAiOppsett()
+  const body = bedrockBody(f)
+  const { url, headers } = await signertForesporsel(o, "invoke", body)
+  const res = await fetch(url, { method: "POST", headers, body, signal })
+  if (!res.ok) throw await feilFraSvar(res)
+  const data = await res.json()
+  const u = data.usage ?? {}
+  rapporterForbruk(funksjon, o.modell, {
+    inputTokens: u.input_tokens ?? 0,
+    outputTokens: u.output_tokens ?? 0,
+    cacheLesTokens: u.cache_read_input_tokens ?? 0,
+    cacheSkrivTokens: u.cache_creation_input_tokens ?? 0,
+  })
+  if (data.stop_reason === "max_tokens") throw new Error("Svaret fra AI ble for langt og ble avbrutt. Prøv igjen.")
+  const blokk = (data.content ?? []).find((b: { type: string }) => b.type === "tool_use")
+  if (!blokk || typeof blokk.input !== "object" || blokk.input === null) {
+    throw new Error("AI-tjenesten svarte ikke med et utfylt skjema. Prøv igjen.")
+  }
+  return blokk.input as Record<string, unknown>
 }
 
 /**

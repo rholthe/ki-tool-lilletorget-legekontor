@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { Users, Stethoscope, Trash2, Clock, BookOpen, Mic, Sparkles } from "lucide-react"
+import { Users, Stethoscope, Trash2, Clock, BookOpen, Mic, Sparkles, FileText } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import {
@@ -58,6 +58,11 @@ const NY_KNAPPER: {
     type: "AIHJELP",
     ikon: <Sparkles className="w-4 h-4" />,
     farge: "bg-teal-600 hover:bg-teal-700",
+  },
+  {
+    type: "SKJEMA",
+    ikon: <FileText className="w-4 h-4" />,
+    farge: "bg-rose-600 hover:bg-rose-700",
   },
 ]
 
@@ -142,7 +147,7 @@ export function AppSidebar() {
     router.push("/")
   }, [lastKonsultasjoner, setAktiv, router])
 
-  // Alt+1..5 oppretter ny oppgave (samme rekkefølge som NY_KNAPPER)
+  // Alt+1..6 oppretter ny oppgave (samme rekkefølge som NY_KNAPPER)
   useHurtigtaster(
     NY_KNAPPER.map(({ type }, i) => ({
       code: `Digit${i + 1}`,

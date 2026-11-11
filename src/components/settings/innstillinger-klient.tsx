@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
 import { User, Shield, Key, BookOpen, FileText, ExternalLink } from "lucide-react"
 import { ToFaktorSeksjon } from "@/components/settings/to-faktor-seksjon"
+import { ProfilSeksjon } from "@/components/settings/profil-seksjon"
 import { PasskeySeksjon } from "@/components/settings/passkey-seksjon"
 import type { PasskeyInfo } from "@/lib/passkey"
 import { PromptbibliotekKlient } from "@/components/settings/promptbibliotek-klient"
@@ -16,6 +17,7 @@ interface Props {
   bruker: {
     name: string | null
     email: string | null
+    hprNummer: string | null
     twoFactorEnabled: boolean
     dpaSignedAt: Date | null
     dpaVersion: string | null
@@ -62,19 +64,7 @@ export function InnstillingerKlient({ bruker, ubrukteKoder, passkeys, aktivModel
               <User className="w-4 h-4 text-slate-500" />
               <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">Profil</h2>
             </div>
-            <div className="rounded-xl border border-slate-200 bg-white p-5 space-y-3">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-xs text-slate-400 font-medium mb-0.5">Navn</p>
-                  <p className="text-slate-700">{bruker?.name ?? "–"}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-slate-400 font-medium mb-0.5">E-post</p>
-                  <p className="text-slate-700">{bruker?.email ?? "–"}</p>
-                </div>
-              </div>
-              <p className="text-xs text-slate-400">Endring av navn og passord kommer i en fremtidig oppdatering.</p>
-            </div>
+            <ProfilSeksjon navn={bruker?.name ?? ""} epost={bruker?.email ?? ""} hpr={bruker?.hprNummer ?? ""} />
           </section>
 
           <Separator />

@@ -97,6 +97,12 @@ export function AppHeaderMeny({ visNavn, erAdmin }: Props) {
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem>
+                <Link href="/admin/skjema" className="flex items-center gap-2 w-full">
+                  <FileText className="w-4 h-4" />
+                  Skjema
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem>
                 <Link href="/admin/meldinger" className="flex items-center gap-2 w-full">
                   <Megaphone className="w-4 h-4" />
                   Meldinger

@@ -7,6 +7,7 @@ import {
   JOURNALGJENNOMGANG,
   CHAT_STAGING,
   AIHJELP_STAGING,
+  SKJEMA_STAGING,
   VEDLEGG_SEKSJON,
   VERKTOY_SEKSJON,
   STIKKORD_SEKSJON,
@@ -90,6 +91,14 @@ export const STAGING_REGISTRY: StagingEntry[] = [
     label: "AI-hjelp (frittstående)",
     beskrivelse: "Systemprompt for frittstående AI-hjelp. Må inneholde plassholderen {KONTEKST}.",
     standard: AIHJELP_STAGING,
+  },
+  {
+    key: "skjema",
+    gruppe: "Notattyper",
+    label: "Skjema (felles)",
+    beskrivelse:
+      "Felles systemprompt for skjemautfylling. Hvert skjema har i tillegg sin egen instruks, som admin skriver under Admin → Skjema.",
+    standard: SKJEMA_STAGING,
   },
 
   // ── Vedlegg (full instruks) ──

@@ -4,7 +4,7 @@
 const FRA_SIDEN = "legeassist"
 const FRA_UTVIDELSEN = "legeassist-utvidelse"
 const VERSJON = chrome.runtime.getManifest().version
-const TILLATT = new Set(["finn-notater", "fyll-notat"])
+const TILLATT = new Set(["finn-notater", "fyll-notat", "hent-pasient", "finn-skjema", "fyll-skjema", "les-skjema"])
 
 function post(data) {
   window.postMessage({ kilde: FRA_UTVIDELSEN, ...data }, location.origin)

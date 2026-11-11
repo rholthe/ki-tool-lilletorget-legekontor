@@ -16,15 +16,23 @@ import {
  * rett fra nettleseren til Bedrock og er aldri innom serveren.
  */
 
+export interface AiVerktoy {
+  name: string
+  description: string
+  input_schema: { type: "object"; properties: Record<string, unknown>; required?: string[] }
+}
+
 export interface AiForesporsel {
   system: string
   messages: MessageParam[]
   maxTokens: number
+  /** Tvinger svaret til å være et kall på dette verktøyet (strukturert svar). */
+  verktoy?: AiVerktoy
 }
 
 type VedleggInn = Pick<Vedlegg, "mimeType" | "base64" | "oppgave" | "spirometriType" | "egendefinertPrompt">
 
-function vedleggBlokk(v: VedleggInn): ContentBlockParam {
+export function vedleggBlokk(v: VedleggInn): ContentBlockParam {
   if (v.mimeType === "application/pdf") {
     return { type: "document", source: { type: "base64", media_type: "application/pdf", data: v.base64 } }
   }

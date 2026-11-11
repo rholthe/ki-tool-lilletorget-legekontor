@@ -1,5 +1,6 @@
 import type { KonsultasjonsForm } from "@/lib/staging"
 import type { VerktoyResultat } from "@/lib/verktoy/typer"
+import type { Pasient, SkjemaDefinisjon, SkjemaVerdier } from "@/lib/skjema/typer"
 
 export type KonsultasjonsType =
   | "KONSULTASJON"
@@ -8,6 +9,7 @@ export type KonsultasjonsType =
   | "JOURNALGJENNOMGANG"
   | "DIKTAT"
   | "AIHJELP"
+  | "SKJEMA"
 
 export type KonsultasjonsStatus =
   | "ny"
@@ -76,6 +78,16 @@ export interface Konsultasjon {
   stikkord?: string[]
   /** Utførte kliniske verktøy — lagres strukturert så de overlever regenerering av notatet. */
   verktoyResultater?: VerktoyResultat[]
+  /** SKJEMA: definisjonen slik den var da legen valgte skjemaet (tåler at admin endrer den). */
+  skjema?: SkjemaDefinisjon
+  /** SKJEMA: verdiene i feltene, nøklet på felt-id. */
+  skjemaVerdier?: SkjemaVerdier
+  /** SKJEMA: felt Claude har fylt ut og legen ikke har rørt ennå. */
+  skjemaAiFelt?: string[]
+  /** SKJEMA: pasienten skjemaet gjelder (fra Pridok eller skrevet inn). */
+  pasient?: Pasient
+  /** SKJEMA startet fra en konsultasjon: hvor innholdet i konteksten ble kopiert fra (vei tilbake). */
+  fraKonsultasjon?: { id: string; etikett: string; createdAt: number }
   chatHistorikk?: ChatMelding[]
   chatKontekstSnapshot?: {
     transkript: string
@@ -92,6 +104,7 @@ export const TYPE_LABELS: Record<KonsultasjonsType, string> = {
   JOURNALGJENNOMGANG: "Journalgjennomgang",
   DIKTAT: "Diktat",
   AIHJELP: "AI-hjelp",
+  SKJEMA: "Skjema",
 }
 
 /** Etikett per konsultasjonsform — brukes når en KONSULTASJON har valgt form. */

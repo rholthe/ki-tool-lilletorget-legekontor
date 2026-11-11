@@ -1,7 +1,7 @@
 "use client"
 
 import { useRef, useState, useEffect, useCallback } from "react"
-import { X, FileText, Upload, ImageIcon, ChevronDown, ChevronUp, Camera } from "lucide-react"
+import { X, FileText, Upload, ImageIcon, ChevronDown, ChevronUp, Camera, Loader2 } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import {
@@ -16,6 +16,21 @@ import { cuid } from "@/lib/cuid"
 
 const MAKS_STORRELSE_MB = 8
 const MAKS_ANTALL = 5
+/** PDF-er som leses som tekst, sendes ikke som fil og kan derfor være større. */
+const MAKS_TEKST_PDF_MB = 50
+/** Over dette er teksten trolig for lang til én forespørsel (omtrent 150 000 tokens). */
+const LANG_TEKST_TEGN = 450_000
+
+/** Beskjed om hva som skjedde med en fil. Bare i minnet; forsvinner når visningen lukkes. */
+interface Filmelding {
+  id: string
+  type: "tekst" | "skannet" | "feil"
+  navn: string
+  tekst: string
+  /** Lest som tekst: blokken som ble lagt i konteksten, og filen i tilfelle legen heller vil sende den. */
+  blokk?: string
+  base64?: string
+}
 const GODKJENTE_TYPER = [
   "image/jpeg",
   "image/png",
@@ -33,9 +48,15 @@ interface Props {
   modus?: "ocr" | "enkel"
   /** Kompakt opplastingssone (én rad) — sparer plass. */
   kompakt?: boolean
+  /**
+   * Sammen med `onKontekst`: PDF-er med tekstlag leses som tekst her i nettleseren og legges
+   * i konteksten i stedet for å sendes som fil. Skannede PDF-er blir vedlegg som før.
+   */
+  kontekst?: string
+  onKontekst?: (ny: string) => void
 }
 
-export function VedleggPanel({ vedlegg, onChange, modus, kompakt }: Props) {
+export function VedleggPanel({ vedlegg, onChange, modus, kompakt, kontekst, onKontekst }: Props) {
   const synligeVedlegg = modus === "ocr"
     ? vedlegg.filter((v) => v.oppgave === "ocr")
     : modus === "enkel"
@@ -45,6 +66,13 @@ export function VedleggPanel({ vedlegg, onChange, modus, kompakt }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
+  const [leser, setLeser] = useState<string | null>(null)
+  const [filmeldinger, setFilmeldinger] = useState<Filmelding[]>([])
+  // Lesingen av en PDF tar tid; konteksten kan ha endret seg når den er ferdig
+  const kontekstRef = useRef(kontekst ?? "")
+  useEffect(() => {
+    kontekstRef.current = kontekst ?? ""
+  }, [kontekst])
   const [kameraStream, setKameraStream] = useState<MediaStream | null>(null)
   const [kameraFeil, setKameraFeil] = useState<string | null>(null)
   const [videoEl, setVideoEl] = useState<HTMLVideoElement | null>(null)
@@ -88,17 +116,89 @@ export function VedleggPanel({ vedlegg, onChange, modus, kompakt }: Props) {
 
   async function leggTilFiler(filer: FileList) {
     const nye: Vedlegg[] = []
+    const meldinger: Filmelding[] = []
+    let nyKontekst: string | null = null
+    const feil = (navn: string, tekst: string) => meldinger.push({ id: cuid(), type: "feil", navn, tekst })
+
     for (const fil of Array.from(filer)) {
-      if (vedlegg.length + nye.length >= MAKS_ANTALL) break
-      if (!GODKJENTE_TYPER.includes(fil.type as GodkjentMimeType)) continue
-      if (fil.size > MAKS_STORRELSE_MB * 1024 * 1024) continue
+      if (!GODKJENTE_TYPER.includes(fil.type as GodkjentMimeType)) {
+        feil(fil.name, "Filtypen støttes ikke (bilde eller PDF).")
+        continue
+      }
+      const forStor = fil.size > MAKS_STORRELSE_MB * 1024 * 1024
+      const full = vedlegg.length + nye.length >= MAKS_ANTALL
+      let skannet = false
+
+      // PDF med tekstlag → tekst i konteksten
+      if (onKontekst && fil.type === "application/pdf") {
+        if (fil.size > MAKS_TEKST_PDF_MB * 1024 * 1024) {
+          feil(fil.name, `Filen er for stor (maks ${MAKS_TEKST_PDF_MB} MB).`)
+          continue
+        }
+        setLeser(fil.name)
+        try {
+          const { lesPdfTekst } = await import("@/lib/pdf-tekst")
+          const lest = await lesPdfTekst(await fil.arrayBuffer())
+          if (lest.harTekstlag) {
+            const blokk = `--- ${fil.name} (${lest.sider} ${lest.sider === 1 ? "side" : "sider"}) ---\n${lest.tekst}\n--- slutt ${fil.name} ---`
+            const fra: string = nyKontekst ?? kontekstRef.current
+            nyKontekst = fra.trim() ? `${fra.replace(/\s+$/, "")}\n\n${blokk}` : blokk
+            const tegn = lest.tekst.length.toLocaleString("nb-NO")
+            meldinger.push({
+              id: cuid(),
+              type: "tekst",
+              navn: fil.name,
+              tekst:
+                `Lest som tekst (${lest.sider} ${lest.sider === 1 ? "side" : "sider"}, ${tegn} tegn) og lagt i konteksten.` +
+                (lest.tekst.length > LANG_TEKST_TEGN ? " Teksten er svært lang – stryk det som ikke er relevant." : ""),
+              blokk,
+              base64: forStor ? undefined : await lesFil(fil),
+            })
+            continue
+          }
+          skannet = true
+        } catch {
+          // Passordbeskyttet eller skadet: prøv å sende filen som den er
+        } finally {
+          setLeser(null)
+        }
+      }
+
+      if (forStor) {
+        feil(
+          fil.name,
+          skannet
+            ? `Skannet dokument uten lesbar tekst, og for stort til å sendes som fil (maks ${MAKS_STORRELSE_MB} MB).`
+            : `Filen er for stor (maks ${MAKS_STORRELSE_MB} MB).`,
+        )
+        continue
+      }
+      if (full) {
+        feil(fil.name, `Maks ${MAKS_ANTALL} vedlegg.`)
+        continue
+      }
       const base64 = await lesFil(fil)
       nye.push({ id: cuid(), navn: fil.name, mimeType: fil.type as GodkjentMimeType, base64, oppgave: modus === "ocr" ? "ocr" : "kontekst", ...(modus === "ocr" ? { ocrBruk: "kontekst" as VedleggOcrBruk } : {}) })
+      if (skannet) {
+        meldinger.push({ id: cuid(), type: "skannet", navn: fil.name, tekst: "Skannet dokument uten lesbar tekst – sendes som PDF." })
+      }
     }
+    if (nyKontekst !== null) onKontekst?.(nyKontekst)
+    if (meldinger.length > 0) setFilmeldinger((f) => [...f, ...meldinger])
     if (nye.length > 0) {
       onChange([...vedlegg, ...nye])
       setExpandedIds((prev) => new Set([...prev, ...nye.map((v) => v.id)]))
     }
+    if (inputRef.current) inputRef.current.value = ""
+  }
+
+  /** Legen vil heller sende filen: teksten tas ut av konteksten igjen, og PDF-en blir vedlegg. */
+  function sendSomPdf(m: Filmelding) {
+    if (!m.base64 || !m.blokk || vedlegg.length >= MAKS_ANTALL) return
+    const na = kontekstRef.current
+    if (na.includes(m.blokk)) onKontekst?.(na.replace(m.blokk, "").replace(/\n{3,}/g, "\n\n").trim())
+    onChange([...vedlegg, { id: cuid(), navn: m.navn, mimeType: "application/pdf", base64: m.base64, oppgave: "kontekst" }])
+    setFilmeldinger((f) => f.filter((x) => x.id !== m.id))
   }
 
   function lesFil(fil: File): Promise<string> {
@@ -330,6 +430,56 @@ export function VedleggPanel({ vedlegg, onChange, modus, kompakt }: Props) {
             <p className="text-xs text-red-600 px-5 pb-3">{kameraFeil}</p>
           )}
         </div>
+      )}
+
+      {leser && (
+        <p role="status" className="flex items-center gap-2 text-xs text-slate-500">
+          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          Leser {leser} …
+        </p>
+      )}
+
+      {filmeldinger.length > 0 && (
+        <ul className="space-y-1.5">
+          {filmeldinger.map((m) => (
+            <li
+              key={m.id}
+              className={`flex items-start gap-2 rounded-lg border px-3 py-2 text-xs ${
+                m.type === "feil"
+                  ? "border-red-200 bg-red-50 text-red-700"
+                  : m.type === "skannet"
+                    ? "border-amber-200 bg-amber-50 text-amber-800"
+                    : "border-slate-200 bg-slate-50 text-slate-600"
+              }`}
+            >
+              <FileText className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+              <span className="flex-1 min-w-0">
+                <span className="font-medium break-all">{m.navn}:</span> {m.tekst}
+                {m.type === "tekst" && m.base64 && vedlegg.length < MAKS_ANTALL && (
+                  <>
+                    {" "}
+                    <button
+                      type="button"
+                      onClick={() => sendSomPdf(m)}
+                      className="underline hover:text-slate-800"
+                      title="For dokumenter med tabeller, bilder eller kurver som ikke kommer med i teksten"
+                    >
+                      Send som PDF i stedet
+                    </button>
+                  </>
+                )}
+              </span>
+              <button
+                type="button"
+                onClick={() => setFilmeldinger((f) => f.filter((x) => x.id !== m.id))}
+                className="shrink-0 opacity-60 hover:opacity-100"
+                aria-label="Lukk meldingen"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </li>
+          ))}
+        </ul>
       )}
 
       {/* Liste over vedlegg */}

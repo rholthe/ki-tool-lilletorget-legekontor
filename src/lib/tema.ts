@@ -1,5 +1,5 @@
 import type { ComponentType } from "react"
-import { Stethoscope, Users, Mic, BookOpen, Sparkles } from "lucide-react"
+import { Stethoscope, Users, Mic, BookOpen, Sparkles, FileText } from "lucide-react"
 import type { KonsultasjonsType } from "@/types/konsultasjon"
 
 /**
@@ -76,6 +76,16 @@ const TEAL: TypeTema = {
   aktivKort: "bg-teal-50 border-teal-200",
 }
 
+const ROSA: TypeTema = {
+  knapp: "bg-rose-600 hover:bg-rose-700 text-white",
+  utlinje: "border-rose-300 text-rose-700 hover:bg-rose-50",
+  badge: "bg-rose-100 text-rose-700 border-rose-200",
+  tekst: "text-rose-600",
+  ikon: "text-rose-500",
+  ikonBg: "bg-rose-100",
+  aktivKort: "bg-rose-50 border-rose-200",
+}
+
 export const TYPE_TEMA: Record<KonsultasjonsType, TypeTema> = {
   KONSULTASJON: BLAA,
   TELEFONKONSULTASJON: BLAA,
@@ -83,6 +93,7 @@ export const TYPE_TEMA: Record<KonsultasjonsType, TypeTema> = {
   DIKTAT: AMBER,
   JOURNALGJENNOMGANG: LILLA,
   AIHJELP: TEAL,
+  SKJEMA: ROSA,
 }
 
 /**
@@ -99,4 +110,5 @@ export const TYPE_IKON_KOMP: Record<
   DIKTAT: Mic,
   JOURNALGJENNOMGANG: BookOpen,
   AIHJELP: Sparkles,
+  SKJEMA: FileText,
 }

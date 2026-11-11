@@ -30,6 +30,10 @@ model User {
   // og holdes bare i minnet i nettleseren. Utlogget = dataene er låst.
   datanokkel String? @db.Text
 
+  // Legens HPR-nummer (helsepersonellregisteret), til skjema som spør etter det.
+  // Brukeren legger det inn selv under Innstillinger.
+  hprNummer String? @db.VarChar(9)
+
   accounts       Account[]
   sessions       Session[]
   authenticators Authenticator[]
@@ -277,4 +281,47 @@ model HapiInnhold {
   // Siste feilmelding ved henting (uten innhold), null når siste henting gikk bra
   sisteFeil           String?   @db.VarChar(500)
   sisteForsokAt       DateTime?
+}
+
+// Skjema til oppgavetypen «Skjema» (hjelp til skjemautfylling). Lagt inn av admin.
+// Bare definisjonen ligger her: feltliste, prompt og hvilke tekster feltene har i
+// Pridok. Utfylte verdier er pasientdata og finnes kun i nettleseren.
+model SkjemaKategori {
+  id         String   @id @default(cuid())
+  navn       String   @unique @db.VarChar(100)
+  rekkefolge Int      @default(0)
+  skjemaer   Skjema[]
+}
+
+model Skjema {
+  id          String  @id @default(cuid())
+  kategoriId  String
+  navn        String  @db.VarChar(200)
+  beskrivelse String? @db.VarChar(500)
+  // Instruks til Claude for akkurat dette skjemaet (legges etter felles systemprompt)
+  prompt      String  @db.Text
+  // JSON: SkjemaFelt[] (src/lib/skjema/typer.ts)
+  felter      String  @db.LongText
+  aktiv       Boolean @default(true)
+  opprettetAv String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  kategori SkjemaKategori @relation(fields: [kategoriId], references: [id])
+  pdf      SkjemaPdf?
+
+  @@index([kategoriId])
+}
+
+// PDF-malen til et skjema (det tomme skjemaet). Egen tabell, så filen ikke følger med
+// hver gang skjemalisten hentes. Utfylte PDF-er lages i nettleseren og lagres ikke her.
+model SkjemaPdf {
+  skjemaId  String   @id
+  filnavn   String   @db.VarChar(200)
+  storrelse Int
+  data      Bytes    @db.LongBlob
+  updatedAt DateTime @updatedAt
+
+  skjema Skjema @relation(fields: [skjemaId], references: [id], onDelete: Cascade)
 }
