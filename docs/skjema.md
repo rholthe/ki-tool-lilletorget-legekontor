@@ -3,7 +3,7 @@
 Detaljer flyttet fra `CLAUDE.md`. Gjelder `src/lib/skjema/`, `skjema-view.tsx`, `til-skjema.tsx`, `/admin/skjema` og PDF-sporet.
 
 - **Skjema** (oppgavetype `SKJEMA`, rosa `FileText`-ikon, `Alt+6`): hjelp til skjemautfylling. Bygget
-  10.–11.11.2026 og committet, **ikke deployet, ikke prøvd i nettleser og ikke testet mot ekte Pridok**. Tabellene
+  10.–11.11.2026 og deployet 12.11.2026, **ikke prøvd i nettleser og ikke testet mot ekte Pridok**. Tabellene
   (`SkjemaKategori`, `Skjema`, `SkjemaPdf`, kolonnen `User.hprNummer`) finnes i databasen
   - Admin legger inn kategorier og skjema på `/admin/skjema` (`SkjemaKategori`, `Skjema`; `actions/admin-skjema.ts`).
     Et skjema = feltliste (JSON, `SkjemaFelt` i `src/lib/skjema/typer.ts`) + instruks til AI. Bare definisjonen
