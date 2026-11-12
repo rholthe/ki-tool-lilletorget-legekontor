@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "LegeAssist → Pridok",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Sender journalnotat og skjema fra LegeAssist til et åpent dokument i Pridok, og henter navn, fødselsnummer og adresse for pasienten som er åpen. Alt går bare mellom fanene i nettleseren.",
   "icons": {
     "16": "ikoner/ikon-16.png",
