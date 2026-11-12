@@ -57,6 +57,9 @@ Detaljer flyttet fra `CLAUDE.md`. Gjelder `src/lib/skjema/`, `skjema-view.tsx`, 
       - **Utfyllbare PDF-er (AcroForm):** feltet kobles til PDF-feltets navn. Avkrysning: avkrysningsboks, eller
         et alternativ i en radiogruppe (`valg`); `pdfNei` er ruten for «Nei». «Lag feltlisten fra PDF-en» leser
         feltene i leserekkefølge (hjelpeteksten `TU` som etikett; ja/nei-radiogrupper blir én avkrysning)
+      - **Avkrysningsboks med flere ruter** (SPK S030: ett felt med rutene «Nei» og «Ja»): behandles som en
+        radiogruppe (`ruteValg`/`velgRute` i `pdf.ts`), så målet må ha `valg`. pdf-libs `check()` ville krysset
+        av første rute, altså «Nei». Oppdaget 12.11.2026 da SPK-skjemaet ble lagt inn
       - **Flate PDF-er:** admin tegner bokser på siden (`pdf-plassering.tsx`, pdf.js-visning). Boksene er
         brøkdeler av sidens CropBox fra øvre venstre hjørne. Avkrysning tegnes som et kryss. Roterte sider
         støttes ikke (admin får advarsel)

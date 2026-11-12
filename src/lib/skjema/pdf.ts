@@ -88,9 +88,37 @@ async function aapne(mal: Uint8Array): Promise<PDFDocument> {
   return doc
 }
 
+/**
+ * Rutene i en avkrysningsboks, ved navnet på «på»-tilstanden. Vanligvis én. Noen skjema (SPK) har
+ * én boks med to ruter, «Nei» og «Ja» — da holder det ikke å krysse av feltet, ruten må velges.
+ */
+function ruteValg(f: PDFCheckBox): string[] {
+  const ut: string[] = []
+  try {
+    for (const w of f.acroField.getWidgets()) {
+      const navn = w.getOnValue()?.decodeText()
+      if (navn && !ut.includes(navn)) ut.push(navn)
+    }
+  } catch {
+    return []
+  }
+  return ut
+}
+
+/** Krysser av én bestemt rute i en avkrysningsboks med flere ruter. */
+function velgRute(f: PDFCheckBox, valg: string): boolean {
+  if (!ruteValg(f).includes(valg)) return false
+  f.acroField.dict.set(PDFName.of("V"), PDFName.of(valg))
+  for (const w of f.acroField.getWidgets()) {
+    w.setAppearanceState(PDFName.of(w.getOnValue()?.decodeText() === valg ? valg : "Off"))
+  }
+  return true
+}
+
 function feltType(f: PDFField): PdfFeltType | null {
   if (f instanceof PDFTextField) return "tekst"
-  if (f instanceof PDFCheckBox) return "avkrysning"
+  // Avkrysningsboks med flere ruter (f.eks. «Nei» og «Ja» i samme felt) velges som en radiogruppe
+  if (f instanceof PDFCheckBox) return ruteValg(f).length > 1 ? "radio" : "avkrysning"
   if (f instanceof PDFRadioGroup) return "radio"
   if (f instanceof PDFDropdown) return "nedtrekk"
   return null // knapper, signaturfelt, lister
@@ -168,6 +196,7 @@ export async function lesPdfMal(mal: Uint8Array): Promise<PdfMalInfo> {
     let valg: string[] = []
     try {
       if (f instanceof PDFRadioGroup || f instanceof PDFDropdown) valg = f.getOptions()
+      else if (f instanceof PDFCheckBox && type === "radio") valg = ruteValg(f)
     } catch {
       valg = []
     }
@@ -497,7 +526,10 @@ export async function fyllPdf(
     let ok = false
     if (maal.felt) {
       const felt = finnFelt(maal.felt)
-      if (felt instanceof PDFCheckBox) {
+      if (felt instanceof PDFCheckBox && ruteValg(felt).length > 1) {
+        // Flere ruter i samme felt: uten valgt rute vet vi ikke hvilken som er «ja»
+        if (maal.valg && velgRute(felt, maal.valg)) ok = true
+      } else if (felt instanceof PDFCheckBox) {
         felt.check()
         ok = true
       } else if ((felt instanceof PDFRadioGroup || felt instanceof PDFDropdown) && maal.valg && felt.getOptions().includes(maal.valg)) {
@@ -525,7 +557,7 @@ export async function fyllPdf(
         if (f.pdfNei && (f.pdfNei.felt || f.pdfNei.boks)) settKryss(f, f.pdfNei)
         // «Nei» uten egen rute: sørg for at ja-ruten ikke står avkrysset i malen
         const ja = f.pdf?.felt ? finnFelt(f.pdf.felt) : undefined
-        if (ja instanceof PDFCheckBox && ja.isChecked()) ja.uncheck()
+        if (ja instanceof PDFCheckBox && !f.pdf?.valg && ruteValg(ja).length <= 1 && ja.isChecked()) ja.uncheck()
       }
     } catch {
       mangler.add(f.id)
