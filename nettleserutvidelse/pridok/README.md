@@ -73,3 +73,8 @@ signert. Versjon 1.0.0 ble signert 09.11.2026 (Ragnars AMO-konto); 1.1.0 (valg m
 notater) er signert; 1.1.1 (gruppering per ytre `docform`) ble signert 10.11.2026. 1.2.0 (pasient og skjema)
 er ikke signert ennå. Fra 1.2 leser utvidelsen personalia og gir dem til LegeAssist-siden; vurder om
 `data_collection_permissions` i manifestet fortsatt skal være `none` før signering.
+
+## Ikon
+
+Kilden er `ikoner/ikon.svg`; PNG-ene (16, 32, 48, 96, 128) er laget fra den med `sharp` og ligger i
+samme mappe. Endres SVG-en, må PNG-ene lages på nytt — Chrome godtar ikke SVG i manifestet.
