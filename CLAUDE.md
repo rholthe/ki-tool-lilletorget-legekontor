@@ -65,6 +65,7 @@ i området** — der står begrunnelsene, fallgruvene og hva som er testet.
 | Konsultasjon, Møte, Diktat, Journalgjennomgang, AI-hjelp | Opptak, notat, chat, vedlegg/OCR, promptbibliotek og staging, stikkord, hurtigtaster (`Alt+1..6`, `Alt+R/S/V`), diktering i tekstfelt, PDF i kontekst som tekst | `docs/oppgaver-og-konsultasjon.md` |
 | Send til journal | Nettleserutvidelsen `nettleserutvidelse/pridok/` fyller notatet inn i Pridok. Teksten går bare mellom fanene | `docs/pridok-utvidelse.md` |
 | Skjema | Oppgavetypen `SKJEMA`: admin definerer skjema, AI foreslår feltinnhold, sendes til Pridok eller lastes ned som utfylt PDF | `docs/skjema.md` |
+| Legge inn et nytt skjema | Når Ragnar gir en PDF og Pridok-HTML og vil ha skjema, mapping og prompt lagt i databasen (`scripts/skjema/`) | `docs/legge-inn-skjema.md` |
 | Kliniske verktøy | Skåringsverktøy, kalkulatorer, undersøkelser (`src/lib/verktoy/`) | `docs/kliniske-verktoy.md` |
 | Retningslinjer og pakkeforløp | Hentes fra Helsedirektoratets API, vises ordrett (`src/lib/hapi/`) | `docs/retningslinjer-hapi.md` |
 | Innlogging og økt | TOTP, gjenopprettingskoder, passkeys, obligatorisk 2FA, 1 t/12 t-regler, kryptering i nettleseren | `docs/sikkerhet-og-okt.md` |
