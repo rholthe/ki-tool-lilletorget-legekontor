@@ -55,6 +55,9 @@ selv etter å ha sett over. Skriptet oppdaterer aldri et skjema som finnes fra f
 - **Fortsettelsesark:** når en rubrikk er for liten for det skjemaet faktisk spør om (sykmeldingsperioder),
   lag et eget felt med `pdf: { ark: true }` og egen instruks, og la rubrikken i skjemaet få en kort
   sammenfatning. Ragnar vil ha sykmeldingsperioder på arket
+- **Ulik type i PDF og Pridok** (SPK S031: avkrysning i PDF-en, fritekst i Pridok): lag to felt, ett per
+  mål, og be i instruksen om samme konklusjon i begge. Merk etikettene «(avkrysning i PDF-en)»/«(tekst til Pridok)»
+- **Legens egne betalingsopplysninger** (fanen «Legefaktura» i Pridok: kontonummer, adresse) tas ikke med
 - **Underskrift:** kobles ikke, heller ikke til legens navn. Feltet skal signeres for hånd
 
 ## Prompten
