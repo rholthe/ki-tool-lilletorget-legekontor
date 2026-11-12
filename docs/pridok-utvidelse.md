@@ -25,5 +25,6 @@ Detaljer flyttet fra `CLAUDE.md`. Gjelder `nettleserutvidelse/pridok/`, `send-ti
     `--load-extension`), også to faner med til sammen tre dagsnotater. Mot ekte Pridok: Firefox 09.11 (1.1.0),
     Chrome 10.11 (krevde 1.1.1)
   - Appen krever utvidelse ≥ 1.1 (`MIN_VERSJON`) og ber om oppdatering ellers
-  - Firefox: 1.0.0 og 1.1.0 signert «unlisted» hos Mozilla 09.11.2026, 1.1.1 signert 10.11.2026 (`web-ext sign`, krever Firefox 140+).
+  - Firefox: 1.0.0 og 1.1.0 signert «unlisted» hos Mozilla 09.11.2026, 1.1.1 signert 10.11.2026,
+    1.2.0 (pasient og skjema) 11.11.2026 og 1.2.1 (samme kode, med ikon) 12.11.2026 (`web-ext sign`, krever Firefox 140+).
     Øk `version` i `manifest.json` før ny signering; fremgangsmåte i utvidelsens README

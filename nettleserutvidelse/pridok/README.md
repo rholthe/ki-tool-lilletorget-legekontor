@@ -71,8 +71,11 @@ Sjekk først med `npx web-ext lint` — eneste forventede advarsel er at Firefox
 Øk `version` i `manifest.json` ved hver endring — Mozilla avviser en versjon som allerede er
 signert. Versjon 1.0.0 ble signert 09.11.2026 (Ragnars AMO-konto); 1.1.0 (valg mellom flere
 notater) er signert; 1.1.1 (gruppering per ytre `docform`) ble signert 10.11.2026. 1.2.0 (pasient og skjema)
-er ikke signert ennå. Fra 1.2 leser utvidelsen personalia og gir dem til LegeAssist-siden; vurder om
-`data_collection_permissions` i manifestet fortsatt skal være `none` før signering.
+ble signert 11.11.2026 og 1.2.1 (samme kode, med ikon) 12.11.2026 — bruk 1.2.1.
+
+Fra 1.2 leser utvidelsen personalia og gir dem til LegeAssist-siden. `data_collection_permissions` i
+manifestet står likevel som `none`: opplysningene går bare mellom to faner i samme nettleser og sendes
+ikke til noen server av utvidelsen. Skulle den noen gang sende noe ut av nettleseren, må dette endres.
 
 ## Ikon
 

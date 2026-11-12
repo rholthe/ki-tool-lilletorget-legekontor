@@ -92,7 +92,8 @@ Mappeoversikt: `docs/mappestruktur.md`.
 ### Status
 
 - Skjema (med PDF-sporet, legeprofil og start fra konsultasjon) er committet 11.11.2026, men **ikke
-  deployet og ikke prøvd i nettleser eller mot ekte Pridok/NAV-PDF-er**. Utvidelse 1.2.0 er ikke signert
+  deployet og ikke prøvd i nettleser eller mot ekte Pridok/NAV-PDF-er**. Utvidelse 1.2.1 er signert for
+  Firefox (12.11.2026), men ikke prøvd mot ekte Pridok
 - Passkeys er ikke prøvd med ekte Bitwarden/YubiKey eller autoutfylling i e-postfeltet
 
 ### Planlagt
