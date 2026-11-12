@@ -17,6 +17,13 @@ selv etter å ha sett over. Skriptet oppdaterer aldri et skjema som finnes fra f
 1. **Les PDF-en.** `pdftotext -layout <fil>` for spørsmålene og hjelpetekstene, og
    `node scripts/skjema/les-pdf.mjs <fil>` for de utfyllbare feltene (navn, type, ruter, plass i tegn).
    Har PDF-en ingen utfyllbare felt, må Ragnar tegne bokser i admin etterpå («Plasser felt på siden»).
+   - **Låst PDF** («passordbeskyttet eller låst for endring», `pdfinfo` viser `Encrypted: yes`): se på
+     tillatelsene. Tillater utgiveren utfylling (`modify_form`), lag en ulåst kopi og bruk den som mal —
+     pdf-lib kan ikke skrive i krypterte filer. `qpdf` finnes ikke på maskinen; bruk pikepdf i et venv i
+     scratchpad (`pikepdf.open(fil).save(ny)`). Si fra til Ragnar at malen er en ulåst kopi. Tillater
+     utgiveren ikke utfylling, stopp og spør
+   - Kun PDF, uten Pridok: ingen felt får `pridokTekst`. Sider andre fyller ut (arbeidsgiver, søker) følger
+     med urørt; feltene der kobles ikke
 2. **Les Pridok-HTML-en.** Hvert felt kjennes igjen på teksten sin, som blir `pridokTekst`:
    `.legend` (når den ikke er `&nbsp;`), `placeholder`, `.chktxt` eller `.tristate-caption`. Kopier teksten
    **nøyaktig**, med Pridoks egne skrivefeil og tegn («en ulykkestilfelle», semikolon til slutt). Bare et
