@@ -1,3 +1,5 @@
+import { SONIOX_MODELL } from "@/lib/soniox-modell"
+
 /**
  * Måler forbruket i én Soniox-økt (fra start til stopp/pause/feil) og
  * rapporterer det én gang til /api/bruk. Bare tall sendes: behandlet lydtid
@@ -16,7 +18,7 @@ export interface SonioxMaaler {
 
 const SPESIALTOKEN = /^<[^>]+>$/
 
-export function lagSonioxMaaler(funksjon: SonioxFunksjon, modell = "stt-rt-v5"): SonioxMaaler {
+export function lagSonioxMaaler(funksjon: SonioxFunksjon, modell = SONIOX_MODELL): SonioxMaaler {
   let lydMs = 0
   let antallTegn = 0
   let ferdig = false

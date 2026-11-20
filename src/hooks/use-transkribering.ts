@@ -4,6 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react"
 import type { KonsultasjonsType } from "@/types/konsultasjon"
 import { registrerAktivitet } from "@/lib/aktivitet"
 import { lagSonioxMaaler, type SonioxMaaler } from "@/lib/soniox-maaler"
+import { SONIOX_MODELL } from "@/lib/soniox-modell"
 
 // Dynamisk import — unngår "window is not defined" ved server-side rendering
 async function lastSonioxClient() {
@@ -87,7 +88,7 @@ export function useTranskribering(
       maalerRef.current = lagSonioxMaaler("transkribering")
 
       klient.start({
-        model: "stt-rt-v5",
+        model: SONIOX_MODELL,
         languageHints: ["no"],
         enableEndpointDetection: true,
         enableSpeakerDiarization: false,
@@ -129,6 +130,8 @@ export function useTranskribering(
           const nonFinalTekst: string[] = []
           for (const tok of result.tokens) {
             if (!tok.text) continue
+            // Soniox-spesialtokens (f.eks. <end> ved endepunktdeteksjon) skal ikke i transkriptet
+            if (/^<[a-z]+>$/i.test(tok.text)) continue
             if (tok.is_final) {
               transkriptRef.current = transkriptRef.current
                 ? `${transkriptRef.current}${tok.text}`
@@ -211,7 +214,7 @@ export function useTranskribering(
       maalerRef.current = lagSonioxMaaler("transkribering")
 
       klient.start({
-        model: "stt-rt-v5",
+        model: SONIOX_MODELL,
         languageHints: ["no"],
         enableEndpointDetection: true,
         enableSpeakerDiarization: false,
@@ -260,6 +263,8 @@ export function useTranskribering(
 
           for (const token of result.tokens) {
             if (!token.text) continue
+            // Soniox-spesialtokens (f.eks. <end> ved endepunktdeteksjon) skal ikke i transkriptet
+            if (/^<[a-z]+>$/i.test(token.text)) continue
             if (token.is_final) {
               transkriptRef.current = transkriptRef.current
                 ? `${transkriptRef.current}${token.text}`

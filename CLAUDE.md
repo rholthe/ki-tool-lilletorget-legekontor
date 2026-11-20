@@ -46,6 +46,12 @@ Nettleser (klinikkens datamaskin)
 
 - Soniox API-nøkkel lagres på serveren; brukes kun til å generere kortlivede temp-tokens
 - Temp-tokens er gyldige i ~60 sekunder og er sesjonsspesifikke
+- Sanntidsmodell: `stt-rt-v6`, satt ett sted i `src/lib/soniox-modell.ts` (`SONIOX_MODELL`).
+  `stt-rt-v5` og `stt-rt-v4` fjernes 15.12.2026
+- **Frist 15.01.2027:** Soniox avviser da tilkoblinger som bare sender nøkkelen som `api_key` i
+  startmeldingen. Nøkkelen må sendes med selve tilkoblingen, som subprotokoll (`soniox-api-key`, nøkkel)
+  eller `Authorization: Bearer`. `@soniox/speech-to-text-web` 1.4.0 (siste versjon) gjør det ikke.
+  Etterfølgeren `@soniox/client` gjør det, men har et annet API. Se «Planlagt»
 - Claude via AWS Bedrock: IAM-brukeren **`legeassist`** (egen bruker, ikke personlig) har policyen
   `bedrock-claude-eu` + `sts:GetFederationToken` på `arn:aws:sts::171433610132:federated-user/la-*`.
   Nøklene ligger i `.env` som `BEDROCK_API_KEY`/`BEDROCK_SECRET_KEY` og forlater aldri serveren.
@@ -98,6 +104,9 @@ Mappeoversikt: `docs/mappestruktur.md`.
 - Passkeys er ikke prøvd med ekte Bitwarden/YubiKey eller autoutfylling i e-postfeltet
 
 ### Planlagt
+- **Før 15.01.2027:** bytte `@soniox/speech-to-text-web` med `@soniox/client` i `use-transkribering.ts`
+  og `use-diktering.ts`, slik at nøkkelen sendes som WebSocket-subprotokoll. Møte trenger en egen
+  `AudioSource` for den sammensatte `MediaStream`-en. Pause, fortsett og keepalive må prøves i nettleser
 - Pakkeforløp: velge kriteriene som er oppfylt (avkrysning av punktene under «Begrunnet mistanke»)
   og få dem i notatet. Osteoporose finnes ikke hos Helsedirektoratet
 - Vektbasert barnedosering som egen `kalkulator`

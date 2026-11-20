@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from "react"
 import { registrerAktivitet } from "@/lib/aktivitet"
 import { lagSonioxMaaler, type SonioxMaaler } from "@/lib/soniox-maaler"
+import { SONIOX_MODELL } from "@/lib/soniox-modell"
 
 // Dynamisk import — unngår "window is not defined" ved server-side rendering
 async function lastSonioxClient() {
@@ -78,7 +79,7 @@ export function useDiktering(opts: {
       maalerRef.current = lagSonioxMaaler("diktering")
 
       klient.start({
-        model: "stt-rt-v5",
+        model: SONIOX_MODELL,
         languageHints: ["no"],
         enableEndpointDetection: true,
         enableSpeakerDiarization: false,

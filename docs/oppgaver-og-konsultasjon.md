@@ -106,7 +106,7 @@ Detaljer flyttet fra `CLAUDE.md`: opptak og notat, chat, vedlegg og OCR, promptb
     - Hooken er montert per view (kun ett vises via `HovedInnhold`); knapper har `title`-hint
 - Diktering i tekstbokser: gjenbrukbart mikrofonikon for live transkribering rett inn i et tekstfelt
   - Komponent `DikteringKnapp` (`src/components/app/diktering-knapp.tsx`) + hook `useDiktering` (`src/hooks/use-diktering.ts`)
-  - Kun sanntidstranskript via Soniox (`stt-rt-v5`, norsk) — ingen AI-behandling, ingen video/skjermdeling
+  - Kun sanntidstranskript via Soniox (`stt-rt-v6`, norsk) — ingen AI-behandling, ingen video/skjermdeling
   - Markør i feltet → tekst settes inn ved `selectionStart`; ellers legges til på slutten (mellomrom mot eksisterende tekst)
   - Foreløpige (non-final) tokens vises umiddelbart og erstattes når de blir endelige (lav latency)
   - Soniox-spesialtokens (`<end>` o.l.) filtreres bort; knappen bruker `onMouseDown` `preventDefault` for å bevare markørfokus
