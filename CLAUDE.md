@@ -203,7 +203,10 @@ side på samme VPS, hver i egne containere.
     før. Tunnelen blokkerer terminalen (Ctrl+C for å avslutte); bruk `-LocalPort 3307` /
     `LOCAL_PORT=3307` hvis 3306 er opptatt lokalt.
   - Samme database i dev og prod — skjemaendringer i dev treffer altså prod-DB; vær bevisst på dette.
-- **SSH:** `ssh -i ~/.ssh/legeassist_vps_new ragnar@159.195.146.240`
+- **SSH:** `ssh ragnar@159.195.146.240`. På ragnar-hjem (Ubuntu) er nøkkelen `~/.ssh/id_ed25519`, som
+  ssh bruker uten `-i`. `push-and-deploy.sh` og `db-tunnel.sh` bruker den som standard; annen nøkkel
+  velges med `KEY=…`. `~/.ssh/legeassist_vps_new` fantes bare på Windows-PC-en ragnar-kontor, og er
+  fortsatt standard i `db-tunnel.ps1`
 - **Deploy fra utviklingsmaskin:** `bash push-and-deploy.sh` (push til origin + SSH kjører
   `./deploy.sh` på serveren: `git pull --ff-only` → `docker compose build` → `docker compose up -d`
   → `docker exec legeassist npx prisma db push` → `docker compose restart`, deretter

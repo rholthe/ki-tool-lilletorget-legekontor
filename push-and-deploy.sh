@@ -8,7 +8,7 @@
 set -euo pipefail
 
 REMOTE="${REMOTE:-ragnar@159.195.146.240}"
-KEY="${KEY:-$HOME/.ssh/legeassist_vps_new}"
+KEY="${KEY:-$HOME/.ssh/id_ed25519}"
 APP_DIR="${APP_DIR:-/home/ragnar/apps/legeassist}"
 
 BRANCH="$(git rev-parse --abbrev-ref HEAD)"

@@ -15,7 +15,7 @@
 set -euo pipefail
 
 REMOTE="${REMOTE:-ragnar@159.195.146.240}"
-KEY="${KEY:-$HOME/.ssh/legeassist_vps_new}"
+KEY="${KEY:-$HOME/.ssh/id_ed25519}"
 CONTAINER="${CONTAINER:-shared-mariadb}"
 NETWORK="${NETWORK:-app-backend}"
 LOCAL_PORT="${LOCAL_PORT:-3306}"
