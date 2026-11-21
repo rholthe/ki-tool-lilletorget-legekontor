@@ -24,7 +24,7 @@
     "@smithy/eventstream-codec": "^4.5.2",
     "@smithy/signature-v4": "^5.7.4",
     "@smithy/util-utf8": "^4.5.2",
-    "@soniox/speech-to-text-web": "^1.4.0",
+    "@soniox/client": "^2.5.0",
     "assemblyai": "^4.33.3",
     "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",

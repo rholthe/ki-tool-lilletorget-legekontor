@@ -1,15 +1,10 @@
 "use client"
 
 import { useState, useRef, useCallback, useEffect } from "react"
+import type { Recording } from "@soniox/client"
 import { registrerAktivitet } from "@/lib/aktivitet"
 import { lagSonioxMaaler, type SonioxMaaler } from "@/lib/soniox-maaler"
-import { SONIOX_MODELL } from "@/lib/soniox-modell"
-
-// Dynamisk import — unngår "window is not defined" ved server-side rendering
-async function lastSonioxClient() {
-  const { SonioxClient } = await import("@soniox/speech-to-text-web")
-  return SonioxClient
-}
+import { erSpesialtoken, startSonioxOpptak, stoppOpptak } from "@/lib/soniox-opptak"
 
 export type DikteringsStatus = "av" | "kobler" | "lytter" | "feil"
 
@@ -28,8 +23,7 @@ export function useDiktering(opts: {
   const [partial, setPartial] = useState("")
   const [feil, setFeil] = useState<string | null>(null)
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const klientRef = useRef<any>(null)
+  const klientRef = useRef<Recording | null>(null)
   const maalerRef = useRef<SonioxMaaler | null>(null)
   const onOppdateringRef = useRef(opts.onOppdatering)
   useEffect(() => {
@@ -46,7 +40,7 @@ export function useDiktering(opts: {
   }, [])
 
   const stopp = useCallback(() => {
-    klientRef.current?.stop()
+    stoppOpptak(klientRef.current)
     maalerRef.current?.avsluttSnart()
     klientRef.current = null
     setPartial("")
@@ -67,62 +61,33 @@ export function useDiktering(opts: {
       const { token, wsUrl } = await tokenRes.json()
       if (!token) throw new Error("Mangler token fra server")
 
-      const SonioxClient = await lastSonioxClient()
-      const klient = new SonioxClient({
-        apiKey: token,
-        webSocketUri: wsUrl,
-        keepAlive: true,
-        keepAliveInterval: 10_000,
-      })
-      klientRef.current = klient
       maalerRef.current?.avslutt()
       maalerRef.current = lagSonioxMaaler("diktering")
-
-      klient.start({
-        model: SONIOX_MODELL,
-        languageHints: ["no"],
-        enableEndpointDetection: true,
-        enableSpeakerDiarization: false,
-        context: {
-          general: [
-            { key: "domain", value: "Healthcare" },
-            { key: "topic", value: "Medical consultation in Norwegian" },
-          ],
-          terms: [
-            "diagnose", "symptom", "behandling", "blodtrykk", "blodprøve",
-            "resept", "sykmelding", "henvisning", "epikrise", "journal",
-            "fastlege", "spesialist", "røntgen", "ultralyd", "spirometri",
-            "hypertensjon", "kolesterol", "diabetes", "ekkokardiografi",
-            "nav", "arbeidsevne", "uføretrygd", "rehabilitering",
-          ],
-        },
-        ...(mikofonId
-          ? { audioConstraints: { deviceId: { exact: mikofonId } } }
-          : {}),
-        onStarted: () => setStatus("lytter"),
-        onError: (_s: string, message: string) => {
+      klientRef.current = await startSonioxOpptak({
+        token,
+        wsUrl,
+        mikrofonId: mikofonId,
+        onStartet: () => setStatus("lytter"),
+        onFeil: (message) => {
           setFeil(`Soniox: ${message}`)
           maalerRef.current?.avslutt()
           setStatus("feil")
           klientRef.current = null
         },
-        onStateChange: ({ newState }: { newState: string }) => {
-          if (newState === "Finished") {
-            maalerRef.current?.avslutt()
-            setPartial("")
-            setStatus("av")
-            klientRef.current = null
-          }
+        onFerdig: () => {
+          maalerRef.current?.avslutt()
+          setPartial("")
+          setStatus("av")
+          klientRef.current = null
         },
-        onPartialResult: (result: { total_audio_proc_ms?: number; tokens: Array<{ text: string; is_final: boolean }> }) => {
+        onResultat: (result) => {
           registrerAktivitet() // et pågående opptak er aktivitet, også uten tastetrykk
           maalerRef.current?.oppdater(result)
           let finalDelta = ""
           const nonFinalTekst: string[] = []
           for (const tok of result.tokens) {
             if (!tok.text) continue
-            // Soniox-spesialtokens (f.eks. <end> ved endepunktdeteksjon) skal ikke vises
-            if (/^<[a-z]+>$/i.test(tok.text)) continue
+            if (erSpesialtoken(tok.text)) continue
             if (tok.is_final) finalDelta += tok.text
             else nonFinalTekst.push(tok.text)
           }

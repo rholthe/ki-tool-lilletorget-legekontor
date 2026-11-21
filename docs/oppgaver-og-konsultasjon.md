@@ -6,6 +6,16 @@ Detaljer flyttet fra `CLAUDE.md`: opptak og notat, chat, vedlegg og OCR, promptb
 
 - Mikrofonfangst i nettleser (Web Audio API) + skjermdeling for videomøter (NAV)
 - Sanntidstranskribering med Soniox, pause/fortsett opptak
+  - SDK `@soniox/client`, felles oppsett i `src/lib/soniox-opptak.ts` (`startSonioxOpptak`). Nøkkelen
+    sendes som subprotokoll. Lyden er som med den gamle SDK-en: valgt mikrofon gir bare `deviceId`
+    (nettleserens ekkodemping/støyreduksjon på), ingen valgt gir alt av og 44,1 kHz mono; 120 ms biter
+  - Video/skjermdeling: SDK-ens `MicrophoneSource` tar ikke en ferdig strøm, så `StromKilde` (samme fil)
+    kjører `MediaRecorder` på en klone av strømmen
+  - Pause er `cancel()` og fortsett er en ny tilkobling med ny nøkkel (ikke SDK-ens `pause()`), så samme
+    vei virker etter bytte av konsultasjon
+  - Video (konsultasjon og Møte): den delte fanen beholdes over pause, så Fortsett bruker samme fanelyd
+    uten ny dialog. Er delingen stoppet («Stopp deling»), spørres det på nytt. Fortsett fra lagret
+    pause og «Fortsett opptak» etter stopp spør alltid på nytt (kan være et annet møte). Stopp slipper fanen
 - Autolagring av transkript hvert 10 sek under opptak + lagring ved pause
 - Alle "fortsett"-knapper pre-laster eksisterende transkript (ingen appendModus)
 - Notatgenerering via Claude (SSE-streaming), auto-start etter stopp. Konsultasjonsnotatene har
