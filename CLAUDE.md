@@ -51,7 +51,7 @@ Nettleser (klinikkens datamaskin)
 - SDK: `@soniox/client` (byttet fra `@soniox/speech-to-text-web` 21.11.2026). Den sender nøkkelen som
   WebSocket-subprotokoll (`soniox-api-key`, nøkkel), som Soniox krever fra 15.01.2027. Oppsettet
   (kontekst, lyd, egen `StromKilde` for skjermdelingslyd) ligger i `src/lib/soniox-opptak.ts`.
-  Prøvd fra Node mot EU (opptak, stopp, pause/fortsett, feil nøkkel), **ikke i nettleser ennå**
+  Prøvd fra Node mot EU og i Chromium (fanelyd, pause/fortsett), deployet 21.11.2026
 - Claude via AWS Bedrock: IAM-brukeren **`legeassist`** (egen bruker, ikke personlig) har policyen
   `bedrock-claude-eu` + `sts:GetFederationToken` på `arn:aws:sts::171433610132:federated-user/la-*`.
   Nøklene ligger i `.env` som `BEDROCK_API_KEY`/`BEDROCK_SECRET_KEY` og forlater aldri serveren.
@@ -104,8 +104,6 @@ Mappeoversikt: `docs/mappestruktur.md`.
 - Passkeys er ikke prøvd med ekte Bitwarden/YubiKey eller autoutfylling i e-postfeltet
 
 ### Planlagt
-- **Før 15.01.2027:** prøve `@soniox/client` i nettleser: konsultasjon med valgt og uten valgt mikrofon,
-  video/skjermdelingslyd, pause/fortsett og bytte konsultasjon, diktering i tekstfelt
 - Pakkeforløp: velge kriteriene som er oppfylt (avkrysning av punktene under «Begrunnet mistanke»)
   og få dem i notatet. Osteoporose finnes ikke hos Helsedirektoratet
 - Vektbasert barnedosering som egen `kalkulator`
